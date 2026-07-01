@@ -1,0 +1,35 @@
+{
+  "source": "https://www.grupoorve.com",
+  "note": "Material de referencia de marketing extraído del sitio público. NO es catálogo/inventario real. Ver content/grupoorve-raw/developments/<slug>.md para el detalle de cada desarrollo.",
+  "extraction_method": "curl (HTML crudo) + parser determinista (stdlib Python), sin resumen por modelo. Imágenes: URLs tomadas de page-sitemap.xml (<image:image><image:loc>), determinista.",
+  "pending_real_photos": "SharePoint de marketing de Grupo Orve (grupoorve-my.sharepoint.com), requiere login M365 o link público compartido por Oscar. Fase aparte, no bloquea este piloto.",
+  "developments": [
+    {
+      "slug": "xook",
+      "name": "Xo'ok",
+      "source_url_es": "https://www.grupoorve.com/xook/",
+      "source_url_en": "https://www.grupoorve.com/xook-en/",
+      "status": "extraído (piloto)",
+      "content_file": "developments/xook.md",
+      "image_count": 10,
+      "image_count_broken_404": 7,
+      "images_dir": "developments/xook-images",
+      "scraped_at": "2026-07-01"
+    },
+    { "slug": "ukana-merida", "name": "Ukana Mérida", "source_url_es": "https://www.grupoorve.com/ukana-merida/", "source_url_en": "https://www.grupoorve.com/ukana-merida-en/", "status": "pendiente", "image_count": 36 },
+    { "slug": "ukana-playa-del-carmen", "name": "Ukana Playa del Carmen", "source_url_es": "https://www.grupoorve.com/ukana-playa-del-carmen/", "source_url_en": "https://www.grupoorve.com/ukana-playa-del-carmen-en/", "status": "pendiente", "image_count": 36 },
+    { "slug": "ciudad-central-merida", "name": "Ciudad Central Mérida", "source_url_es": "https://www.grupoorve.com/ciudad-central-merida/", "source_url_en": "https://www.grupoorve.com/ciudad-central-merida-en/", "status": "pendiente", "image_count": 34 },
+    { "slug": "ciudad-central-progreso", "name": "Ciudad Central Progreso", "source_url_es": "https://www.grupoorve.com/ciudad-central-progreso/", "source_url_en": "https://www.grupoorve.com/ciudad-central-progreso-en/", "status": "pendiente", "image_count": 37 },
+    { "slug": "ciudad-central-riviera-maya", "name": "Ciudad Central Riviera Maya", "source_url_es": "https://www.grupoorve.com/ciudad-central-riviera-maya/", "source_url_en": null, "status": "pendiente", "image_count": 12 },
+    { "slug": "zania", "name": "Zania", "source_url_es": "https://www.grupoorve.com/zania/", "source_url_en": "https://www.grupoorve.com/zania-en/", "status": "pendiente", "image_count": 36 },
+    { "slug": "nuva-ii", "name": "NUVA II", "source_url_es": "https://www.grupoorve.com/nuva-ii/", "source_url_en": "https://www.grupoorve.com/nuva-ii-en/", "status": "pendiente", "image_count": 36 },
+    { "slug": "tulum-ha", "name": "Tulum Ha", "source_url_es": "https://www.grupoorve.com/tulum-ha/", "source_url_en": "https://www.grupoorve.com/tulum-ha-en/", "status": "pendiente", "image_count": 36 },
+    { "slug": "townhouses", "name": "Townhouses", "source_url_es": "https://www.grupoorve.com/townhouses/", "source_url_en": "https://www.grupoorve.com/townhouses-en/", "status": "pendiente", "image_count": 31 },
+    { "slug": "legado-verde", "name": "Legado Verde", "source_url_es": "https://www.grupoorve.com/legado-verde/", "source_url_en": "https://www.grupoorve.com/legado-verde-en/", "status": "pendiente", "image_count": 10 },
+    { "slug": "rosenda", "name": "Rosenda", "source_url_es": "https://www.grupoorve.com/rosenda/", "source_url_en": null, "status": "pendiente", "image_count": 10 },
+    { "slug": "tierra-bonita", "name": "Tierra Bonita", "source_url_es": "https://www.grupoorve.com/tierra-bonita/", "source_url_en": null, "status": "pendiente", "image_count": 0, "note": "sin metadata de imagen en el sitemap, verificar manualmente" },
+    { "slug": "wanda", "name": "Wanda", "source_url_es": "https://www.grupoorve.com/wanda/", "source_url_en": null, "status": "pendiente", "image_count": 6 },
+    { "slug": "luci", "name": "Luci", "source_url_es": "https://www.grupoorve.com/luci/", "source_url_en": null, "status": "pendiente", "image_count": 0, "note": "sin metadata de imagen en el sitemap, verificar manualmente" },
+    { "slug": "kenua", "name": "Kenua", "source_url_es": "https://www.grupoorve.com/kenua/", "source_url_en": null, "status": "pendiente", "image_count": 16 }
+  ]
+}
