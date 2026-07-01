@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -43,15 +42,7 @@ export function SiteNav() {
         ))}
       </nav>
 
-      <Link href="#top" className="flex items-center gap-2 md:absolute md:left-1/2 md:-translate-x-1/2">
-        <Image
-          src="/brand/orve-logo-mark.png"
-          alt="Grupo Orve"
-          width={32}
-          height={32}
-          className={`h-8 w-8 brightness-0 transition ${scrolled ? "" : "invert"}`}
-          priority
-        />
+      <Link href="#top" className="md:absolute md:left-1/2 md:-translate-x-1/2">
         <span className="text-sm font-bold tracking-[0.3em]">ORVE</span>
       </Link>
 
