@@ -38,16 +38,20 @@ const TESTIMONIALS = [
 export default function HomePage() {
   return (
     <main id="top" className="bg-cream text-obsidian">
-      {/* Hero — full-bleed, split headline sobre foto real (render Xenotikal, Xo'ok) */}
+      {/* Hero — full-bleed, split headline sobre foto real (club de playa, Ciudad Central Progreso) */}
       <section className="relative flex h-[100dvh] min-h-[640px] w-full items-end overflow-hidden">
         <SiteNav />
         <Image
-          src="/hero/xook-spa-xenotikal.webp"
-          alt="Casa club Xenotikal, inspirada en los cenotes de Yucatán — desarrollo Xo'ok de Grupo Orve"
+          src="/hero/orve-club-playa-progreso.webp"
+          alt="Villa y club de playa frente al mar — desarrollo Ciudad Central Progreso de Grupo Orve"
           fill
           priority
           className="object-cover"
         />
+        {/* Foto real de cielo claro: sin tinte el nav y el headline no se leen (regla Lightship
+            de DESIGN.md — se prueba sin overlay primero, se agrega solo si no hay legibilidad) */}
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/45 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/55 to-transparent" />
         <div className="relative z-10 grid w-full grid-cols-1 gap-6 px-6 pb-16 md:grid-cols-2 md:px-10 md:pb-20">
           <h1 className="text-[13vw] font-normal leading-[0.95] tracking-[-0.03em] text-white md:text-[4.5vw]">
             Explora las oportunidades de inversión inmobiliaria
@@ -90,6 +94,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Banda cinematográfica — Mérida real, mismo claim de seguridad ya aprobado, ahora con prueba visual */}
+      <Reveal>
+        <section className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
+          <Image
+            src="/hero/orve-merida-centro.webp"
+            alt="Centro histórico de Mérida, Yucatán"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 px-6 pb-10 md:px-10 md:pb-14">
+            <p className="text-sm tracking-[0.2em] text-white/70 uppercase">Mérida, Yucatán</p>
+            <p className="mt-2 max-w-xl text-2xl leading-[1.2] tracking-[-0.01em] text-white md:text-3xl">
+              Yucatán se mantiene como el estado más seguro de México.
+            </p>
+          </div>
+        </section>
+      </Reveal>
+
       {/* Historia — párrafo editorial grande, copy verbatim de quienes-somos */}
       <section className="border-t border-mist bg-white py-24 md:py-[100px]">
         <Reveal>
@@ -100,6 +123,25 @@ export default function HomePage() {
           </p>
         </Reveal>
       </section>
+
+      {/* Banda cinematográfica — cenote real, mismo claim de riqueza hídrica ya aprobado */}
+      <Reveal>
+        <section className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
+          <Image
+            src="/hero/orve-cenote.webp"
+            alt="Cenote en la selva de Yucatán"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/5 to-transparent" />
+          <div className="absolute inset-x-0 top-0 px-6 pt-10 text-right md:px-10 md:pt-14">
+            <p className="text-sm tracking-[0.2em] text-white/70 uppercase">Cenotes de Yucatán</p>
+            <p className="mt-2 ml-auto max-w-xl text-2xl leading-[1.2] tracking-[-0.01em] text-white md:text-3xl">
+              Una de las reservas de agua subterránea más importantes de México.
+            </p>
+          </div>
+        </section>
+      </Reveal>
 
       {/* Xo'ok — desarrollo piloto, tipografía display + imagen real */}
       <section id="xook" className="relative overflow-hidden py-24 md:py-[100px]">
