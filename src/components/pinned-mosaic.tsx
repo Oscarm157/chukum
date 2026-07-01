@@ -19,8 +19,8 @@ interface MosaicPhoto {
 
 const PHOTOS: MosaicPhoto[] = [
   {
-    src: "/hero/orve-merida-centro.webp",
-    alt: "Centro histórico de Mérida, Yucatán",
+    src: "/hero/orve-merida-plaza-grande.webp",
+    alt: "Vista aérea de la Plaza Grande y la catedral de Mérida, Yucatán",
     restClassName: "top-[7%] left-[3%] w-[26vw] min-w-[220px] aspect-[4/3]",
     from: { x: -340, y: 90 },
     enter: [0.15, 0.45],

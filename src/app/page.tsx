@@ -5,6 +5,7 @@ import { Reveal } from "@/components/reveal";
 import { PinnedMosaic } from "@/components/pinned-mosaic";
 import { StackedReveal, type StackSlide } from "@/components/stacked-reveal";
 import { ValuePropsCarousel } from "@/components/value-props-carousel";
+import { DevelopmentsCarousel } from "@/components/developments-carousel";
 
 const VALUE_CARDS = [
   {
@@ -56,6 +57,44 @@ const XOOK_STACK: StackSlide[] = [
       "*Aplican restricciones. Cifras de marketing publicadas por Grupo Orve, no son inventario verificado.",
   },
 ];
+
+const DEVELOPMENTS = [
+  {
+    name: "Xo'ok",
+    place: "Yucatán · selva maya",
+    image: "/hero/xook-spa-xenotikal.webp",
+    alt: "Casa club Xenotikal, desarrollo Xo'ok",
+    href: "https://www.grupoorve.com/xook/",
+  },
+  {
+    name: "Ciudad Central Mérida",
+    place: "Mérida, Yucatán",
+    image: "/hero/orve-ccm-casa-club.webp",
+    alt: "Casa club y alberca, Ciudad Central Mérida",
+    href: "https://www.grupoorve.com/ciudad-central-merida/",
+  },
+  {
+    name: "Ciudad Central Progreso",
+    place: "Progreso, Yucatán · frente al mar",
+    image: "/hero/orve-ccp-pabellon.webp",
+    alt: "Acceso del desarrollo Ciudad Central Progreso",
+    href: "https://www.grupoorve.com/ciudad-central-progreso/",
+  },
+  {
+    name: "Ukana Playa del Carmen",
+    place: "Playa del Carmen, Quintana Roo",
+    image: "/hero/orve-ukana-pdc-alberca.webp",
+    alt: "Alberca entregada, Ukana Playa del Carmen",
+    href: "https://www.grupoorve.com/ukana-playa-del-carmen/",
+  },
+  {
+    name: "Tulum Ha",
+    place: "Tulum, Quintana Roo · en construcción",
+    image: "/hero/orve-tulum-ha-avance.webp",
+    alt: "Avance de obra real, Tulum Ha",
+    href: "https://www.grupoorve.com/tulum-ha/",
+  },
+] as const;
 
 const TESTIMONIALS = [
   {
@@ -174,6 +213,23 @@ export default function HomePage() {
           </div>
         </section>
       </Reveal>
+
+      {/* Nuestros desarrollos — carrusel real: Yucatán interior, costa, Playa del Carmen, Tulum */}
+      <section className="mx-auto max-w-[1440px] px-6 py-24 md:px-10 md:py-[100px]">
+        <Reveal>
+          <p className="text-sm tracking-[0.2em] text-pebble uppercase">Nuestros desarrollos</p>
+        </Reveal>
+        <Reveal>
+          <h2 className="mt-4 max-w-2xl text-4xl leading-[1.1] tracking-[-0.02em] md:text-6xl">
+            De la selva maya a la costa del Caribe.
+          </h2>
+        </Reveal>
+        <Reveal>
+          <div className="mt-16">
+            <DevelopmentsCarousel items={DEVELOPMENTS} />
+          </div>
+        </Reveal>
+      </section>
 
       {/* Sobre Grupo Orve — copy verbatim de quienes-somos + foto real del equipo */}
       <section className="border-t border-mist bg-white py-24 md:py-[100px]">
