@@ -1,89 +1,87 @@
-# DESIGN.md — dirección visual del proyecto
+# DESIGN.md — Vivir en Yucatán / Live Yucatán
 
-Este archivo congela la dirección de diseño para que el agente sea consistente en todas las
-pantallas. Se llena AL INICIAR la UI, desde el reference lock de Refero (referencia primaria +
-1-2 detalles prestados). No copiar el DESIGN.md de otra marca tal cual: referencia, no plantilla.
-El starter llega en blanco a propósito; el diseño es bespoke por proyecto.
+Contrato de diseño. El agente de UI lo lee para ser consistente entre pantallas. NO improvisar
+por página. Validar SIEMPRE con captura real (Playwright, build de prod). Anti-slop es ley.
 
-## Reference lock (de Refero)
-- Referencia primaria: **Lightship** (lightshiprv.com, vía styles.refero.design). Sistema editorial
-  photography-first: fotografía cinematográfica full-bleed, tipografía display apretada, casi
-  monocromático con un solo acento. Encaja con real estate porque el producto (los desarrollos) se
-  vende con fotografía/narrativa, no con UI — mismo principio que Lightship vende el tráiler con
-  paisaje, no con chrome de producto. El copy de Xo'ok (cenotes, selva maya, santuario) pide
-  exactamente este tratamiento editorial en vez de un layout de "tarjetas de propiedad" genérico.
-- Detalles prestados:
-  1. **Acento cromático:** se reemplaza el ember-orange de Lightship (#fa5c40) por el **verde real
-     de Orve** (~#3FCF30, muestreado del botón "Conoce Más" en grupoorve.com — no hay manual de
-     marca con hex oficial todavía). Misma disciplina que el naranja original: solo washes/strips
-     pequeños, nunca relleno grande de botón.
-  2. **Overlay de hero:** Lightship pone el texto directo sobre la foto sin tinte. Orve en su sitio
-     actual usa overlay oscuro sobre foto para legibilidad. Se prueba primero sin overlay (regla
-     Lightship) y solo se agrega tinte si en la foto real de un desarrollo el texto no se lee.
+## Norte / mood
+Editorial cálido yucateco. Habitabilidad premium anclada en lo local: piedra caliza de Mérida
+(sascab), sol, terracota colonial, selva/cenote. Debe leer como **revista de autoridad**, no como
+portal de listings tipo Inmuebles24. Calma, fotografía protagonista, tipografía grande y fina.
 
-## Tema y atmósfera
-Editorial, cálido, fotografía por delante del texto. Sobrio con un acento verde medido — no
-"vende-humos inmobiliario" (nada de badges rojos de urgencia, nada de countdown, nada de collage
-de logos de bancos).
+## Reference lock (decision ledger — cada decisión trazada)
+- **Primaria — Samara (samara.com):** lienzo pergamino cálido, tinta casi negra, titulares display
+  finos y enormes, fotografía residencial soleada, banda hero oscura, ritmo de folleto premium
+  hecho digital, tarjetas arena con radio suave. → mood general, densidad, canvas.
+- **Prestado 1 — Aspelin Reitan (aspelineiendom.no):** bandas oscuras cinematográficas full-bleed
+  con foto arquitectónica y un acento cálido. → de aquí la PROFUNDIDAD (hero + banda "por qué el
+  norte"), para no caer en grid de tarjetas planas.
+- **Prestado 2 — Kinfolk / The New Yorker:** editorial serif para las guías/pilares. → autoridad
+  de magazine (sin sobre-estilizar el look Kinfolk; calidez sobre frialdad literaria).
+- **Patrón ficha — Trulia property-detail:** hero dos columnas (galería + specs sidebar sticky).
+- **Patrón zona — PamPam/Trulia neighborhood:** mapa + stats + narrativa.
+- **Terracota + limestone:** decisión local (Mérida colonial/sascab), NO de referencia ajena.
 
-## Paleta (roles semánticos, no solo hex)
-- Fondo / superficies: crema cálido `#faf6ef` como canvas primario (evita el blanco frío de SaaS);
-  blanco puro `#ffffff` solo para elevar cards/imagen sobre el crema.
-- Texto (fuerte / suave / tenue): negro `#000000` (fuerte, texto primario y nav) / gris `#999999`
-  (suave, cuerpo secundario) / gris claro `#d9d9d9` (tenue, hairlines y separadores en reposo).
-- Acento (y cuándo se usa, con disciplina): verde Orve `~#3FCF30` (a confirmar hex oficial) — solo
-  como wash/franja de highlight o estado de foco. Nunca como fondo de sección completa ni relleno
-  de botón primario (no hay "botón primario" en este sistema, ver Componentes).
-- Bordes / líneas: `#d9d9d9` hairline 1px en reposo, pasa a `#000000` en foco.
-- Estados (éxito / aviso / error): no definidos — este tier landing no tiene flujos transaccionales
-  todavía (sin CRM). Se definen cuando exista un formulario real que los necesite.
+## Paleta (roles, no decoración)
+Modo claro (default). Tokens en `globals.css` `@theme`, reemplazan los de Orve (cream/verde).
+- `--canvas` #F7F1E7 — pergamino/sascab, fondo base
+- `--surface` #FFFFFF / `--surface-warm` #FCF8F1 — tarjetas/superficies elevadas
+- `--ink` #1C1815 — texto primario (casi negro cálido)
+- `--ink-2` #6B6258 — texto secundario (piedra)
+- `--hairline` #E4DAC9 — líneas/bordes finos
+- `--terracota` #B5502E — ACENTO ÚNICO. Eyebrows, links activos, subrayados, números clave,
+  íconos. NO relleno masivo de botones.
+- `--terracota-deep` #8F3D20 — hover/énfasis
+- Banda oscura cinematográfica: `--espresso` #17120E fondo, `--crema` #F2E7D6 texto, acento
+  terracota sobre foto full-bleed.
+- **PROHIBIDO verde como acento** (confunde con Grupo Orve, marca de la que nos diferenciamos).
 
 ## Tipografía
-- Display / títulos: sans geométrica (F37Bolton en el original; sustituto real: DM Sans o Inter,
-  eligiendo el corte más geométrico/no-humanista disponible). Peso 700 solo en display y wordmark.
-- Cuerpo: misma familia, peso 400.
-- Escala y pesos: escala Minor Third desde 16px base — 72/75px (display), 48px (heading-lg), 34px
-  (heading), 24px (heading-sm), 22px (subheading), 20px (body-lg), 16px (body), 14px (body-sm),
-  12px (caption). Tracking apretado: -0.05em en 48px+, -0.03em en 34px y menos.
-- Números (tabulares si hay datos): pendiente — se define cuando haya precios/m2 reales de
-  `units` en pantalla (no antes, para no formatear datos que hoy son `verified: false`).
+- Display: **Fraunces** (variable, óptica, alto contraste, cálida) — titulares. Peso ligero a
+  medio, tracking apretado en tamaños grandes (-0.02em desde 48px). Hasta 72-96px.
+- UI/body: **Inter** — cuerpo 16-18px, line-height generoso (1.6). Specs/labels en mayúsculas
+  discretas con tracking amplio para eyebrows.
+- Números/precios: **Geist Mono** (tabular) para specs, m², precios, stats.
+- Reemplazar el DM Sans actual del layout por Fraunces (display) + Inter (body). Mono se queda.
+
+## Familias de layout (cada sección hermana DISTINTA — nunca 3 grids iguales)
+1. **Hero:** foto full-bleed cinematográfica de Yucatán + titular Fraunces enorme y fino sobre
+   gradiente oscuro. Nav transparente encima. Parallax sutil.
+2. **Banda "Por qué el norte / Yucatán":** banda oscura espresso, foto full-bleed, 3-4 stats en
+   terracota (seguridad, plusvalía, crecimiento) con número mono grande.
+3. **Índice de zonas:** image-led, NO grid uniforme. Una zona líder grande (imagen dominante) +
+   lista editorial de las demás. Cada item enlaza a /zonas/[slug].
+4. **Ficha de desarrollo:** dos columnas (galería izquierda grande + panel specs sticky derecha,
+   specs en mono). Amenidades como lista con hairlines. CTA WhatsApp + form.
+5. **Guías/pilares:** filas editoriales serif tipo New Yorker (título serif grande, dek, imagen
+   lateral). Fase posterior, pero el layout ya queda definido.
+6. **Cierre/contacto:** cálido, simple. Form + botón WhatsApp contextual.
 
 ## Componentes
-- Botones (primario / secundario / ghost): **sin botones rellenos.** Todo es texto tipo ghost-link
-  (subrayado al hover) o chip tipo píldora (radio 100px, sin relleno ni borde). El verde de Orve no
-  se usa como fondo de botón — rompería la disciplina "acento discreto" del reference lock.
-- Inputs / formularios: píldora, radio 100px, borde 1px `#d9d9d9` en reposo → `#000000` en foco,
-  relleno crema o blanco, padding horizontal generoso (20px).
-- Cards / contenedores (elevación por capa o por sombra): sin sombras. Elevación = cambio de
-  superficie (crema → blanco) + radio 20px, nunca `box-shadow`.
-- Navegación: barra de 3 zonas (menú + links / wordmark centrado / links utilitarios), transparente
-  sobre el hero, sin fondo. Texto blanco sobre foto, negro sobre crema.
+- **Botones:** ghost/outline, radio pill. Primario = borde ink o texto terracota; NADA de relleno
+  terracota grande. Inputs tipo pill.
+- **Cards:** cambio de superficie + radio ~16px, sin sombra pesada; hairline sutil.
+- **Nav:** 3 zonas, transparente sobre hero → limestone al hacer scroll (reusar patrón site-nav).
+- **Motion:** reusar `reveal.tsx` (scroll fade+slide), Lenis ya activo. Respetar
+  `prefers-reduced-motion` SIEMPRE (fallback estático).
 
-## Layout y espaciado
-- Anchos máximos, grid, ritmo vertical: max-width 1440px para contenido; hero y quiebres de sección
-  pueden ir full-bleed (100vw). Gap entre secciones: 100px. Mosaico de fotos **asimétrico** (no
-  grid parejo de N columnas iguales) — offsets verticales variables, como en Lightship.
-- Densidad (compacto / aireado): aireado — 100px entre secciones, 24px padding de card, 16px gap
-  entre elementos.
+## Guardrails anti-slop (bloqueantes)
+- Data real o marcada `verified:false`; NUNCA inventar precios, m², plusvalía, testimonios.
+- Sin em-dashes en copy. Sin frases huecas ("transforma tu vida", "solución integral", "sin
+  fricciones"). Copy factual con datos/nombres reales.
+- Sin stock genérico obvio; fotografía real de Yucatán o del desarrollo.
+- Verde prohibido (ver paleta).
+- No repetir la misma familia de layout en secciones hermanas.
+- No usar copy reciclado con errores de Orve (ej. el bloque de un desarrollo que menciona otro).
 
-## Motion
-- Reveal por scroll en el mosaico de fotos: las imágenes entran/asientan en su posición conforme
-  aparecen en viewport (visto en Lightship al hacer scroll). Hero con imagen grande que puede
-  "perforar" un titular display gigante en el primer quiebre de sección. Siempre con
-  `prefers-reduced-motion` respetado (fallback: aparecen ya en posición final, sin animar).
+## SEO/i18n (recordatorio para el que maqueta)
+- `generateMetadata` por página (canonical, OG). JSON-LD en `lib/seo.ts`. sitemap dinámico.
+- ES primero. EN + hreflang después (columnas `descripcionEn`/`descriptionEn` ya existen).
+- URLs limpias: `/zonas/[slug]`, `/desarrollos/[slug]`, `/guias/[slug]`.
 
-## Guardrails (qué NO hacer)
-- No inventar fotos de stock genéricas para rellenar huecos — usar el material real (piloto Xo'ok
-  en `content/grupoorve-raw/`, o SharePoint cuando esté disponible) o dejar el espacio pendiente.
-- No mostrar precios, m2 ni disponibilidad de `units` con `verified: false` como si fueran dato
-  confirmado — son borrador de scraping, marcarlos como tal si llegan a mostrarse antes de tener
-  el Excel/PDF real cargado.
-- No usar el copy reciclado con errores detectado en el piloto (ej. el bloque de Xo'ok que dice
-  "Ciudad Central Progreso") — revisar cada desarrollo contra su propio contenido antes de publicar.
-- No usar el verde de Orve como fondo grande de sección ni relleno de botón — rompe la disciplina
-  de acento discreto heredada de Lightship.
-- Nada de urgencia falsa (countdowns, "solo quedan X") si no viene de un dato real verificado.
-
-## Responsive
-- Pendiente de definir en el piloto de la primera pantalla real — pantalla candidata: home o
-  desarrollo Xo'ok (ya tiene contenido extraído). Se documenta aquí una vez construida y revisada.
+## Datos del piloto (fuente de verdad hoy)
+- Zona piloto: **Mérida Norte** (corredor periférico de crecimiento; keyword "casas/terrenos en
+  venta al norte de mérida", KD 15). Publicada porque tiene desarrollo colgado.
+- Desarrollo piloto: **Ciudad Central Mérida** (terrenos/townhouses/departamentos, preventa).
+  Precio/m²/ubicación exacta = `verified:false` (Orve no los publica; llegan de Oscar/SharePoint).
+- Imágenes reales disponibles: `public/desarrollos/ciudad-central-merida/casa-club.jpg` (foto) y
+  `masterplan.jpg`. Falta material distintivo de mayor calidad (SharePoint, fase aparte).
