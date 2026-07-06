@@ -76,20 +76,26 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: var(--font-sans-display);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
   --font-mono: var(--font-geist-mono);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Paleta del sitio público (ver DESIGN.md) — reference lock Lightship + verde real Orve */
-  --color-cream: #faf6ef;
-  --color-obsidian: #000000;
-  --color-pebble: #999999;
-  --color-driftwood: #a1a1a1;
-  --color-mist: #d9d9d9;
-  --color-orve-green: #3fcf30;
+  /* Paleta del sitio público (ver DESIGN.md) — terracota acento único, sin verde.
+     Reference lock Samara (pergamino) + Aspelin Reitan (bandas oscuras). */
+  --color-canvas: #f7f1e7; /* pergamino/sascab, fondo base */
+  --color-surface: #ffffff;
+  --color-surface-warm: #fcf8f1;
+  --color-ink: #1c1815; /* texto primario, casi negro cálido */
+  --color-ink-2: #6b6258; /* texto secundario, piedra */
+  --color-hairline: #e4dac9; /* líneas/bordes finos */
+  --color-terracota: #b5502e; /* ACENTO ÚNICO */
+  --color-terracota-deep: #8f3d20;
+  --color-espresso: #17120e; /* banda oscura cinematográfica */
+  --color-crema: #f2e7d6; /* texto sobre espresso */
 }
 
 @layer base {

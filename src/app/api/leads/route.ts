@@ -116,13 +116,13 @@ export async function POST(req: Request) {
       html: `
         <h2 style="margin:0 0 16px;font-family:sans-serif">Nuevo lead (${esc(source)})</h2>
         <table style="font-family:sans-serif;font-size:14px;border-collapse:collapse">
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Nombre</td><td><strong>${esc(name ?? "—")}</strong></td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Email</td><td>${esc(email ?? "—")}</td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Teléfono</td><td>${esc(phone ?? "—")}</td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Mensaje</td><td>${esc(message ?? "—")}</td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Zona</td><td>${esc(clean(d.zonaSlug) ?? "—")}</td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Desarrollo</td><td>${esc(clean(d.developmentSlug) ?? "—")}</td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#888">Origen</td><td>${esc(clean(d.sourceUrl) ?? "—")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Nombre</td><td><strong>${esc(name ?? "N/D")}</strong></td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Email</td><td>${esc(email ?? "N/D")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Teléfono</td><td>${esc(phone ?? "N/D")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Mensaje</td><td>${esc(message ?? "N/D")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Zona</td><td>${esc(clean(d.zonaSlug) ?? "N/D")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Desarrollo</td><td>${esc(clean(d.developmentSlug) ?? "N/D")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Origen</td><td>${esc(clean(d.sourceUrl) ?? "N/D")}</td></tr>
         </table>
       `.trim(),
     });

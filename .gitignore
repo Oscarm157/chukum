@@ -45,3 +45,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /e2e/__screenshots__/
+
+# capturas del piloto (artefactos, no versionar)
+.pilot-shots*

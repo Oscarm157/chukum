@@ -1,44 +1,58 @@
 import Link from "next/link";
+import { SITE, waLink } from "@/lib/site";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-mist bg-cream">
+    <footer className="border-t border-hairline bg-surface-warm">
       <div className="mx-auto max-w-[1440px] px-6 py-16 md:px-10">
-        <p className="max-w-md text-2xl tracking-[-0.01em]">
-          Cada vez más personas construyen su futuro con Grupo Orve.
+        <p className="max-w-lg font-display text-3xl leading-[1.1] tracking-[-0.02em] md:text-4xl">
+          Compra terreno o casa en el norte de Mérida, directo con el desarrollador.
         </p>
 
-        <div className="mt-12 grid grid-cols-2 gap-8 border-t border-mist pt-10 md:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-8 border-t border-hairline pt-10 md:grid-cols-4">
           <div>
-            <p className="text-sm text-pebble">Navegación</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-ink-2">Zonas</p>
             <div className="mt-3 flex flex-col gap-2 text-sm">
-              <Link href="#xook" className="transition hover:text-pebble">Xo&apos;ok</Link>
-              <Link href="#por-que-invertir" className="transition hover:text-pebble">
-                ¿Por qué invertir?
+              <Link href="/zonas/merida-norte" className="transition hover:text-terracota">
+                Mérida Norte
               </Link>
             </div>
           </div>
           <div>
-            <p className="text-sm text-pebble">Contacto</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-ink-2">Desarrollos</p>
+            <div className="mt-3 flex flex-col gap-2 text-sm">
+              <Link
+                href="/desarrollos/ciudad-central-merida"
+                className="transition hover:text-terracota"
+              >
+                Ciudad Central Mérida
+              </Link>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-ink-2">Contacto</p>
             <div className="mt-3 flex flex-col gap-2 text-sm">
               <a
-                href="https://www.grupoorve.com/"
+                href={waLink("Hola, quiero información de desarrollos en Yucatán.")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition hover:text-pebble"
+                className="transition hover:text-terracota"
               >
-                grupoorve.com
+                WhatsApp
               </a>
+              <Link href="/#contacto" className="transition hover:text-terracota">
+                Enviar mensaje
+              </Link>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-mist pt-6 text-xs text-driftwood md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-hairline pt-6 text-xs text-ink-2 md:flex-row md:items-center md:justify-between">
           <p className="max-w-2xl">
-            Cifras y specs de desarrollos mostrados son material de marketing publicado por Grupo
-            Orve, no constituyen inventario verificado ni oferta vinculante.
+            {SITE.name} comercializa desarrollos de Grupo Orve. Amenidades y avances mostrados son
+            material del desarrollador; disponibilidad y precios se confirman al solicitar informes.
           </p>
-          <p>© {new Date().getFullYear()}, Grupo Orve.</p>
+          <p>© {new Date().getFullYear()} {SITE.name}</p>
         </div>
       </div>
     </footer>

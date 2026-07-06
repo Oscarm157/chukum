@@ -5,12 +5,12 @@ import { neon } from "@neondatabase/serverless";
 const sql = neon(process.env.DATABASE_URL);
 
 const zonaDescripcion =
-  "El norte de Mérida es el corredor de mayor crecimiento de la ciudad: nuevos fraccionamientos y desarrollos residenciales conectados al periférico, a minutos de plazas comerciales, universidades y hospitales. Es donde se concentra la inversión en terreno y vivienda nueva por su plusvalía y proyección.";
+  "El norte de Mérida es el corredor de mayor crecimiento de la ciudad: nuevos fraccionamientos y desarrollos residenciales conectados al periférico, a minutos de plazas comerciales, universidades y hospitales. Es donde se concentra la inversión en terreno y vivienda nueva; la plusvalía y proyección se confirman con cada desarrollador.";
 const zonaPerfil =
-  "Inversión en terreno y vivienda nueva; familias que buscan fraccionamiento con amenidades y compradores que priorizan plusvalía en el corredor de crecimiento.";
+  "Inversión en terreno y vivienda nueva; familias que buscan fraccionamiento con amenidades y compradores que buscan plusvalía a futuro en el corredor de crecimiento.";
 
 const devDescripcion =
-  "Desarrollo integral conectado al periférico de Mérida, a minutos de las plazas comerciales y universidades más importantes. Ofrece terrenos residenciales, townhouses y departamentos dentro de un entorno con casas club, áreas verdes y servicios subterráneos.";
+  "Desarrollo conectado al periférico de Mérida, a minutos de las plazas comerciales y universidades más importantes. Ofrece terrenos residenciales, townhouses y departamentos dentro de un entorno con casas club, áreas verdes y servicios subterráneos.";
 const devAmenities = [
   "Áreas verdes",
   "Casas club",
