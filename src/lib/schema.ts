@@ -23,13 +23,38 @@ export type User = typeof users.$inferSelect;
 export type UnitType = "terreno" | "casa" | "departamento" | "townhouse" | "local_comercial";
 export type UnitStatus = "disponible" | "apartado" | "vendido";
 export type DevelopmentStatus = "preventa" | "en_construccion" | "entrega_inmediata" | "vendido";
-export type DataSource = "grupoorve_scrape" | "oscar_manual" | "excel_import";
+export type DataSource = "grupoorve_scrape" | "oscar_manual" | "excel_import" | "curado";
 export type ImageKind = "hero" | "gallery" | "floorplan" | "logo";
+
+// ===== Capa SEO: zonas/colonias de Yucatán (páginas programáticas) =====
+// Cada zona alimenta /zonas/[slug]. Gate anti thin-content: solo se publica
+// (`publicada`) si tiene data real (precio/plusvalía) o un desarrollo Orve colgado.
+export const zonas = pgTable("zonas", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  nombre: text("nombre").notNull(),
+  descripcionEs: text("descripcion_es"),
+  descripcionEn: text("descripcion_en"),
+  precioM2Mxn: integer("precio_m2_mxn"),
+  plusvaliaAnual: numeric("plusvalia_anual"), // % anual histórico
+  perfilComprador: text("perfil_comprador"),
+  amenidades: jsonb("amenidades").$type<string[]>(),
+  lat: numeric("lat"),
+  lng: numeric("lng"),
+  publicada: boolean("publicada").default(false).notNull(),
+  dataSource: text("data_source").$type<DataSource>().default("curado").notNull(),
+  verified: boolean("verified").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export type Zona = typeof zonas.$inferSelect;
 
 export const developments = pgTable("developments", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
+  zonaId: uuid("zona_id").references(() => zonas.id, { onDelete: "set null" }),
   city: text("city"),
   state: text("state"),
   country: text("country").default("MX").notNull(),
@@ -88,3 +113,30 @@ export const units = pgTable("units", {
 });
 
 export type Unit = typeof units.$inferSelect;
+
+// ===== Captura de leads (form público + WhatsApp) =====
+// El lead lo queda Oscar primero; el status `enviado_orve` marca el hand-off manual
+// al CRM de Grupo Orve. UTM + atribución por zona/desarrollo para medir qué página convierte.
+export type LeadSource = "form" | "whatsapp" | "manual";
+export type LeadStatus = "nuevo" | "contactado" | "enviado_orve" | "cerrado";
+
+export const leads = pgTable("leads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name"),
+  email: text("email"),
+  phone: text("phone"),
+  message: text("message"),
+  locale: text("locale").default("es").notNull(),
+  source: text("source").$type<LeadSource>().default("form").notNull(),
+  sourceUrl: text("source_url"), // página que originó el lead
+  zonaSlug: text("zona_slug"), // atribución opcional
+  developmentSlug: text("development_slug"),
+  utmSource: text("utm_source"),
+  utmCampaign: text("utm_campaign"),
+  utmMedium: text("utm_medium"),
+  status: text("status").$type<LeadStatus>().default("nuevo").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export type Lead = typeof leads.$inferSelect;

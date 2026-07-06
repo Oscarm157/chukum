@@ -218,3 +218,44 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================================
+   Vivir en Yucatán — home de relocation bajo /vivir-en-merida.
+   Bloque 100% aditivo (mismo patron que `.campus`): registra
+   tokens namespaced que resuelven SOLO dentro de `.vivir` y no
+   toca ningun token ni utilidad del corporativo verde. Reusa
+   los registros --color-surface / --color-ink que ya declara el
+   bloque de Campus (ambos apuntan a var(--surface)/var(--ink),
+   redefinidos por scope). El resto son tokens nuevos.
+   ============================================================ */
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface-warm: var(--surface-warm);
+  --color-ink-2: var(--ink-2);
+  --color-hairline: var(--hairline);
+  --color-terracota: var(--terracota);
+  --color-terracota-deep: var(--terracota-deep);
+  --color-espresso: var(--espresso);
+  --color-crema: var(--crema);
+  --font-display: var(--font-fraunces);
+}
+
+/* Paleta terracota + fuentes, activas solo bajo /vivir-en-merida.
+   Reference lock Samara (pergamino) + Aspelin Reitan (bandas oscuras).
+   --font-sans-display se redefine a Inter aqui: el utility `font-sans`
+   (inline sobre var(--font-sans-display)) rinde Inter dentro de .vivir
+   y sigue siendo DM Sans en /inicio y /campus. */
+.vivir {
+  --canvas: #f7f1e7; /* pergamino/sascab, fondo base */
+  --surface: #ffffff;
+  --surface-warm: #fcf8f1;
+  --ink: #1c1815; /* texto primario, casi negro cálido */
+  --ink-2: #6b6258; /* texto secundario, piedra */
+  --hairline: #e4dac9; /* líneas/bordes finos */
+  --terracota: #b5502e; /* ACENTO ÚNICO */
+  --terracota-deep: #8f3d20;
+  --espresso: #17120e; /* banda oscura cinematográfica */
+  --crema: #f2e7d6; /* texto sobre espresso */
+  --font-sans-display: var(--font-inter);
+}
