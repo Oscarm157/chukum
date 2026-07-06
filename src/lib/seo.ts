@@ -26,7 +26,7 @@ export function placeJsonLd(zona: Zona) {
     "@type": "Place",
     name: zona.nombre,
     description: zona.descripcionEs ?? undefined,
-    url: `${SITE.url}/zonas/${zona.slug}`,
+    url: `${SITE.url}/vivir-en-merida/zonas/${zona.slug}`,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Mérida",
@@ -45,7 +45,7 @@ export function realEstateListingJsonLd(
     "@type": "RealEstateListing",
     name: dev.name,
     description: dev.descriptionEs ?? undefined,
-    url: `${SITE.url}/desarrollos/${dev.slug}`,
+    url: `${SITE.url}/vivir-en-merida/desarrollos/${dev.slug}`,
     image: images.map((img) => `${SITE.url}${img.url}`),
     address: {
       "@type": "PostalAddress",
