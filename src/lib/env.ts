@@ -11,6 +11,9 @@ const schema = z.object({
   // CRM: destinatario de aviso de lead nuevo (opcional) e IA opcional para blog/resumen.
   LEAD_RECIPIENT: z.string().email().optional().or(z.literal("")),
   ANTHROPIC_API_KEY: z.string().optional(),
+  // Gate de la base de conocimientos privada /campus. Opcional: sin valor, /campus
+  // no deja entrar a nadie (el proxy redirige siempre a /campus/acceso).
+  KB_PASSWORD: z.string().optional(),
 });
 
 let cached: z.infer<typeof schema> | undefined;

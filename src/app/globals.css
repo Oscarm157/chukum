@@ -111,3 +111,110 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ============================================================
+   Campus ORVE — lector de notas privado bajo /campus. Bloque
+   100% aditivo: registra tokens namespaced (ink/paper/surface/
+   line/accent-*) que el sitio publico NO usa, y activa la
+   paleta calida solo dentro de `.campus`. No altera ningun
+   token ni utilidad existente fuera de ese scope.
+   ============================================================ */
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-ink: var(--accent-ink);
+  --font-serif: var(--font-campus-serif);
+}
+
+/* Paleta del lector, activa solo bajo /campus. Redefine tambien las variables
+   semanticas que shadcn usa (accent, primary-foreground, destructive) para que
+   dentro del campus lean verde Orve / papel, sin tocar el resto del sitio. */
+.campus {
+  --paper: #f7f6f2;
+  --surface: #fffffe;
+  --surface-2: #f1efe8;
+  --ink: #1c1b18;
+  --ink-soft: #4a4842;
+  --ink-mute: #86837a;
+  --ink-faint: #b4b0a6;
+  --line: #e6e3da;
+  --line-strong: #d6d2c6;
+  --accent: #1f7a4d;
+  --accent-soft: #2c8f5e;
+  --accent-tint: #e7f1ea;
+  --accent-ink: #164e33;
+  --primary-foreground: #ffffff;
+  --destructive: #c0392b;
+  --ring: var(--accent);
+}
+.campus ::selection {
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+/* ===== Prose del lector: ritmo de lectura comodo ===== */
+.campus .reader {
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.72;
+}
+.campus .reader p {
+  margin: 0 0 1.05em;
+  color: var(--ink-soft);
+}
+.campus .reader strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.campus .reader ul {
+  margin: 0 0 1.1em;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.campus .reader li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: var(--ink-soft);
+}
+.campus .reader li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.campus .reader a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Datos clave: lista mas densa, tabular para las cifras */
+.campus .reader-facts li {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus .kb-fade { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+.campus .kb-fade { animation: kbFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes kbFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
