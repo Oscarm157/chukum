@@ -1,10 +1,18 @@
 @AGENTS.md
 
-# Grupo-Orve
+# Chukum
 
-Sitio propio para promocionar propiedades (terrenos, casas, departamentos) de la
-desarrolladora Grupo Orve. Bootstrap desde el starter de plomería design-agnóstico
-de Oscar. Tier **Landing sin CRM**: no lleva panel /admin ni captura de leads.
+Sitio de **Chukum**, la correduría inmobiliaria de Oscar: comercializa desarrollos de
+terceros (terrenos, casas, departamentos) en la península de Yucatán, incluido Quintana
+Roo. Bootstrap desde el starter de plomería design-agnóstico de Oscar.
+
+**Restricción legal:** está prohibido usar la marca corporativa del desarrollador Grupo
+Orve en publicidad. Sus desarrollos SÍ se pueden nombrar por su nombre propio (Xo'ok,
+Ciudad Central, Ukana, Tulum Ha). El material de `/campus` es interno y va tras el gate.
+
+**Arquitectura de marca:** Chukum firma (es quien aparece como `Organization` en el
+JSON-LD, ver `BRAND` en `src/lib/site.ts`). "Vivir en Yucatán" (`CONTENT_BRAND`) es el
+motor de contenido SEO que cuelga de las rutas `/vivir-*`, no una entidad legal.
 
 ## Reglas (heredan del CLAUDE.md global de Oscar)
 - Seguridad de base: toda server action / route handler abre con `requireUser()`/`requireRole()`.

@@ -99,7 +99,7 @@ export function AddFicha() {
 
       <header className="kb-fade mt-8">
         <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-accent">
-          Campus ORVE
+          Campus Chukum
         </p>
         <h1 className="mt-2.5 font-serif text-[2.1rem] leading-[1.1] tracking-tight text-ink sm:text-[2.6rem]">
           Agregar video

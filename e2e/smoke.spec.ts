@@ -8,6 +8,6 @@ test("login renderiza y se captura", async ({ page }) => {
 
 test("home pública renderiza sin redirigir a login", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL(/\/inicio/);
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
 });

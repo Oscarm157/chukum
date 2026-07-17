@@ -83,13 +83,12 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Paleta del sitio público (ver DESIGN.md) — reference lock Lightship + verde real Orve */
+  /* Paleta del sitio público (ver DESIGN.md) — reference lock Lightship, sin acento cromático */
   --color-cream: #faf6ef;
   --color-obsidian: #000000;
   --color-pebble: #999999;
   --color-driftwood: #a1a1a1;
   --color-mist: #d9d9d9;
-  --color-orve-green: #3fcf30;
 }
 
 @layer base {
@@ -113,7 +112,7 @@
 }
 
 /* ============================================================
-   Campus ORVE — lector de notas privado bajo /campus. Bloque
+   Campus Chukum — lector de notas privado bajo /campus. Bloque
    100% aditivo: registra tokens namespaced (ink/paper/surface/
    line/accent-*) que el sitio publico NO usa, y activa la
    paleta calida solo dentro de `.campus`. No altera ningun
@@ -138,7 +137,7 @@
 
 /* Paleta del lector, activa solo bajo /campus. Redefine tambien las variables
    semanticas que shadcn usa (accent, primary-foreground, destructive) para que
-   dentro del campus lean verde Orve / papel, sin tocar el resto del sitio. */
+   dentro del campus lean verde / papel, sin tocar el resto del sitio. */
 .campus {
   --paper: #f7f6f2;
   --surface: #fffffe;

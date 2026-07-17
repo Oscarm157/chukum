@@ -32,7 +32,7 @@ export default async function AccesoPage({
         </div>
 
         <h1 className="font-serif text-[2rem] leading-[1.1] tracking-tight text-ink">
-          Campus ORVE
+          Campus Chukum
         </h1>
         <p className="mt-2 text-[0.95rem] leading-relaxed text-ink-soft">
           Base de conocimientos interna. Escribe la contraseña para entrar.

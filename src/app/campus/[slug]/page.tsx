@@ -19,7 +19,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const ficha = getFicha(slug);
   return {
-    title: ficha ? `${ficha.title} · Campus ORVE` : "Ficha · Campus ORVE",
+    title: ficha ? `${ficha.title} · Campus Chukum` : "Ficha · Campus Chukum",
     robots: { index: false, follow: false },
   };
 }

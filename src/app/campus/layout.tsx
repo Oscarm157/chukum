@@ -10,8 +10,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Campus ORVE · Base de conocimientos",
-  description: "Resúmenes de los videos de capacitación Campus ORVE.",
+  title: "Campus Chukum · Base de conocimientos",
+  description: "Resúmenes de los videos de capacitación Campus Chukum.",
   robots: { index: false, follow: false },
 };
 

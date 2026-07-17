@@ -13,16 +13,16 @@ El starter llega en blanco a propósito; el diseño es bespoke por proyecto.
   paisaje, no con chrome de producto. El copy de Xo'ok (cenotes, selva maya, santuario) pide
   exactamente este tratamiento editorial en vez de un layout de "tarjetas de propiedad" genérico.
 - Detalles prestados:
-  1. **Acento cromático:** se reemplaza el ember-orange de Lightship (#fa5c40) por el **verde real
-     de Orve** (~#3FCF30, muestreado del botón "Conoce Más" en grupoorve.com — no hay manual de
-     marca con hex oficial todavía). Misma disciplina que el naranja original: solo washes/strips
-     pequeños, nunca relleno grande de botón.
-  2. **Overlay de hero:** Lightship pone el texto directo sobre la foto sin tinte. Orve en su sitio
-     actual usa overlay oscuro sobre foto para legibilidad. Se prueba primero sin overlay (regla
-     Lightship) y solo se agrega tinte si en la foto real de un desarrollo el texto no se lee.
+  1. **Acento cromático: hoy no hay.** El sistema corre sin acento, solo crema / negro / grises. El
+     ember-orange de Lightship (#fa5c40) nunca se sustituyó: el token que lo iba a reemplazar se
+     declaró y jamás se usó en un solo pixel. Chukum define su acento en un proyecto de identidad
+     aparte; hasta entonces este documento no inventa uno.
+  2. **Overlay de hero:** Lightship pone el texto directo sobre la foto sin tinte. Aquí el hero usa
+     video de cielo claro, donde sin tinte el nav y el headline no se leen, así que lleva gradiente
+     arriba y abajo. Es la excepción justificada a la regla Lightship, no el default.
 
 ## Tema y atmósfera
-Editorial, cálido, fotografía por delante del texto. Sobrio con un acento verde medido — no
+Editorial, cálido, fotografía por delante del texto. Sobrio y sin acento cromático, no
 "vende-humos inmobiliario" (nada de badges rojos de urgencia, nada de countdown, nada de collage
 de logos de bancos).
 
@@ -31,9 +31,10 @@ de logos de bancos).
   blanco puro `#ffffff` solo para elevar cards/imagen sobre el crema.
 - Texto (fuerte / suave / tenue): negro `#000000` (fuerte, texto primario y nav) / gris `#999999`
   (suave, cuerpo secundario) / gris claro `#d9d9d9` (tenue, hairlines y separadores en reposo).
-- Acento (y cuándo se usa, con disciplina): verde Orve `~#3FCF30` (a confirmar hex oficial) — solo
-  como wash/franja de highlight o estado de foco. Nunca como fondo de sección completa ni relleno
-  de botón primario (no hay "botón primario" en este sistema, ver Componentes).
+- Acento: **no hay, y es a propósito.** El sistema se sostiene con crema, negro y grises. Cuando
+  Chukum defina el suyo, entra con la disciplina de Lightship: solo wash/franja de highlight o
+  estado de foco, nunca fondo de sección completa ni relleno de botón primario (no hay "botón
+  primario" en este sistema, ver Componentes).
 - Bordes / líneas: `#d9d9d9` hairline 1px en reposo, pasa a `#000000` en foco.
 - Estados (éxito / aviso / error): no definidos — este tier landing no tiene flujos transaccionales
   todavía (sin CRM). Se definen cuando exista un formulario real que los necesite.
@@ -50,8 +51,8 @@ de logos de bancos).
 
 ## Componentes
 - Botones (primario / secundario / ghost): **sin botones rellenos.** Todo es texto tipo ghost-link
-  (subrayado al hover) o chip tipo píldora (radio 100px, sin relleno ni borde). El verde de Orve no
-  se usa como fondo de botón — rompería la disciplina "acento discreto" del reference lock.
+  (subrayado al hover) o chip tipo píldora (radio 100px, sin relleno ni borde). Cuando exista un
+  acento, tampoco va como fondo de botón: rompería la disciplina "acento discreto" del reference lock.
 - Inputs / formularios: píldora, radio 100px, borde 1px `#d9d9d9` en reposo → `#000000` en foco,
   relleno crema o blanco, padding horizontal generoso (20px).
 - Cards / contenedores (elevación por capa o por sombra): sin sombras. Elevación = cambio de
@@ -80,8 +81,8 @@ de logos de bancos).
   el Excel/PDF real cargado.
 - No usar el copy reciclado con errores detectado en el piloto (ej. el bloque de Xo'ok que dice
   "Ciudad Central Progreso") — revisar cada desarrollo contra su propio contenido antes de publicar.
-- No usar el verde de Orve como fondo grande de sección ni relleno de botón — rompe la disciplina
-  de acento discreto heredada de Lightship.
+- No inventarle un acento cromático a Chukum aquí. Va en su proyecto de identidad; hasta entonces
+  el sistema corre sin acento, y eso no es un hueco que rellenar.
 - Nada de urgencia falsa (countdowns, "solo quedan X") si no viene de un dato real verificado.
 
 ## Responsive

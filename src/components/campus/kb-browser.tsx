@@ -32,7 +32,7 @@ export function KbBrowser({ temas }: { temas: TemaGroup[] }) {
       <header className="kb-fade">
         <div className="flex items-start justify-between gap-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-accent">
-            Campus ORVE
+            Campus Chukum
           </p>
           <Link
             href="/campus/agregar"
