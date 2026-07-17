@@ -18,12 +18,12 @@ export type User = typeof users.$inferSelect;
 // ===== Dominio: catálogo de propiedades que comercializa Chukum (capa 3, bespoke) =====
 // `developments` = el proyecto/desarrollo (ej. Xo'ok). `units` = unidad individual
 // vendible (terreno/casa/depa) con precio y m2 reales — se llena con el Excel/PDF
-// real de Oscar, NO con el scraping de marketing en content/grupoorve-raw/.
+// real de Oscar, NO con el scraping de marketing en content/raw/.
 
 export type UnitType = "terreno" | "casa" | "departamento" | "townhouse" | "local_comercial";
 export type UnitStatus = "disponible" | "apartado" | "vendido";
 export type DevelopmentStatus = "preventa" | "en_construccion" | "entrega_inmediata" | "vendido";
-export type DataSource = "grupoorve_scrape" | "oscar_manual" | "excel_import" | "curado";
+export type DataSource = "scrape" | "oscar_manual" | "excel_import" | "curado";
 export type ImageKind = "hero" | "gallery" | "floorplan" | "logo";
 
 // ===== Capa SEO: zonas/colonias de Yucatán (páginas programáticas) =====
@@ -65,7 +65,7 @@ export const developments = pgTable("developments", {
   amenities: jsonb("amenities").$type<string[]>(),
   sourceUrlEs: text("source_url_es"),
   sourceUrlEn: text("source_url_en"),
-  dataSource: text("data_source").$type<DataSource>().default("grupoorve_scrape").notNull(),
+  dataSource: text("data_source").$type<DataSource>().default("scrape").notNull(),
   verified: boolean("verified").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
@@ -115,10 +115,10 @@ export const units = pgTable("units", {
 export type Unit = typeof units.$inferSelect;
 
 // ===== Captura de leads (form público + WhatsApp) =====
-// El lead lo queda Oscar primero; el status `enviado_orve` marca el hand-off manual al CRM
+// El lead lo queda Oscar primero; el status `enviado_crm` marca el hand-off manual al CRM
 // del desarrollador. UTM + atribución por zona/desarrollo para medir qué página convierte.
 export type LeadSource = "form" | "whatsapp" | "manual";
-export type LeadStatus = "nuevo" | "contactado" | "enviado_orve" | "cerrado";
+export type LeadStatus = "nuevo" | "contactado" | "enviado_crm" | "cerrado";
 
 export const leads = pgTable("leads", {
   id: uuid("id").primaryKey().defaultRandom(),

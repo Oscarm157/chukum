@@ -3,7 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 
 // El markdown es la fuente de verdad. Las fichas viven en carpetas por tema dentro
-// de content/campus (p. ej. content/campus/Induccion/01-campus-orve.md). Agregar una
+// de content/campus (p. ej. content/campus/Induccion/01-campus-chukum.md). Agregar una
 // ficha = agregar un .md dentro de una carpeta de tema. El sitio las toma solo.
 
 const CONTENT_ROOT = path.join(process.cwd(), "content", "campus");

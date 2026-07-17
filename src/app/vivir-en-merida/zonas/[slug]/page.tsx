@@ -89,7 +89,7 @@ export default async function ZonaPage({
         {/* Hero de zona */}
         <section className="relative flex h-[62vh] min-h-[420px] w-full items-end overflow-hidden">
           <ParallaxImage
-            src={heroImg?.url ?? "/hero/orve-merida-plaza-grande.webp"}
+            src={heroImg?.url ?? "/hero/merida-plaza-grande.webp"}
             alt={heroImg?.alt ?? `Zona ${zona.nombre}, Yucatán`}
             priority
             className="absolute inset-0 h-full w-full"

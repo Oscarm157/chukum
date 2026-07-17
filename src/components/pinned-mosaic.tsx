@@ -19,7 +19,7 @@ interface MosaicPhoto {
 
 const PHOTOS: MosaicPhoto[] = [
   {
-    src: "/hero/orve-merida-plaza-grande.webp",
+    src: "/hero/merida-plaza-grande.webp",
     alt: "Vista aérea de la Plaza Grande y la catedral de Mérida, Yucatán",
     restClassName: "top-[7%] left-[3%] w-[26vw] min-w-[220px] aspect-[4/3]",
     from: { x: -340, y: 90 },
@@ -28,7 +28,7 @@ const PHOTOS: MosaicPhoto[] = [
     rotateTo: -4,
   },
   {
-    src: "/hero/orve-cenote.webp",
+    src: "/hero/cenote.webp",
     alt: "Cenote en la selva de Yucatán",
     restClassName: "bottom-[9%] left-[10%] w-[19vw] min-w-[160px] aspect-[4/5]",
     from: { x: -160, y: 260 },
@@ -46,7 +46,7 @@ const PHOTOS: MosaicPhoto[] = [
     rotateTo: 5,
   },
   {
-    src: "/hero/orve-familia-playa.webp",
+    src: "/hero/familia-playa.webp",
     alt: "Familia en la playa de Yucatán",
     restClassName: "bottom-[12%] right-[7%] w-[17vw] min-w-[150px] aspect-[3/4]",
     from: { x: 220, y: 240 },

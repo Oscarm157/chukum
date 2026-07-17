@@ -11,26 +11,26 @@ const VALUE_CARDS = [
   {
     title: "Seguridad",
     body: "Yucatán se mantiene como el estado más seguro de México, según múltiples índices nacionales, gracias a sus bajos niveles de delincuencia.",
-    image: "/hero/orve-card-seguridad.webp",
+    image: "/hero/card-seguridad.webp",
     alt: "Centro histórico de Mérida, Yucatán",
   },
   {
     title: "Certeza legal",
     body: "Cada desarrollo del catálogo cuenta con permisos municipales y estatales y propiedad legal de los terrenos, documentación que revisas antes de firmar.",
-    image: "/hero/orve-card-certeza-legal.webp",
+    image: "/hero/card-certeza-legal.webp",
     alt: "Documentación de un desarrollo inmobiliario",
   },
   {
     title: "Riqueza hídrica",
     body: "Yucatán tiene una de las reservas de agua subterránea más importantes de México, gracias a su red de cenotes y acuíferos naturales.",
-    image: "/hero/orve-card-riqueza-hidrica.webp",
+    image: "/hero/card-riqueza-hidrica.webp",
     alt: "Cenote en la selva de Yucatán",
   },
 ] as const;
 
 const XOOK_STACK: StackSlide[] = [
   {
-    src: "/hero/orve-cenote.webp",
+    src: "/hero/cenote.webp",
     alt: "Cenote en la selva de Yucatán",
     eyebrow: "El origen",
     title: "Dzonot, portales de agua cristalina",
@@ -68,25 +68,25 @@ const DEVELOPMENTS = [
   {
     name: "Ciudad Central Mérida",
     place: "Mérida, Yucatán",
-    image: "/hero/orve-ccm-casa-club.webp",
+    image: "/hero/ccm-casa-club.webp",
     alt: "Casa club y alberca, Ciudad Central Mérida",
   },
   {
     name: "Ciudad Central Progreso",
     place: "Progreso, Yucatán · frente al mar",
-    image: "/hero/orve-ccp-pabellon.webp",
+    image: "/hero/ccp-pabellon.webp",
     alt: "Acceso del desarrollo Ciudad Central Progreso",
   },
   {
     name: "Ukana Playa del Carmen",
     place: "Playa del Carmen, Quintana Roo",
-    image: "/hero/orve-ukana-pdc-alberca.webp",
+    image: "/hero/ukana-pdc-alberca.webp",
     alt: "Alberca entregada, Ukana Playa del Carmen",
   },
   {
     name: "Tulum Ha",
     place: "Tulum, Quintana Roo · en construcción",
-    image: "/hero/orve-tulum-ha-avance.webp",
+    image: "/hero/tulum-ha-avance.webp",
     alt: "Avance de obra real, Tulum Ha",
   },
 ] as const;
@@ -102,11 +102,11 @@ export default function HomePage() {
           muted
           loop
           playsInline
-          poster="/hero/orve-club-playa-progreso.webp"
+          poster="/hero/club-playa-progreso.webp"
           className="absolute inset-0 h-full w-full object-cover"
         >
-          <source src="/hero/orve-hero.webm" type="video/webm" />
-          <source src="/hero/orve-hero.mp4" type="video/mp4" />
+          <source src="/hero/hero.webm" type="video/webm" />
+          <source src="/hero/hero.mp4" type="video/mp4" />
         </video>
         {/* Foto/video real de cielo claro: sin tinte el nav y el headline no se leen (regla
             Lightship de DESIGN.md: sin overlay primero, se agrega solo si no hay legibilidad) */}
@@ -124,7 +124,7 @@ export default function HomePage() {
 
       {/* Mosaico pineado — el hero se encoge a un card mientras 4 fotos reales entran dispersas */}
       <PinnedMosaic
-        heroSrc="/hero/orve-club-playa-progreso.webp"
+        heroSrc="/hero/club-playa-progreso.webp"
         heroAlt="Villa y club de playa frente al mar, Ciudad Central Progreso"
       />
 
@@ -150,7 +150,7 @@ export default function HomePage() {
       <Reveal>
         <section className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
           <Image
-            src="/hero/orve-familia-playa-wide.webp"
+            src="/hero/familia-playa-wide.webp"
             alt="Familia disfrutando la playa en Yucatán"
             fill
             className="object-cover"

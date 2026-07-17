@@ -178,7 +178,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'grupoorve_scrape'"
+          "default": "'scrape'"
         },
         "verified": {
           "name": "verified",

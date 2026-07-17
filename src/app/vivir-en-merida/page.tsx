@@ -58,7 +58,7 @@ export default async function HomePage() {
         {/* (a) Hero full-bleed cinematográfico */}
         <section className="relative flex h-[100dvh] min-h-[620px] w-full items-end overflow-hidden">
           <ParallaxImage
-            src="/hero/orve-merida-plaza-grande.webp"
+            src="/hero/merida-plaza-grande.webp"
             alt="Centro de Mérida, Yucatán, al atardecer"
             priority
             className="absolute inset-0 h-full w-full"
@@ -108,7 +108,7 @@ export default async function HomePage() {
         <section className="relative overflow-hidden bg-espresso text-crema">
           <div className="absolute inset-0 opacity-30">
             <Image
-              src="/hero/orve-merida-catedral.webp"
+              src="/hero/merida-catedral.webp"
               alt=""
               fill
               sizes="100vw"
@@ -174,7 +174,7 @@ export default async function HomePage() {
                 <div className="grid md:grid-cols-2">
                   <div className="relative min-h-[320px] overflow-hidden md:min-h-[460px]">
                     <Image
-                      src={leadZonaImage?.url ?? "/hero/orve-merida-plaza-grande.webp"}
+                      src={leadZonaImage?.url ?? "/hero/merida-plaza-grande.webp"}
                       alt={leadZonaImage?.alt ?? `Desarrollo en ${leadZona.nombre}`}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"

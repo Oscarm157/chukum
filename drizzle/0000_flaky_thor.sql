@@ -24,7 +24,7 @@ CREATE TABLE "developments" (
 	"amenities" jsonb,
 	"source_url_es" text,
 	"source_url_en" text,
-	"data_source" text DEFAULT 'grupoorve_scrape' NOT NULL,
+	"data_source" text DEFAULT 'scrape' NOT NULL,
 	"verified" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
