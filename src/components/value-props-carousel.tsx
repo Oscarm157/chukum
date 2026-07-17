@@ -14,7 +14,7 @@ export function ValuePropsCarousel({ items }: { items: readonly ValueCard[] }) {
   return (
     <Carousel
       items={items}
-      ariaLabel="¿Por qué invertir en Grupo Orve?"
+      ariaLabel="¿Por qué invertir en Yucatán?"
       renderItem={(v) => (
         <div className="relative aspect-[4/3] overflow-hidden rounded-[20px]">
           <Image src={v.image} alt={v.alt} fill className="object-cover" sizes="40vw" />

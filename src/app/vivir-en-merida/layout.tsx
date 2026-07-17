@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Vivir en Mérida",
   },
   description:
-    "Guía de zonas y desarrollos para comprar terreno, casa o departamento en el norte de Mérida, directo con el desarrollador.",
+    "Guía de zonas y desarrollos para comprar terreno, casa o departamento en el norte de Mérida.",
 };
 
 export default function VivirLayout({

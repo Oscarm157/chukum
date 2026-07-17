@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="border-t border-hairline bg-surface-warm">
       <div className="mx-auto max-w-[1440px] px-6 py-16 md:px-10">
         <p className="max-w-lg font-display text-3xl leading-[1.1] tracking-[-0.02em] md:text-4xl">
-          Compra terreno o casa en el norte de Mérida, directo con el desarrollador.
+          Compra terreno o casa en el norte de Mérida.
         </p>
 
         <div className="mt-12 grid grid-cols-2 gap-8 border-t border-hairline pt-10 md:grid-cols-4">
@@ -49,7 +49,7 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-hairline pt-6 text-xs text-ink-2 md:flex-row md:items-center md:justify-between">
           <p className="max-w-2xl">
-            {SITE.name} comercializa desarrollos de Grupo Orve. Amenidades y avances mostrados son
+            {SITE.name} comercializa desarrollos de terceros. Amenidades y avances mostrados son
             material del desarrollador; disponibilidad y precios se confirman al solicitar informes.
           </p>
           <p>© {new Date().getFullYear()} {SITE.name}</p>
