@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
-import { SITE } from "@/lib/site";
+import { BRAND } from "@/lib/site";
 
 // Sistema de diseño de "Vivir en Yucatán" scopeado a /vivir-en-merida: terracota +
 // Fraunces (display) + Inter (cuerpo). Las variables de fuente se cuelgan del wrapper
@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
+  metadataBase: new URL(BRAND.url),
   title: {
     default: "Vivir en Mérida | Zonas y desarrollos del norte de la ciudad",
     template: "%s | Vivir en Mérida",

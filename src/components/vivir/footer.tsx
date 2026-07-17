@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE, waLink } from "@/lib/site";
+import { CONTENT_BRAND, waLink } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -49,10 +49,10 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-hairline pt-6 text-xs text-ink-2 md:flex-row md:items-center md:justify-between">
           <p className="max-w-2xl">
-            {SITE.name} comercializa desarrollos de terceros. Amenidades y avances mostrados son
+            {CONTENT_BRAND.name} comercializa desarrollos de terceros. Amenidades y avances mostrados son
             material del desarrollador; disponibilidad y precios se confirman al solicitar informes.
           </p>
-          <p>© {new Date().getFullYear()} {SITE.name}</p>
+          <p>© {new Date().getFullYear()} {CONTENT_BRAND.name}</p>
         </div>
       </div>
     </footer>

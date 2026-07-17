@@ -1,4 +1,4 @@
-import { SITE } from "@/lib/site";
+import { BRAND } from "@/lib/site";
 import type { Development, DevelopmentImage, Zona } from "@/lib/schema";
 
 // Builders de JSON-LD tipados. Se serializan en <script type="application/ld+json">.
@@ -15,7 +15,7 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]) {
       "@type": "ListItem",
       position: i + 1,
       name: it.name,
-      item: `${SITE.url}${it.url}`,
+      item: `${BRAND.url}${it.url}`,
     })),
   };
 }
@@ -26,7 +26,7 @@ export function placeJsonLd(zona: Zona) {
     "@type": "Place",
     name: zona.nombre,
     description: zona.descripcionEs ?? undefined,
-    url: `${SITE.url}/vivir-en-merida/zonas/${zona.slug}`,
+    url: `${BRAND.url}/vivir-en-merida/zonas/${zona.slug}`,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Mérida",
@@ -45,8 +45,8 @@ export function realEstateListingJsonLd(
     "@type": "RealEstateListing",
     name: dev.name,
     description: dev.descriptionEs ?? undefined,
-    url: `${SITE.url}/vivir-en-merida/desarrollos/${dev.slug}`,
-    image: images.map((img) => `${SITE.url}${img.url}`),
+    url: `${BRAND.url}/vivir-en-merida/desarrollos/${dev.slug}`,
+    image: images.map((img) => `${BRAND.url}${img.url}`),
     address: {
       "@type": "PostalAddress",
       addressLocality: dev.city ?? "Mérida",
@@ -61,8 +61,8 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: SITE.name,
-    url: SITE.url,
+    name: BRAND.name,
+    url: BRAND.url,
     areaServed: { "@type": "AdministrativeArea", name: "Yucatán, México" },
   };
 }
