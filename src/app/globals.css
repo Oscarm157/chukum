@@ -258,3 +258,61 @@
   --crema: #f2e7d6; /* texto sobre espresso */
   --font-sans-display: var(--font-inter);
 }
+
+/* ============================================================
+   Chukum V2 — landing/funnel de conversión (home nueva en /inicio).
+   Dirección propia anclada en el material chukum: el estuco mineral
+   cálido yucateco. Bloque 100% aditivo, mismo patrón que .vivir /
+   .campus: reusa los registros --color-canvas/surface/ink/ink-2/
+   hairline/espresso/crema (redefinidos por scope aquí) y añade solo
+   los tokens de acento nuevos. No toca ningún token fuera de .chukum.
+   Ver DESIGN-chukum.md.
+   ============================================================ */
+
+@theme inline {
+  --color-chukum: var(--chukum);
+  --color-chukum-deep: var(--chukum-deep);
+  --color-cenote: var(--cenote);
+  --color-cenote-deep: var(--cenote-deep);
+}
+
+.chukum {
+  --canvas: #f4efe6; /* encalado / lime-wash, fondo base */
+  --surface: #fbf7ef; /* superficie cálida elevada (cards) */
+  --surface-warm: #efe7d8;
+  --ink: #241e17; /* texto primario, casi negro cálido */
+  --ink-2: #6e6353; /* texto secundario, piedra */
+  --hairline: #e4dac9; /* líneas/bordes finos */
+  --chukum: #b9a489; /* SUPERFICIE FIRMA: estuco greige */
+  --chukum-deep: #8c7659; /* estuco saturado, profundidad */
+  --cenote: #2e7d6b; /* ACENTO ÚNICO: agua de cenote */
+  --cenote-deep: #245f52;
+  --espresso: #1e1a16; /* banda oscura mineral */
+  --crema: #f2e7d6; /* texto sobre espresso */
+  --font-sans-display: var(--font-inter);
+}
+.chukum ::selection {
+  background: var(--cenote);
+  color: var(--canvas);
+}
+
+/* Grano de estuco: textura mineral sutil sobre superficies clave. Es sistema de
+   material (chukum), no un "efectito"; se aplica a bandas y cards, no a todo. */
+.chukum-grain {
+  position: relative;
+  isolation: isolate;
+}
+.chukum-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+}
+.chukum-grain > * {
+  position: relative;
+  z-index: 1;
+}
