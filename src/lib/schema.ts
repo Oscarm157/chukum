@@ -18,7 +18,7 @@ export type User = typeof users.$inferSelect;
 // ===== Dominio: catálogo de propiedades que comercializa Chukum (capa 3, bespoke) =====
 // `developments` = el proyecto/desarrollo (ej. Xo'ok). `units` = unidad individual
 // vendible (terreno/casa/depa) con precio y m2 reales — se llena con el Excel/PDF
-// real de Oscar, NO con el scraping de marketing en content/raw/.
+// real de Oscar, NO con material de marketing sin verificar.
 
 export type UnitType = "terreno" | "casa" | "departamento" | "townhouse" | "local_comercial";
 export type UnitStatus = "disponible" | "apartado" | "vendido";

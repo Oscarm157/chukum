@@ -74,8 +74,8 @@ de logos de bancos).
   `prefers-reduced-motion` respetado (fallback: aparecen ya en posición final, sin animar).
 
 ## Guardrails (qué NO hacer)
-- No inventar fotos de stock genéricas para rellenar huecos — usar el material real (piloto Xo'ok
-  en `content/grupoorve-raw/`, o SharePoint cuando esté disponible) o dejar el espacio pendiente.
+- No inventar fotos de stock genéricas para rellenar huecos — usar el material real (piloto Xo'ok,
+  o SharePoint cuando esté disponible) o dejar el espacio pendiente.
 - No mostrar precios, m2 ni disponibilidad de `units` con `verified: false` como si fueran dato
   confirmado — son borrador de scraping, marcarlos como tal si llegan a mostrarse antes de tener
   el Excel/PDF real cargado.

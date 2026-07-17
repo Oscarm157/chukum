@@ -4,12 +4,12 @@ title: Introducción al módulo de proyectos
 tema: Producto
 duracion: "0:27"
 tipo: Bienvenida
-tags: [campus-orve, proyectos, producto, induccion]
+tags: [campus, proyectos, producto, induccion]
 ---
 # 01 · Introducción al módulo de proyectos
 
 ## Resumen
-Video de apertura del módulo de proyectos. Explica que el módulo contiene la información esencial de los proyectos que comercializa Orve: ubicación, precios, esquemas de financiamiento y puntos clave de cada uno.
+Video de apertura del módulo de proyectos. Explica que el módulo contiene la información esencial de los proyectos que comercializa la desarrolladora: ubicación, precios, esquemas de financiamiento y puntos clave de cada uno.
 
 ## Datos clave
 - El módulo cubre: ubicación, precios, esquemas de financiamiento y puntos clave de los proyectos.

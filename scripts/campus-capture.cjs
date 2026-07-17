@@ -55,7 +55,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.screenshot({ path: `${OUT}/3-indice-busqueda.png`, fullPage: true });
     console.log("shot: indice-busqueda");
 
-    await page.goto(`${BASE}/campus/induccion-02-quien-es-grupo-orve`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE}/campus/induccion-02-quien-es-la-desarrolladora`, { waitUntil: "networkidle" });
     await page.screenshot({ path: `${OUT}/4-ficha.png`, fullPage: true });
     console.log("shot: ficha");
     await ctx.close();

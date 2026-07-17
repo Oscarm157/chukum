@@ -1,5 +1,5 @@
 // Genera el video del hero con Kling (Replicate), image-to-video desde la foto
-// real del club de playa de Ciudad Central Progreso (public/hero/orve-club-playa-progreso.webp).
+// real del club de playa de Ciudad Central Progreso (public/hero/club-playa-progreso.webp).
 // Uso: REPLICATE_API_TOKEN=... node scripts/gen-hero-video.mjs
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -11,8 +11,8 @@ if (!TOKEN) {
 }
 
 const MODEL = "kwaivgi/kling-v3-video";
-const OUT = path.resolve("public/hero/orve-hero.mp4");
-const START_IMAGE = path.resolve("public/hero/orve-club-playa-progreso.webp");
+const OUT = path.resolve("public/hero/hero.mp4");
+const START_IMAGE = path.resolve("public/hero/club-playa-progreso.webp");
 
 const imgBuf = await fs.readFile(START_IMAGE);
 const dataUri = `data:image/webp;base64,${imgBuf.toString("base64")}`;

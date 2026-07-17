@@ -6,7 +6,7 @@ Campus. Sin `git merge` (historias sin raíz común, colisión en cada archivo):
 sobre la rama `unificacion` (desde `main`), que al aprobarse se vuelve `main`.
 
 ## Fuente de verdad / arquitectura
-- Base: `main` de Grupo-Orve (ya tiene `/campus` mergeado en `3c62d75`).
+- Base: `main` de Chukum (ya tiene `/campus` mergeado en `3c62d75`).
 - Se traen las piezas de la rama `vivir-en-yucatan` (working dir `/root/vivir-en-yucatan`).
 - Schema: se adopta el de vivir (superset: agrega `zonas` + `leads` + FK `zonaId`).
 - DB: **la Neon de vivir** (ya tiene developments + zonas + leads + piloto). El sitio unificado
@@ -14,7 +14,7 @@ sobre la rama `unificacion` (desde `main`), que al aprobarse se vuelve `main`.
 
 ## Route map (decidido con Oscar)
 - `/` → **redirect a `/inicio`**.
-- `/inicio` → home **corporativa** (la actual `main` `src/app/page.tsx`), diseño verde Orve.
+- `/inicio` → home **corporativa** (la actual `main` `src/app/page.tsx`), diseño verde corporativo.
 - `/vivir-en-merida` → home **de vivir**, diseño terracota. Sus sub-rutas **anidadas**:
   - `/vivir-en-merida/zonas/[slug]`
   - `/vivir-en-merida/desarrollos/[slug]`
@@ -24,7 +24,7 @@ sobre la rama `unificacion` (desde `main`), que al aprobarse se vuelve `main`.
 ## Coexistencia de diseño (clave)
 Dos sistemas en un mismo sitio, scopeados por wrapper de sección (mismo patrón que ya se usó en
 `/campus`):
-- Corporativo verde Orve (DM Sans) → scopeado a `/inicio` (y layout raíz por defecto).
+- Corporativo verde (DM Sans) → scopeado a `/inicio` (y layout raíz por defecto).
 - Vivir terracota (Fraunces + Inter) → scopeado a `/vivir-en-merida` con su propio wrapper/layout.
 - Campus (verde, serif) → ya scopeado en `.campus`.
 Fuentes: cargar las familias necesarias en el layout raíz (o sub-layouts por sección). Tokens de cada

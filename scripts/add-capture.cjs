@@ -21,15 +21,15 @@ title: Ukana Playa del Carmen
 tema: Producto
 duracion: "3:12"
 tipo: Producto
-tags: [campus-orve, producto, ukana, playa-del-carmen]
+tags: [campus, producto, ukana, playa-del-carmen]
 ---
 # 04 · Ukana Playa del Carmen
 
 ## Resumen
-Recorrido por Ukana Playa del Carmen, desarrollo vertical de Grupo Orve. Repasa ubicacion, amenidades y estado de entrega.
+Recorrido por Ukana Playa del Carmen, desarrollo vertical de la desarrolladora. Repasa ubicacion, amenidades y estado de entrega.
 
 ## Datos clave
-- Desarrollo vertical entregado por Grupo Orve.
+- Desarrollo vertical entregado por la desarrolladora.
 - Ubicacion: Playa del Carmen, Quintana Roo.
 - Amenidades: alberca, roof garden, gimnasio.
 

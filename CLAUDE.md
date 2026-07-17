@@ -6,9 +6,9 @@ Sitio de **Chukum**, la correduría inmobiliaria de Oscar: comercializa desarrol
 terceros (terrenos, casas, departamentos) en la península de Yucatán, incluido Quintana
 Roo. Bootstrap desde el starter de plomería design-agnóstico de Oscar.
 
-**Restricción legal:** está prohibido usar la marca corporativa del desarrollador Grupo
-Orve en publicidad. Sus desarrollos SÍ se pueden nombrar por su nombre propio (Xo'ok,
-Ciudad Central, Ukana, Tulum Ha). El material de `/campus` es interno y va tras el gate.
+**Restricción legal:** está prohibido usar la marca corporativa del desarrollador en
+publicidad. Sus desarrollos SÍ se pueden nombrar por su nombre propio (Xo'ok, Ciudad
+Central, Ukana, Tulum Ha). El material de `/campus` es interno y va tras el gate.
 
 **Arquitectura de marca:** Chukum firma (es quien aparece como `Organization` en el
 JSON-LD, ver `BRAND` en `src/lib/site.ts`). "Vivir en Yucatán" (`CONTENT_BRAND`) es el
@@ -38,7 +38,5 @@ motor de contenido SEO que cuelga de las rutas `/vivir-*`, no una entidad legal.
 ## Dominio: catálogo de propiedades
 - `developments` (el proyecto/desarrollo, ej. Xo'ok) y `units` (unidad vendible: terreno/casa/
   depa, con precio y m2 reales) en `src/lib/schema.ts`. Campo `dataSource`/`verified` en ambas:
-  todo lo que entra por scraping de `content/grupoorve-raw/` nace `grupoorve_scrape` /
-  `verified: false`. Nunca confundir con datos reales confirmados por Oscar (Excel/PDF).
-- `content/grupoorve-raw/`: copy e imágenes de referencia extraídos de grupoorve.com (material
-  de referencia de marketing, NO catálogo/inventario real).
+  todo lo que entra por scraping nace `scrape` / `verified: false`. Nunca confundir con datos
+  reales confirmados por Oscar (Excel/PDF).
