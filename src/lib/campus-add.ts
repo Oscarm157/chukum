@@ -9,7 +9,7 @@ import { KB_COOKIE, expectedToken, constantTimeEqual } from "@/lib/campus-gate";
 // - prompt de IA que convierte el transcript crudo en ficha,
 // - calculo de la ruta del .md (carpeta por tema, correlativo, slug).
 
-export const CAMPUS_REPO = "Oscarm157/grupo-orve";
+export const CAMPUS_REPO = "Oscarm157/chukum";
 export const CAMPUS_BRANCH = "main";
 const CONTENT_ROOT = path.join(process.cwd(), "content", "campus");
 

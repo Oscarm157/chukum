@@ -6,7 +6,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const { chromium } = require("@playwright/test");
 
-const DIR = "/root/Grupo-Orve";
+const DIR = "/root/chukum";
 const PORT = 4330;
 const BASE = `http://127.0.0.1:${PORT}`;
 const OUT = `${DIR}/.campus-shots`;
