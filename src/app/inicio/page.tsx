@@ -71,38 +71,44 @@ export default function ChukumHome() {
           <source src="/hero/hero.webm" type="video/webm" />
           <source src="/hero/hero.mp4" type="video/mp4" />
         </video>
-        {/* Solo un gradiente suave arriba para el nav: el video se queda brillante. */}
+        {/* Gradiente suave arriba (para el nav) y scrim SOLO en la franja inferior:
+            la mitad de arriba del video queda limpia y brillante. */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-espresso/45 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[64%] bg-gradient-to-t from-espresso/90 via-espresso/55 to-transparent md:h-[50%]" />
 
-        {/* Panel de vidrio esmerilado (glass) bottom-left: legibilidad sin oscurecer
-            la imagen, look moderno. El kicker con índice es el hilo editorial. */}
-        <div className="relative z-10 flex h-full w-full items-end p-4 md:p-6">
-          <div className="w-full max-w-xl rounded-[28px] border border-crema/15 bg-espresso/40 p-6 shadow-[0_20px_60px_-20px_rgba(20,16,14,0.6)] backdrop-blur-xl md:p-9">
+        {/* Franja horizontal al pie: la imagen luce, el contenido vive abajo. El kicker
+            con índice conserva el hilo editorial. */}
+        <div className="relative z-10 w-full px-5 pb-24 md:px-10 md:pb-12">
+          <div className="mx-auto max-w-[1400px] border-t border-crema/15 pt-6">
             <div className="flex items-center gap-3 text-crema/85">
               <span className="font-display text-base leading-none">01</span>
               <span className="h-px w-10 bg-crema/40" />
               <span className="text-xs uppercase tracking-[0.24em]">Península de Yucatán</span>
             </div>
-            <h1 className="mt-5 font-display text-4xl leading-[1.0] tracking-[-0.02em] text-crema md:text-6xl">
-              Tu casa, terreno o departamento en la península de Yucatán
-            </h1>
-            <p className="mt-5 text-base leading-relaxed text-crema/85 md:text-lg">
-              Hay muchos desarrollos y es fácil perderse. Contesta unas preguntas y ves las que van
-              contigo.
-            </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#quiz"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-cenote px-7 py-3.5 text-sm font-medium text-canvas transition hover:bg-cenote-deep"
-              >
-                Encuentra tu desarrollo <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href="#desarrollos"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-crema/40 px-7 py-3.5 text-sm text-crema transition hover:bg-crema/10"
-              >
-                Ver desarrollos
-              </a>
+            <div className="mt-5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
+              <div className="max-w-3xl">
+                <h1 className="font-display text-3xl leading-[1.03] tracking-[-0.02em] text-crema md:text-[3.2rem] md:leading-[1.0]">
+                  Tu casa, terreno o departamento en la península de Yucatán
+                </h1>
+                <p className="mt-4 max-w-xl text-base leading-relaxed text-crema/85">
+                  Hay muchos desarrollos y es fácil perderse. Contesta unas preguntas y ves las que
+                  van contigo.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-3 sm:flex-row md:pb-1">
+                <a
+                  href="#quiz"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-cenote px-7 py-3.5 text-sm font-medium text-canvas transition hover:bg-cenote-deep"
+                >
+                  Encuentra tu desarrollo <ArrowRight className="h-4 w-4" />
+                </a>
+                <a
+                  href="#desarrollos"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-crema/40 px-7 py-3.5 text-sm text-crema transition hover:bg-crema/10"
+                >
+                  Ver desarrollos
+                </a>
+              </div>
             </div>
           </div>
         </div>
