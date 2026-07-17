@@ -140,3 +140,35 @@ export const leads = pgTable("leads", {
 });
 
 export type Lead = typeof leads.$inferSelect;
+
+// ---- Comentarios del sitio (widget de anotaciones tipo BugHerd) ----
+export type FeedbackStatus = "open" | "resolved";
+
+// Enlaces de feedback: un token por ronda de revisión. El widget del sitio solo aparece
+// si la URL trae un token activo (?fb=). Se crean/revocan desde /admin/feedback.
+export const feedbackLinks = pgTable("feedback_links", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  token: text("token").notNull().unique(),
+  label: text("label").notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Notas anónimas que se dejan al hacer click en el sitio, con contexto del elemento y
+// posición en el documento para ubicar el pin.
+export const feedbackNotes = pgTable("feedback_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  linkId: uuid("link_id")
+    .notNull()
+    .references(() => feedbackLinks.id, { onDelete: "cascade" }),
+  path: text("path").notNull(),
+  note: text("note").notNull(),
+  selector: text("selector"),
+  elementText: text("element_text"),
+  xPct: integer("x_pct"),
+  yPct: integer("y_pct"),
+  viewportW: integer("viewport_w"),
+  pageTitle: text("page_title"),
+  status: text("status").$type<FeedbackStatus>().default("open").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});

@@ -3,6 +3,7 @@ import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { FeedbackWidget } from "@/components/site/FeedbackWidget";
 
 // DM Sans: geométrica, tracking apretado — sustituto real recomendado para F37Bolton
 // (referencia Lightship, ver DESIGN.md) en vez del Geist por default del starter.
@@ -32,6 +33,7 @@ export default function RootLayout({
         <SmoothScroll />
         {children}
         <Toaster />
+        <FeedbackWidget />
       </body>
     </html>
   );

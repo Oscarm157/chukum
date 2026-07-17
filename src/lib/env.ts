@@ -17,6 +17,9 @@ const schema = z.object({
   // Token de GitHub para commitear fichas nuevas de /campus al repo. Opcional en
   // build: solo se usa en runtime dentro del handler de guardar.
   GITHUB_TOKEN: z.string().optional(),
+  // Whisper (Replicate) para el dictado por voz del widget de comentarios. Opcional:
+  // sin valor, /api/feedback/transcribe responde 500 y el resto del widget funciona.
+  REPLICATE_API_TOKEN: z.string().optional(),
 });
 
 let cached: z.infer<typeof schema> | undefined;
