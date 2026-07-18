@@ -16,6 +16,7 @@ export type Development = {
   // (ni siquiera en el bundle). El slug es el único id interno; las cards usan heading+tipo+etapa.
   heading: string; // encabezado de card por ubicación, sin nombre de proyecto
   place: string; // ubicación legible (uso interno / alt)
+  ciudad: string; // ciudad para el filtro del catálogo (Xo'ok va como "Selva maya")
   zona: Zona;
   tipos: Tipo[];
   usos: Uso[];
@@ -45,6 +46,7 @@ export const DEVELOPMENTS: Development[] = [
     slug: "xook",
     heading: "En la selva de Yucatán",
     place: "Yucatán, selva maya",
+    ciudad: "Selva maya",
     zona: "selva",
     tipos: ["terreno", "casa"],
     usos: ["invertir", "vivir"],
@@ -63,6 +65,7 @@ export const DEVELOPMENTS: Development[] = [
     slug: "ciudad-central-merida",
     heading: "En el norte de Mérida",
     place: "Mérida, Yucatán",
+    ciudad: "Mérida",
     zona: "merida",
     tipos: ["terreno", "casa"],
     usos: ["invertir", "vivir"],
@@ -76,6 +79,7 @@ export const DEVELOPMENTS: Development[] = [
     slug: "ciudad-central-progreso",
     heading: "Frente al mar en Progreso",
     place: "Progreso, Yucatán, frente al mar",
+    ciudad: "Progreso",
     zona: "costa",
     tipos: ["terreno"],
     usos: ["invertir", "vivir"],
@@ -89,6 +93,7 @@ export const DEVELOPMENTS: Development[] = [
     slug: "ukana-playa-del-carmen",
     heading: "Frente al mar en Playa del Carmen",
     place: "Playa del Carmen, Quintana Roo",
+    ciudad: "Playa del Carmen",
     zona: "caribe",
     tipos: ["departamento"],
     usos: ["invertir", "vivir"],
@@ -102,6 +107,7 @@ export const DEVELOPMENTS: Development[] = [
     slug: "tulum-ha",
     heading: "En Tulum, entre selva y playa",
     place: "Tulum, Quintana Roo",
+    ciudad: "Tulum",
     zona: "caribe",
     tipos: ["departamento"],
     usos: ["invertir"],
@@ -117,6 +123,10 @@ export const DEVELOPMENTS: Development[] = [
 export function tiposLabel(tipos: Tipo[]): string {
   return tipos.map((t) => TIPO_LABEL[t]).join(" y ");
 }
+
+// Ciudades del catálogo para los pills de filtro, en el orden en que aparecen los
+// desarrollos y sin repetir.
+export const CIUDADES: string[] = [...new Set(DEVELOPMENTS.map((d) => d.ciudad))];
 
 export type QuizAnswers = {
   uso: Uso;
