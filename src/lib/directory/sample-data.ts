@@ -26,6 +26,7 @@ export type SamplePlace = {
   editorialNote?: string;
   perfiles: PerfilSlug[];
   imageUrl?: string;
+  gallery?: string[]; // galería (top 10) del endpoint de fotos de Outscraper
 };
 
 function box(lng: number, lat: number, dx: number, dy: number): [number, number][] {
@@ -70,6 +71,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["me-mudo","vacaciones","retiro"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkMA1rBfepFv3wEMZgGm2xAxGFBDFukPasKmk3nM9kKRsCVEkNIYFyaVzbbwIRgOGBKcgjdwF3C9DFozHX3Ye5Q2rfBoz4YiIdHpwx-sd6Zd76apgN83KBszL4dMM7Dr0thkJbSOJF4uHo=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn2snC3FXGHLwU6cKxSvLgk8eQKo_QTeNmtNE275LrBChUESz-F_FjAkCBmhwZ2PGcVXvee72K_9Wh50T9lP9dHgMUKSHroPaS9KR6CtZDacDX6d4laovhFr_b9OtbnWXU7yXnPnpLyj28=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlBs1vWR8AWKS9153Ar4IQAflK5o6l61Dz__mgkq8JGqaiP9loeJQiUQKgalXRwVtszdp88nEHGx5S-npNB5bJpVHGV8kY0QkECqJttHeOiLAWc21Tj94FyVgZ8B4SDIX_wfaXaBw=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmuzw8IxJiD1wKyJiDAb-O3iDOBQjY9zIpI9-OuLmG3fmOIKVj7X8YCV6zIFjkyt5ViYBvEyf01zMNjKUJ3eYwcEHOLRClmlvRT0w9Llu1VTTL0yNFYS-pBxZjISxY-wMKXu-nELA=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmg78HTlXzNB-iM5dt3vRsg25uAUcXaUcgTdcz1___CLPUgbqzWtEgHgpvQJav3SPFUol8v1mXDOQq5ZggVtgbFr5W7l53eXFpgD-Z8TPIIfpwrHfuibpAyCfaULhlyFegB7CvL7P-bbdII=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkAg2MGAVwGWE-CQ6z8-0kvJna4iDrrh11qEWAmKxpK097ZTwgUMtV_r3S_GjdxyQjamAmh19MZHf9nUmgngN3bisO7YgD48XERc7-KIPHJHxQ9zRJYg2TcQ0x3_ftRkFFWeXVfmnsJoUjp=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkslxtmgM0y4pO4U3CdDgIZi2uJ1VVndt19W4gwfB93XH2SEvNcyyvdPw2e9pwINqJxnzFtYhRZ6CZB_KiAeZgOtac1QMrwn5sTelbfYPZIoVnAVtsIk9X9NaT01yMArMTASQ3Wz5S9f5M-=w2048-h2048-k-no"],
   },
   {
     slug: "luuch-cocina-yucateca-contemporanea-ykth3a",
@@ -161,6 +163,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["me-mudo","vacaciones","retiro"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkXobLSCqG2Gj1k4JuDrVE35zqFPxAAkV7LGFIM769zK4gRn0CgAtAEC0lQahKfn3tQ-3Z0hWgAkmgZlOSbvx0KI8CtoNiIWKkV2nZC05XhpggHDWi6HZwbdn9ArvmdfzbRxOmBJw=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlySvRJPWAmoR4MtupPBLOlJbn--IlwuvuxB5edybVdpKQS40EGiqf_qxzHhAYGM0Oi0_S3TPpObXOLQvjJvxtjC2ZNR3pCrHcIfTME_Yvnpq1T6m98Ivof2CCGpUGny1iAFRCH=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnhDyRw8dGI-MQyFwk29HF3arNJktYPdc2dd0AWmszGVDuXehYrBau8ocdY48P6tzwv4YIJxwjIv3nAD3RBS2PL8fsIqnkAQ6iGGL_ALuNFBDj_6d-4p--xSBtJV5UQ2a4Wue5FtxmfrhXe=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnJwhKEn6m8MALHQe2WIb5Qsyq2adVe3YZlOcBnaGfBdIHYDPyUu3rqFMYboTQQEHLDsNN8CslvtV952qk51Jqyx9OzqDfOH9bpeA3PXKSaNClD0PTCsNPd4gOQqAIirWTJbHr3Evwc_eI=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkp7PIGOnuMVSXvfaZbVcJ6WcTNnJ5A9tzI953WH3cFDwak7ST4HfeDQ0gQMiCpZgg_dQuSOXD_27uhWBCoidCH8uMCLvkl1Kvo3t1z5b3F_f46k0gQu_0v_ILApdStzdt2RIt_oz_XsgBg=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm6alnWlBZeBmFdxF_IfOR2hVUonDzVpBbt8ngUPKdafha9QzXEpV69A4xcEmda6jZ1hI5d_wA-HyO-YIjeXHu9AS4G5dIsgFYgVcYx2LYZeXJKX0EadAGh5NTOm7hukj9F_dSRO3YAn3M=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnhE6I7U0j48zf_284nNIdLE_uCPS3VWC-MXj_6qBnlnBYGkx9PmO_SLVPpDNBMCrvFy6-U_XJe3K_P-5ja5lhAotNksg1jsRWo8kly3gw0TRKiKfbgav5PC2hu0-U8vlnXI_yo6b07sBs8=w2048-h2048-k-no"],
   },
   {
     slug: "la-chaya-maya-casona-wvfuj4",
@@ -278,6 +281,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["me-mudo","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWni76Gn31ry9Qwfe6klir9rvYbUljZbZZaaeZHI_pkKzdPtOHP8-9v6WjDCpJRxuLvzvBeLkq6Xo0CIcjSzFhUpXY80LfYWCJfnvDBz4SHgv8BMogbhKg3FehCTjRZDzuEEOPJB=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlsOrx8N-RUEDUmuTUBNy9grWjChyXpcTqt2jNhSu_DV0ei3ehu8eQYtECWiQaNC71fY4zY179sxUDzrOTJLACxW7exD_lWtS7dkIOlaOXhu3ukrv4okNrioIQgfKRF8I87INFFgcox0fly=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnbMi8VNBSo7hfeS7dzsbvC0CZsu4lQb2Ah-hHbB06HLUuRB0zOA82iYGlRn9QJBg1qaeVxAZTj9IzhiniUIY8chtQ5iOXYkiph_nhbyWm4RWdca4IJYbLtACWRi2G7PpPlx56_6BuFdrQ=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnTolgNfkT5NkLLX1Th2DZDmeYtg7enjouuUpD6YdzhBTAT3PGGSgVsnGLSNeYQd90PAaTcTWkSIaP53vxnypAWdre5RWqrMHwK24E7EKQ_DE0-a5jjZImN7rS4BhkT0OhbkoU=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnwaZhYFtHLI2KPFHryU2B4s86Qb9FQW4GKdNsZjkw7bicVNxl3LJ5mSHQafirbovZiGouqtMmG8aMXGqJWLgw3GtbCZ-l7Rusy40fhZw9loYprT7R2A2OLF6WvGJdq0BWN6s9SOSX2XqEM=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkHYFb6Ekm32RcdWFB-XSUBLCgC1O029uUfZcQC0JMAumr4nAN89sOt0ZkhJBGCH5pA_dkD7t6S0NM_21CoG3h8pmA9S_I3dpQ9rRHKZlScJhLs06KTotDgiLW6LyNf9ePvrCU6=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkLT5_9exkr84rxlh029xLEz4BIIMhOVhL8vftyndD2lBoWA3VTHXj2zSRN23E5AGDv-R2zPAQ9B-78BM4DYTAObPmrKxJlOdAPdqQxfIo6E8FIL48yaQL52aTo4PpiJU7CrqTbugiYlNA=w2048-h2048-k-no"],
   },
   {
     slug: "sempere-libros-y-cafe-hdbkww",
@@ -291,6 +295,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["me-mudo","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmuZoDzcmAEMWnMBYR3BQiX6uCa7p6RVn6Gs03-fKo0JY1dFrq8lkMVyWwKZc6rhmf_QHeq8QbuHTvlOA2IvrkeIjKExPmtO4YMObhNosYJs8rRPUKhLOcDDGvUSkom087VhK13XpBTa8Nh=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn1aQKB-IzGW-pIJXkVisyxvShksEE9ozm3xuhpImJjetmXVPm_7UqWmS0o7bqFJLfyvaOJ5NCpNs5BGgAOnGBEq3DUv6uj7EywICO4qtHOfU3Coxzk5o9HbrAjBzi6V1vf7mA=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkFZqYRETgMHfa-2MGnVG6K8OCsAKKZNQYC7c6L43kT_B5jSKZ4zmaKglnfJqUops2xlATYw34qOBkfMKlDP6MBLegMydwmx2opKqUMT1CaeDLj2TZYLtFgI6GfpPnzv-bC2ag=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkocuouXJgeublQxPX6qa5il5v_UVF2A9eFSBmw0g6lajxwAWBQujeBnBJkCV7NzZvCzH53tc9NGUR_G2Y1H95YdKkMNN5eI1kj6Tq9cmFXvCyz_2gu-dKL5c-Ik46uGFbpQS4xGLWYKj-v=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWncaccUp0UL2XbGN-z-4yykyZpYUNC7itrKhZDVdqVqQL_E0X1WleMsLfV-JBRGNL8giKJRmUGJp_0lYRFt_Mwp9ZbM5m0O6krsCweZNwXfMkc8oNZKg_DaU4U-NwFRUiCsDuln=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWko9t_asDNLnZnxl68ETOi97bZDO9ogRWL7m70xYWv--hazjQSNGwxBkxYLVY3jXAIuwjqja8lggSEwRkMLl09kGzEjvgw5zUSiMxBVyPbM0FMT3cC8dld49Le-LdwclD44jLu1wmQullYE=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmuZoDzcmAEMWnMBYR3BQiX6uCa7p6RVn6Gs03-fKo0JY1dFrq8lkMVyWwKZc6rhmf_QHeq8QbuHTvlOA2IvrkeIjKExPmtO4YMObhNosYJs8rRPUKhLOcDDGvUSkom087VhK13XpBTa8Nh=w2048-h2048-k-no"],
   },
   {
     slug: "cafe-loco-coffee-lab-3uqkpe",
@@ -304,6 +309,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["me-mudo","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn-vpzNIW_PgJ8YAuLC2D1sb_ZSgTvTs7vzgv0RC28zTe_6NA29C3PQUtyU60Isbg7JYxJujIlZo-fxngRhCyNjFMXdBFSbRc2uvFtEqWhDuDHHvTGdecB1rw7cegFUNNBs13r51rWeGQ1x=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkO2p8kwUdUGntVV8Dktx0foUmlEIIpPXcVlpeGfzYDvI7Abe4noJYOidFPAMf4mvuVIG5zkf7O9MDZQGCX_yeFB6MzLW1YMxkVs8xNR6w8DD6DNrClyTeLWnPYXj9haaG4kNCyz_8DBEXd=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlPCSoaxka-RVckWfAatG5bOcpwi27TRINCa9paArVRu2R3NiG-VTqIX14YXwQ7Z-ypfNKHnmwIBI6p5iDWxDAOZ2D-Najxynofr4fUC58q00O-PRrKj1gjFJAMhd5y0pYaoO7_S76_pTa5=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkQYNw9ydOdPhvqZ2AsnQ4T3b3unB48ti2rVdUfM-lnRQkoUl_6fzWMhK2Es5jRArPbd4NtrGNYDUAmWXQOhZFMuou1s2sNy6p6VMIhASuTV7tkyX8E-ZYWZiAbrKJYKD-GvRdJVy9Mm5eb=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkt-EJVtPodEWz4TUNBEiSWsdGxJ-PAM5DXN7_8b90RpFKtJMCLU_9m5bQ838EDikwz-OWfXyGzBxFBTSNd6FCdWhlJarMp-SAMOxTVFa-zGhGkIM4fTwwtdaSIDXSmUAHhfiiKmx-rPcs=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmqq6ja4-Hb02YY1550Fvr6kphDaJ4GYSPAlzhk3EeNOd_L5J_dY85DPo6M_9DwLNPk-2uBlaWmRddUtinFohT7dGbmh5MI-ZAcsSuUpzWupzq8KCHMOj-T2bsn_Gmw3RoEODteLtpnrrPi=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnexTsIre-D5SIltfIu9GiAeZ8gJSmEaFiNpr-HH2xU_F8ncHqlQc4WQRMlIbdQvuI1EfQaMVk4yw6ev_TaRB6W6VrOCirj7oS_nlFRi4_h3SJvAN2cpB92I-ih_G5sG8_5rWGy3UEwr1Ok=w2048-h2048-k-no"],
   },
   {
     slug: "manifesto-casa-tostadora-calabrese-xiryac",
@@ -356,6 +362,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["me-mudo","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkHdWlPFwzDPU_7LDcDJw6HARnKo5gOPhaucTalD9OxWP5O7xFL24-ydorgK0UPM73Wuqn10EY2g0iX6nAKts6gv1UT_taE9o_gr2Ps04V575UyDJUuIHYi1W9ge9GyMEXNSw=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnZxjk1gP1JwDgUUJbCZy-hZ28z7ldRFkoDkSjieFz25sWqFUldW9Q-vqoRB6Jtjh5xnPpzGIvuag2nbrPeLq_SMwt-22I7Q9p8cTb_plPLi2CjSxqvuVVxzL-xw3uf=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWleTrC5CL9bHAL8GIOxG4Bjo8Srm4PVQH7WwN-1Afef-UyEzAO73WVb-VzaICo_1kOGWZ0muzoDyuatCwvwIJJeVVX9hSIef0VzR0r5J57Swt7metjunU4HlWLpEh-NbYQtnjMsvK9iq0-q=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlnRV1nCb30cPu1fXlh6tPG_EPkLP5jfvKAXvyzzZpIxezy1nclYPLRfDZCKHqM8Pj_ujooX7b7eLrCN2-SphN3zxpmkJUeL8s-5K2WLcywG_5u_DYsAevZnuoQaghBgebn-K_fNz6i6AyA=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkxEVaL3QUl-dZD8P15lXpLX8EiqIdMdH1QVyKqTl65sCxttPJp_F2zjSJqpnwPLJAHgmBm5K2iy7q464zol6ExayvTIj1NyPnRcyflVuHrnj4ysxx6VKeEtJHO9YaT6veVJai4=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlwCQEAhH5Rklynq8fo-WmkHFNnwBT1Mz-MmjjdJr5IjX6wszfiXQbhWR5gPfxI_06bj2OTdJXXmaUgrBwxiaSIs3Jm4RkggfOh9eZNMdUxVIR435OycrzkC1mCO01yskmDqP0JPA72Xes=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWltSN1oP1Yiwi3kAYimSgJdeSjvrEg9L2EVqic9g9tIu8RN5VmcXv9yMfaYxYJEjjFg-XrCI21rTgF-9NtAIO2iO666q6nGKzCR5OnLSAy-zeSz-ZNmlGLpMeDmtFLsp6AE57F-7gZMNDp4=w2048-h2048-k-no"],
   },
   {
     slug: "cafe-la-habana-jr1il8",
@@ -421,6 +428,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["vacaciones","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm6H-eWT544R3G4nTNCKBhUdvnltBWs-VdT80P_2PR7EdfOxgOf-RJCiBO-y-G4i2RrS-IqySY13d5XUaWSACgMAUc9v5VevkxZJB-ZjGjrFZBR44s5LrZZFeOD_eRIgQuFgIYy=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm6H-eWT544R3G4nTNCKBhUdvnltBWs-VdT80P_2PR7EdfOxgOf-RJCiBO-y-G4i2RrS-IqySY13d5XUaWSACgMAUc9v5VevkxZJB-ZjGjrFZBR44s5LrZZFeOD_eRIgQuFgIYy=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlT7it0TNDTJoJxEUQU828wNX_RyQp7-5v42z620_Jv5hzdeN524Bm61M_NRWT_DVMAWT_U2aYyAuY-1yA0ZrlZRqPZaqQklGlHOZ7boebSJqu87glnU9l3qMEr0leM7lFqeNHC=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmc-EmVHtYkoEzAd3vAvwngJSt3HOHzY6ZYX59j1U3jgi70QL4B0sc9xKNQb1clTxRzUYatykAkrlb0QL-MTJ-qBjX4jeZoBEyHSRFixHhQryzG7P3crHndrsWYFNJeld8XDzSZvn_a7gsP=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkCQsrj5XKtg7zfebADx0Unvofr3q4nobTpqmaz_MkZb2Rl31OBr8nfnWhM8DC1yb0ufEIsrOAgDuhLiuaNgIeGdZ_Hk2we0L_9uSuerYlctF3PJ7qc80kO68NlXuqu4-vtjJpI=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlhkV8PUurwGkP3KmwuKefCHim7t7oj3J8X7RDOBlPbeN1KTlTEP9MBsEvHGeIepoOdklwgH0LJWScTvm_hMlVHjd4K_qzexuBmjIRAY5VE68IlcK-fRImdG2wxJYZyQUxpAX0K7aAsqIVq=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlEsbsiZbbXDBrEKuUt0dQvf0fuS7ivVRwBcbmzQxyzbfVv3XPcuSIjbDz1ZfNPDLKV96PlCKLRxagDskO21vgZQUGUGOTTgBi8tO6CazTY4gPxvC6wq-tO__wYROa5AQLf9Us1swZ0RG0e=w2048-h2048-k-no"],
   },
   {
     slug: "yerba-santa-merida-fo9j78",
@@ -447,6 +455,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["vacaciones","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnO4gqm5yaLtYjN4SsWeyt_yMC6Y6MRkoSExN01XE4S9LTmDoU7_3oQ7By5rwOjsKXPsWspKgUAEtKUmgQ4hF2x2cLQX-9T1CENJ0k7j5WZDp05Rl3aX9GVu5066QEfYTKJWnxbUQ=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk5wLPnSg36j3s57ctueVHcTfTMQIWqEBXcVfVPGOqU33atdpAavFxPCK7I_5klWzhJcIz4SeDamIZa-VGR0T5MrDYYUd3Xi1yr-a9j8GXU24uBRkunRSbdnkmruV7g8fS-P1P7iA=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmMkeV1jOYOPrB_dvGrRfG5iSDnuYphu-ELv-aVBydHmwAlMUvlVMrYJ34y2441sZ9UM6WJSpDABvhag1QAsbJ6-0ZHBb_-lp3GCix5mMY84ZZC4Xbpq1pO5VrIMjaDOxNqtUsDJA=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnxVD9ayjSRq1cN8yaDAYk_NDZdS5Lg-bazG4sEVKqWW5OqLRD6KVUhq_zNPA2A7dDbRKYIzBz1qiavw04qLKkoO-TmqUGgPpA9h6x25e8yNgQvDxxQ-8fXSDQnC2wMl4ClBM-2p4Zrepw=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlwelsTdU4mPVTBMRwKn_JGnrhlldlIfl-VFnxHRNon-Vl7NEvuqLqVmxPC7ZM5bBsW3hiQ31HU9lb4Sa9RUEGGaPQZpYShAtesNA4Wb0Bsa7TY_E9bcZq3zBbtrcrfnBsV2n2kle5tiaSI=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmLKH8bFkUjdDYfYlBXOU9BcL-7nsv0Y00HmTrqyiv3aiApCkfCl2GI2xe_eV2Y48mWGQrK9yE7Jg7oONDhkpprBIys6CvwWofVEDaKEwNpLV5_3IBSR5yNI_3opVpbwib_DQusCB6yh64=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnvkW1wZjeQdxCxicOAVbmkl2-B_kXU-Gpt_fdC-5NPDOtUwHHF2DS8Qblx_6dok8R7wgMXHTJrQE9ql7aEjWptm-gpYt0XzA67g2T8fwU_h1Gu_guWEomV8Mq2EEY6v1qdd4Si9T5mM7IS=w2048-h2048-k-no"],
   },
   {
     slug: "restaurante-emplumado-dtypwg",
@@ -473,6 +482,7 @@ export const SAMPLE_PLACES: SamplePlace[] = [
     priceLevel: 2,
     perfiles: ["vacaciones","inversion"],
     imageUrl: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlbtRXY4cWkN0zHXWYvKLE-xOZL7dY-ij8v_-N3tJJ9-xZlXh5dFtv1M3JemTlVYjYcykhxhKW8gwZ37peHCuGjuMjtdz31jB6z2O4ZxgH549YE05gasUri7xHrxuCYKtq7iKAojQ=w800-h500-k-no",
+    gallery: ["https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmh-c2F6NSRs7o7FBWACJxXgWy8AUJ1-BUJiG8TCIE5VOp2TWVu4qyu4i5J-yz3CiIfkd1sLBPTMuWsiUx_S8EO1uVjtawytIcbeCW6_Fl7-Bx0T1hNYJv9xoUT_pq55bouclZPRA=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmb5-PHBFlijIm_FUlL_7EFpsY6c04SJGmejYtQLSObHJfsgOezuEDrozjKQyA3WecUeiWDe5GD1mJacFenT_sDYVq0IMCyG38wYmuSoXmX6q03wybYl4VNOw2JOrXUdX5fepJqVe5zOELB=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm2IpHACG6ht7-1YZRtUdcHQBLLH_sMrCc67g6oJcjxdaCECWBvO1kHK1cJK6mwFCgW9kKR0AHN7EFvBskRD-7HLFNMtiEWTTJRql7NlZIphLHoeRxT34aCwA-OgV9y8n8kJOqeiEqV51U=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkPisi86lX7btBemZxfHgwSdC7dQWJZr2YvztZtMK7-1erKZEP733lx9HQ8PxImcg7kx3_f_0TFQe3-Nwkype5IlnqHMzUoCTcHJT6G1W3wJbRa4mrBRxjuSicmqT7IPX3wZ0mqAnEBoyI=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlVg8mLx0uMZ-RDVHU3vp-i4WpWxsYp6VdsqwISnRon28Bz7uGQ784g3upw0Rh0wtPxJ-HPbVeymRcqa3eiVwEoi5euPE8c2BFBNF6mORKktpW7sbeE82VDjdVVKPofR6VK1bENfCYVGoK6=w2048-h2048-k-no","https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmJIsATy1XOxtj2HQ4myCZQNsqDX8QX_talLgHkzznH_3qovW10HEUFLRcAjqQQYDUsICF-3F04K1lubl41nMrp2XrXzexpM1T40El-suWXN1--CXjUH7D5GfCq7FWKqIKKwbUX_4u7e0vP=w2048-h2048-k-no"],
   },
   {
     slug: "oliva-enoteca-yhfavy",

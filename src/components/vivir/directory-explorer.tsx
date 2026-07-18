@@ -350,6 +350,36 @@ function ZonaTag({ zona }: { zona?: SampleZona }) {
   );
 }
 
+/* ---------- Galería (top 10): imagen principal + tira de miniaturas ---------- */
+function Gallery({ images, alt }: { images: string[]; alt: string }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div>
+      <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[active]} alt={alt} className="h-full w-full object-cover" />
+      </div>
+      {images.length > 1 && (
+        <div className="mt-2 flex gap-2">
+          {images.slice(0, 5).map((src, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              aria-label={`Foto ${i + 1} de ${alt}`}
+              className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg border transition md:h-16 md:w-24 ${
+                active === i ? "border-terracota" : "border-hairline opacity-70 hover:opacity-100"
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Entrada destacada (#1) ---------- */
 function FeaturedEntry({
   place,
@@ -379,7 +409,13 @@ function FeaturedEntry({
           Lo mejor ahora
         </span>
       </div>
-      <PlaceImage place={place} zona={zona} rank={1} className="mt-5 aspect-[16/9] w-full rounded-2xl" numberClass="text-[12rem]" />
+      <div className="mt-5">
+        {place.gallery && place.gallery.length > 0 ? (
+          <Gallery images={place.gallery} alt={place.nombre} />
+        ) : (
+          <PlaceImage place={place} zona={zona} rank={1} className="aspect-[16/9] w-full rounded-2xl" numberClass="text-[12rem]" />
+        )}
+      </div>
       <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h3 className="font-display text-3xl tracking-[-0.02em] text-ink md:text-4xl">{place.nombre}</h3>
         <ZonaTag zona={zona} />
