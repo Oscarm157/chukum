@@ -50,3 +50,5 @@ next-env.d.ts
 .add-shots/
 .v2-shots/
 .hero-cand/
+.pills-shots/
+.portal-shots/

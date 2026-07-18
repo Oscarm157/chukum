@@ -25,6 +25,10 @@ export type UnitStatus = "disponible" | "apartado" | "vendido";
 export type DevelopmentStatus = "preventa" | "en_construccion" | "entrega_inmediata" | "vendido";
 export type DataSource = "scrape" | "oscar_manual" | "excel_import" | "curado";
 export type ImageKind = "hero" | "gallery" | "floorplan" | "logo";
+// Dimensiones del home/quiz (superset sobre el catálogo de la base).
+export type Uso = "invertir" | "vivir";
+export type MacroZona = "merida" | "costa" | "caribe" | "selva";
+export type HighlightSpec = { label: string; value: string };
 
 // ===== Capa SEO: zonas/colonias de Yucatán (páginas programáticas) =====
 // Cada zona alimenta /zonas/[slug]. Gate anti thin-content: solo se publica
@@ -54,15 +58,22 @@ export const developments = pgTable("developments", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
+  // Encabezado de card para el home, SIN nombre de proyecto (restricción legal de publicidad).
+  heading: text("heading"),
   zonaId: uuid("zona_id").references(() => zonas.id, { onDelete: "set null" }),
   city: text("city"),
   state: text("state"),
   country: text("country").default("MX").notNull(),
+  // Macro-zona y usos: dimensiones del filtro/quiz del home (no confundir con zonaId SEO).
+  macroZona: text("macro_zona").$type<MacroZona>(),
+  usos: jsonb("usos").$type<Uso[]>(),
   propertyTypes: jsonb("property_types").$type<UnitType[]>(),
   statusMarketing: text("status_marketing").$type<DevelopmentStatus>(),
   descriptionEs: text("description_es"),
   descriptionEn: text("description_en"),
   amenities: jsonb("amenities").$type<string[]>(),
+  // Bullets curados del home (ej. "Aparta con $10,000"). Solo cuando existen datos reales.
+  highlightSpecs: jsonb("highlight_specs").$type<HighlightSpec[]>(),
   sourceUrlEs: text("source_url_es"),
   sourceUrlEn: text("source_url_en"),
   dataSource: text("data_source").$type<DataSource>().default("scrape").notNull(),
