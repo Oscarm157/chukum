@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -74,11 +74,24 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-export function Quiz({ developments }: { developments: Development[] }) {
+export function Quiz({
+  developments,
+  onStartedChange,
+}: {
+  developments: Development[];
+  onStartedChange?: (started: boolean) => void;
+}) {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<QuizAnswers>>({});
   const [done, setDone] = useState(false);
+
+  // Ya arrancó en cuanto respondió la primera pregunta. Las animaciones de
+  // motivación (marquee + columna izquierda) se congelan a partir de aquí.
+  const started = step > 0 || done;
+  useEffect(() => {
+    onStartedChange?.(started);
+  }, [started, onStartedChange]);
 
   function choose(value: string) {
     const key = QUESTIONS[step].key;

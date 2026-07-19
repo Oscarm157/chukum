@@ -8,8 +8,11 @@ import { motion, useReducedMotion } from "motion/react";
 const BARS = [0, 1, 2, 3];
 const CYCLE = 4.2; // segundos
 
-export function QuizProcess() {
-  const reduce = useReducedMotion();
+export function QuizProcess({ paused = false }: { paused?: boolean }) {
+  const reduceMotion = useReducedMotion();
+  // Congelar el loop (estado final estático) cuando el usuario ya arrancó el
+  // cuestionario: solo motiva antes de empezar, después distrae.
+  const reduce = reduceMotion || paused;
 
   return (
     <div className="rounded-2xl border border-hairline bg-surface p-6">

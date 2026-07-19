@@ -3,8 +3,7 @@ import { Reveal } from "@/components/reveal";
 import { ChukumNav } from "@/components/chukum/nav";
 import { Catalogo } from "@/components/chukum/catalogo";
 import { SectionHead } from "@/components/chukum/section-head";
-import { Quiz } from "@/components/chukum/quiz";
-import { QuizProcess } from "@/components/chukum/quiz-process";
+import { QuizSection } from "@/components/chukum/quiz-section";
 import { Mosaic } from "@/components/chukum/mosaic";
 import { CaptureForm } from "@/components/chukum/capture-form";
 import { tiposLabel, type Development } from "@/lib/developments";
@@ -132,21 +131,7 @@ export default async function ChukumHome() {
 
       {/* 3 — Quiz (núcleo del funnel), 2 columnas */}
       <section id="quiz" className="scroll-mt-20 bg-canvas px-5 py-20 md:px-10 md:py-28">
-        <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-2 md:gap-16">
-          <div>
-            <SectionHead index="03" eyebrow="Cuestionario" title="Encuentra el desarrollo que corresponde a tu perfil" />
-            <p className="mt-4 max-w-md text-ink-2">
-              Cuatro preguntas sobre zona, tipo de propiedad y etapa. Al final se pueden dejar los datos
-              para recibir disponibilidad y precios.
-            </p>
-            <div className="mt-8">
-              <QuizProcess />
-            </div>
-          </div>
-          <div className="quiz-marquee rounded-3xl bg-surface p-6 md:p-10">
-            <Quiz developments={developments} />
-          </div>
-        </div>
+        <QuizSection developments={developments} />
       </section>
 
       {/* 3 — Desarrollos (grid asimétrico: Xo'ok destacado + 4) */}
