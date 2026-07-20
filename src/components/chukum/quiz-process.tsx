@@ -45,7 +45,7 @@ export function QuizProcess({ paused = false }: { paused?: boolean }) {
 
       <div className="mt-5 flex items-center gap-2 text-ink-2">
         <span className="h-px flex-1 bg-hairline" />
-        <span className="text-[11px] uppercase tracking-[0.14em]">2 opciones para ti</span>
+        <span className="text-[11px] uppercase tracking-[0.14em]">Tus mejores opciones</span>
         <span className="h-px flex-1 bg-hairline" />
       </div>
 

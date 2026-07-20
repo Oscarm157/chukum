@@ -138,8 +138,8 @@ export type QuizAnswers = {
 };
 
 // Empareja las respuestas del quiz con los desarrollos reales. Ponderado: la zona pesa
-// más, luego el tipo de propiedad, luego uso y etapa. Devuelve los 2 mejores (siempre
-// devuelve algo: si nada calza fuerte, el mejor esfuerzo + el segundo).
+// más, luego el tipo de propiedad, luego uso y etapa. Devuelve hasta 3 rankeados y descarta
+// los que no coinciden en nada (score 0), pero siempre deja al menos el mejor esfuerzo (#1).
 export function matchDevelopments(devs: Development[], a: QuizAnswers): Development[] {
   const scored = devs.map((d) => {
     let score = 0;
@@ -150,5 +150,7 @@ export function matchDevelopments(devs: Development[], a: QuizAnswers): Developm
     return { d, score };
   });
   scored.sort((x, y) => y.score - x.score);
-  return scored.slice(0, 2).map((s) => s.d);
+  const top3 = scored.slice(0, 3);
+  const nonZero = top3.filter((s) => s.score > 0);
+  return (nonZero.length ? nonZero : top3.slice(0, 1)).map((s) => s.d);
 }

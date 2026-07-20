@@ -83,25 +83,30 @@ export async function POST(req: Request) {
       .from(leads)
       .where(and(eq(leads.email, email), gt(leads.createdAt, new Date(Date.now() - 10 * 60 * 1000))))
       .limit(1);
-    if (recent.length) return Response.json({ ok: true });
+    if (recent.length) return Response.json({ ok: true, id: recent[0].id });
   }
 
   let hadError = false;
+  let id: string | null = null;
   try {
-    await db.insert(leads).values({
-      name,
-      email,
-      phone,
-      message,
-      locale,
-      source,
-      sourceUrl: clean(d.sourceUrl),
-      zonaSlug: clean(d.zonaSlug),
-      developmentSlug: clean(d.developmentSlug),
-      utmSource: clean(d.utmSource),
-      utmCampaign: clean(d.utmCampaign),
-      utmMedium: clean(d.utmMedium),
-    });
+    const [row] = await db
+      .insert(leads)
+      .values({
+        name,
+        email,
+        phone,
+        message,
+        locale,
+        source,
+        sourceUrl: clean(d.sourceUrl),
+        zonaSlug: clean(d.zonaSlug),
+        developmentSlug: clean(d.developmentSlug),
+        utmSource: clean(d.utmSource),
+        utmCampaign: clean(d.utmCampaign),
+        utmMedium: clean(d.utmMedium),
+      })
+      .returning({ id: leads.id });
+    id = row?.id ?? null;
   } catch (err) {
     console.error("lead: DB insert failed", err);
     hadError = true;
@@ -123,6 +128,80 @@ export async function POST(req: Request) {
           <tr><td style="padding:4px 12px 4px 0;color:#888">Zona</td><td>${esc(clean(d.zonaSlug) ?? "N/D")}</td></tr>
           <tr><td style="padding:4px 12px 4px 0;color:#888">Desarrollo</td><td>${esc(clean(d.developmentSlug) ?? "N/D")}</td></tr>
           <tr><td style="padding:4px 12px 4px 0;color:#888">Origen</td><td>${esc(clean(d.sourceUrl) ?? "N/D")}</td></tr>
+        </table>
+      `.trim(),
+    });
+  } catch (err) {
+    console.error("lead: email failed", err);
+    hadError = true;
+  }
+
+  if (hadError) return Response.json({ ok: false, id }, { status: 207 });
+  return Response.json({ ok: true, id });
+}
+
+// Segundo paso del quiz: el lead ya existe (gate con nombre+correo) y agrega su teléfono
+// después de ver los resultados. Actualiza ESE lead por id, no crea uno nuevo.
+const patchSchema = z.object({
+  id: z.string().uuid(),
+  phone: z.string().max(60).optional(),
+  message: z.string().max(2000).optional(),
+});
+
+export async function PATCH(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (rateLimited(ip)) {
+    return Response.json({ ok: false, error: "rate_limited" }, { status: 429 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = patchSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json({ ok: false, error: "bad_request" }, { status: 400 });
+  }
+
+  const phone = clean(parsed.data.phone);
+  const extra = clean(parsed.data.message);
+  if (!phone && !extra) {
+    return Response.json({ ok: false, error: "nothing_to_update" }, { status: 400 });
+  }
+
+  const [current] = await db
+    .select({ name: leads.name, message: leads.message })
+    .from(leads)
+    .where(eq(leads.id, parsed.data.id))
+    .limit(1);
+  if (!current) {
+    return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+  }
+
+  const message = extra
+    ? [current.message, extra].filter(Boolean).join(" · ")
+    : current.message;
+
+  let hadError = false;
+  try {
+    await db
+      .update(leads)
+      .set({ phone, message, updatedAt: new Date() })
+      .where(eq(leads.id, parsed.data.id));
+  } catch (err) {
+    console.error("lead: DB update failed", err);
+    hadError = true;
+  }
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: mailFrom,
+      to: leadRecipient,
+      subject: `Lead agregó teléfono: ${current.name ?? "Sin nombre"}`,
+      html: `
+        <h2 style="margin:0 0 16px;font-family:sans-serif">El lead agregó su teléfono</h2>
+        <table style="font-family:sans-serif;font-size:14px;border-collapse:collapse">
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Nombre</td><td><strong>${esc(current.name ?? "N/D")}</strong></td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Teléfono</td><td>${esc(phone ?? "N/D")}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#888">Mensaje</td><td>${esc(message ?? "N/D")}</td></tr>
         </table>
       `.trim(),
     });
