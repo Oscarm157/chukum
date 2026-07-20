@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MessageCircle, ArrowRight, ShieldCheck, FileCheck2, Droplets } from "lucide-react";
 import { Reveal } from "@/components/reveal";
 import { ChukumNav } from "@/components/chukum/nav";
@@ -7,6 +8,7 @@ import { SectionHead } from "@/components/chukum/section-head";
 import { QuizSection } from "@/components/chukum/quiz-section";
 import { Mosaic } from "@/components/chukum/mosaic";
 import { TileBand } from "@/components/chukum/tile-band";
+import { AmbientAudio } from "@/components/chukum/ambient-audio";
 import { CaptureForm } from "@/components/chukum/capture-form";
 import { tiposLabel, type Development } from "@/lib/developments";
 import { getDevelopmentsForHome } from "@/lib/queries";
@@ -62,6 +64,7 @@ export default async function ChukumHome() {
     <main id="top">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(developments)) }} />
       <ChukumNav />
+      <AmbientAudio />
 
       {/* 1 — Hero full-bleed (video real) */}
       <section className="relative flex h-[100dvh] min-h-[620px] w-full items-end overflow-hidden">
@@ -119,8 +122,8 @@ export default async function ChukumHome() {
         </div>
       </section>
 
-      {/* Franja de azulejos marinos (marquee) */}
-      <TileBand />
+      {/* Franja de azulejos marinos (cuadrícula) — después del hero */}
+      <TileBand src="/hero/azulejos-mar.webp" rows={5} />
 
       {/* 2 — Abanico de opciones (animación de scroll) */}
       <section className="bg-canvas px-5 py-12 md:px-10 md:py-16">
@@ -139,8 +142,11 @@ export default async function ChukumHome() {
         <QuizSection developments={developments} />
       </section>
 
+      {/* Franja de onda cenote animada (olas) — después del cuestionario */}
+      <TileBand src="/hero/onda-cenote.webp" video={{ mp4: "/hero/onda-cenote.mp4" }} />
+
       {/* 3 — Desarrollos (grid asimétrico: Xo'ok destacado + 4) */}
-      <section id="desarrollos" className="scroll-mt-20 bg-canvas px-5 pb-20 md:px-10 md:pb-28">
+      <section id="desarrollos" className="scroll-mt-20 bg-canvas px-5 pt-16 pb-20 md:px-10 md:pt-24 md:pb-28">
         <div className="mx-auto max-w-[1400px]">
           <Catalogo developments={developments} />
         </div>
@@ -181,11 +187,23 @@ export default async function ChukumHome() {
               ciudades más seguras del país y costa a media hora. Algunos datos para ubicarse.
             </p>
           </Reveal>
-          <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-hairline bg-hairline sm:grid-cols-4">
-            <Stat value="~28°C" label="Temperatura media anual en Mérida" />
-            <Stat value="~1.2M" label="Habitantes en la zona metropolitana de Mérida" />
-            <Stat value="1er lugar" label="Estado más seguro de México" />
-            <Stat value="30 min" label="De Mérida a la playa de Progreso" />
+          <div className="mt-12 grid grid-cols-2 gap-8 md:max-w-[1180px] md:grid-cols-4 md:gap-12">
+            {[
+              { img: "/hero/stat-clima.webp", value: "~28°C", label: "Temperatura media anual en Mérida" },
+              { img: "/hero/stat-poblacion.webp", value: "~1.2M", label: "Habitantes en la zona metropolitana de Mérida" },
+              { img: "/hero/stat-seguridad.webp", value: "1er lugar", label: "Estado más seguro de México" },
+              { img: "/hero/stat-playa.webp", value: "30 min", label: "De Mérida a la playa de Progreso" },
+            ].map((s) => (
+              <div key={s.label} className="overflow-hidden rounded-3xl border border-hairline bg-surface">
+                <div className="relative aspect-[3/4]">
+                  <Image src={s.img} alt="" fill className="object-cover" sizes="(max-width:768px) 50vw, 25vw" />
+                </div>
+                <div className="p-5">
+                  <p className="font-display text-3xl tracking-[-0.02em] text-ink">{s.value}</p>
+                  <p className="mt-1.5 text-sm leading-snug text-ink-2">{s.label}</p>
+                </div>
+              </div>
+            ))}
           </div>
           <Reveal>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -260,11 +278,3 @@ export default async function ChukumHome() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="bg-canvas px-7 py-10">
-      <p className="font-display text-5xl tracking-[-0.03em] text-ink">{value}</p>
-      <p className="mt-3 text-sm leading-relaxed text-ink">{label}</p>
-    </div>
-  );
-}

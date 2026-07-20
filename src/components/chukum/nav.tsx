@@ -91,10 +91,14 @@ export function ChukumNav() {
           solid ? "border-b border-hairline bg-canvas/90 backdrop-blur-md" : "border-b border-transparent bg-transparent"
         }`}
       >
-        <div className="mx-auto flex h-20 max-w-[1400px] items-center px-5 md:px-10">
+        <div
+          className={`mx-auto flex max-w-[1400px] items-center px-5 transition-[height] duration-300 md:px-10 ${
+            scrolled ? "h-14" : "h-20"
+          }`}
+        >
           <a
             href="#top"
-            className={`text-xl font-bold tracking-[0.24em] transition-colors md:text-2xl ${light ? "text-crema" : "text-ink"}`}
+            className={`font-bold tracking-[0.24em] transition-all ${scrolled ? "text-lg md:text-xl" : "text-xl md:text-2xl"} ${light ? "text-crema" : "text-ink"}`}
           >
             CHUKUM
           </a>

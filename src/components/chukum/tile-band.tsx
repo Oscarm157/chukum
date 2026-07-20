@@ -1,37 +1,52 @@
-// Franja de azulejos marinos bajo el hero: marquee horizontal en loop. Muestra las 2 filas
-// superiores (recorte por overflow) de una imagen 21:9; las copias impares van espejadas
-// (-scale-x) para que cada empalme case y el loop no muestre costura. Decorativa (aria-hidden),
-// CSS puro (sin JS); se detiene con prefers-reduced-motion (ver .tile-marquee-track en globals).
+// Tira de azulejos bajo secciones del home. Dos modos:
+//  - imagen (default): marquee horizontal con copias espejadas (loop sin costura). Recorta a 1
+//    fila mostrando solo la primera de `rows` filas de la imagen (alto imagen = banda × rows).
+//  - video: un loop full-bleed (olas "avanzando") recortado a la misma altura de tira. El
+//    movimiento lo da el propio video; sin marquee.
+// `reverse` invierte la dirección del marquee (para alternar tiras). Decorativa (aria-hidden).
 
-const BAND = "h-[150px] md:h-[190px]";
-const IMG = "h-[300px] w-auto md:h-[380px]"; // 2x el alto de la banda → recorta las 2 filas de arriba
+type Props = {
+  src: string; // imagen (o poster si hay video)
+  rows?: number; // nº de filas de azulejos en la imagen (para recortar a 1)
+  reverse?: boolean; // dirección del marquee (imagen)
+  video?: { webm?: string; mp4?: string }; // si viene, la tira es video
+};
 
-function Unit() {
-  return (
+const BAND_PX = 104; // alto de la tira (1 fila)
+
+export function TileBand({ src, rows = 5, reverse = false, video }: Props) {
+  if (video) {
+    // Video fijo full-bleed (sin marquee): el movimiento lo dan las olas del propio clip.
+    return (
+      <section aria-hidden className="overflow-hidden border-y border-hairline bg-espresso" style={{ height: BAND_PX }}>
+        <video autoPlay muted loop playsInline poster={src} className="h-full w-full object-cover">
+          {video.mp4 && <source src={video.mp4} type="video/mp4" />}
+          {video.webm && <source src={video.webm} type="video/webm" />}
+        </video>
+      </section>
+    );
+  }
+
+  const imgH = BAND_PX * rows; // la banda recorta la primera fila
+  const img = (mirror: boolean) => (
+    <img
+      src={src}
+      alt=""
+      draggable={false}
+      className={`w-auto max-w-none select-none${mirror ? " -scale-x-100" : ""}`}
+      style={{ height: imgH }}
+    />
+  );
+  const Unit = () => (
     <div className="flex shrink-0">
-      <img
-        src="/hero/azulejos-mar.webp"
-        alt=""
-        className={`${IMG} max-w-none select-none`}
-        draggable={false}
-      />
-      <img
-        src="/hero/azulejos-mar.webp"
-        alt=""
-        className={`${IMG} max-w-none -scale-x-100 select-none`}
-        draggable={false}
-      />
+      {img(false)}
+      {img(true)}
     </div>
   );
-}
 
-export function TileBand() {
   return (
-    <section
-      aria-hidden
-      className={`${BAND} overflow-hidden border-y border-hairline bg-canvas`}
-    >
-      <div className="tile-marquee-track flex w-max">
+    <section aria-hidden className="overflow-hidden border-y border-hairline bg-canvas" style={{ height: BAND_PX }}>
+      <div className={`tile-marquee-track flex w-max${reverse ? " tile-marquee-reverse" : ""}`}>
         <Unit />
         <Unit />
       </div>

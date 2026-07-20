@@ -12,6 +12,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Preview de `next dev` por IP del VPS: Next 16 bloquea el origen cruzado de los assets de
+  // dev; declarar el IP aquí lo permite (solo afecta a desarrollo, no a producción).
+  allowedDevOrigins: ["161.97.87.16"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

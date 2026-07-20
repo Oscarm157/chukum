@@ -794,6 +794,9 @@ html[data-crm-theme="light"] .crm-logo-navy { display: block; }
   animation: tile-marquee 70s linear infinite;
   will-change: transform;
 }
+.tile-marquee-reverse {
+  animation-direction: reverse;
+}
 @media (prefers-reduced-motion: reduce) {
   .tile-marquee-track {
     animation: none;
