@@ -82,23 +82,23 @@ export default async function ChukumHome() {
         {/* Gradiente suave arriba (para el nav) y scrim SOLO en la franja inferior:
             la mitad de arriba del video queda limpia y brillante. */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-espresso/45 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-[64%] bg-gradient-to-t from-espresso via-espresso/60 to-transparent md:h-[50%] md:from-espresso/90 md:via-espresso/55" />
+        <div className="absolute inset-x-0 bottom-0 h-[64%] bg-gradient-to-t from-espresso/80 via-espresso/45 to-transparent md:h-[50%] md:from-espresso/85 md:via-espresso/50" />
 
         {/* Franja horizontal al pie: la imagen luce, el contenido vive abajo. El kicker
             con índice conserva el hilo editorial. */}
         <div className="relative z-10 w-full px-5 pb-24 md:px-10 md:pb-12">
           <div className="mx-auto max-w-[1400px] border-t border-crema/15 pt-6">
-            <div className="flex items-center gap-3 text-crema/85">
+            <div className="flex items-center gap-3 text-crema/85 [text-shadow:0_1px_6px_rgba(0,0,0,0.3)]">
               <span className="font-display text-base leading-none">01</span>
               <span className="h-px w-10 bg-crema/40" />
               <span className="text-xs uppercase tracking-[0.24em]">Península de Yucatán</span>
             </div>
             <div className="mt-5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
               <div className="max-w-3xl">
-                <h1 className="font-display text-[2.35rem] leading-[1.05] tracking-[-0.02em] text-crema md:text-[3.2rem] md:leading-[1.0]">
+                <h1 className="font-display text-[2.35rem] leading-[1.05] tracking-[-0.02em] text-crema [text-shadow:0_2px_14px_rgba(0,0,0,0.4)] md:text-[3.2rem] md:leading-[1.0]">
                   Tu casa, terreno o departamento en la península de Yucatán
                 </h1>
-                <p className="mt-4 max-w-xl text-base leading-relaxed text-crema/85">
+                <p className="mt-4 max-w-xl text-base leading-relaxed text-crema/85 [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]">
                   Vivir entre selva, cenotes y el mar del Caribe, en el estado más seguro de México.
                   Contesta el cuestionario y ve los desarrollos que corresponden a lo que buscas.
                 </p>

@@ -98,7 +98,7 @@ export function ChukumNav() {
         >
           <a
             href="#top"
-            className={`font-bold tracking-[0.24em] transition-all ${scrolled ? "text-lg md:text-xl" : "text-xl md:text-2xl"} ${light ? "text-crema" : "text-ink"}`}
+            className={`font-bold tracking-[0.24em] transition-all ${scrolled ? "text-lg md:text-xl" : "text-xl md:text-2xl"} ${light ? "text-crema [text-shadow:0_1px_10px_rgba(0,0,0,0.35)]" : "text-ink"}`}
           >
             CHUKUM
           </a>
