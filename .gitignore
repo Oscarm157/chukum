@@ -52,3 +52,7 @@ next-env.d.ts
 .hero-cand/
 .pills-shots/
 .portal-shots/
+.fb-shots/
+.stat-cand/
+.fb-*.log
+.stat-cand-*.log

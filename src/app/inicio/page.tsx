@@ -74,7 +74,7 @@ export default async function ChukumHome() {
           loop
           playsInline
           poster="/hero/hero-poster.webp"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-[25%_center] md:object-center"
         >
           <source src="/hero/hero.webm" type="video/webm" />
           <source src="/hero/hero.mp4" type="video/mp4" />
@@ -82,7 +82,7 @@ export default async function ChukumHome() {
         {/* Gradiente suave arriba (para el nav) y scrim SOLO en la franja inferior:
             la mitad de arriba del video queda limpia y brillante. */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-espresso/45 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-[64%] bg-gradient-to-t from-espresso/90 via-espresso/55 to-transparent md:h-[50%]" />
+        <div className="absolute inset-x-0 bottom-0 h-[64%] bg-gradient-to-t from-espresso via-espresso/60 to-transparent md:h-[50%] md:from-espresso/90 md:via-espresso/55" />
 
         {/* Franja horizontal al pie: la imagen luce, el contenido vive abajo. El kicker
             con índice conserva el hilo editorial. */}
@@ -95,7 +95,7 @@ export default async function ChukumHome() {
             </div>
             <div className="mt-5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
               <div className="max-w-3xl">
-                <h1 className="font-display text-3xl leading-[1.03] tracking-[-0.02em] text-crema md:text-[3.2rem] md:leading-[1.0]">
+                <h1 className="font-display text-[2.35rem] leading-[1.05] tracking-[-0.02em] text-crema md:text-[3.2rem] md:leading-[1.0]">
                   Tu casa, terreno o departamento en la península de Yucatán
                 </h1>
                 <p className="mt-4 max-w-xl text-base leading-relaxed text-crema/85">
@@ -142,8 +142,8 @@ export default async function ChukumHome() {
         <QuizSection developments={developments} />
       </section>
 
-      {/* Franja de onda cenote animada (olas) — después del cuestionario */}
-      <TileBand src="/hero/onda-cenote.webp" video={{ mp4: "/hero/onda-cenote.mp4" }} />
+      {/* Franja de azulejos finos (fija) — después del cuestionario */}
+      <TileBand src="/hero/azulejos-mar-fino.webp" rows={6} reverse />
 
       {/* 3 — Desarrollos (grid asimétrico: Xo'ok destacado + 4) */}
       <section id="desarrollos" className="scroll-mt-20 bg-canvas px-5 pt-16 pb-20 md:px-10 md:pt-24 md:pb-28">
