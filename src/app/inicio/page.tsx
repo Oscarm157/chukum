@@ -143,7 +143,7 @@ export default async function ChukumHome() {
       </section>
 
       {/* Franja de azulejos finos (fija) — después del cuestionario */}
-      <TileBand src="/hero/azulejos-mar-fino.webp" rows={6} reverse />
+      <TileBand src="/hero/azulejos-mar-fino.webp" rows={8} reverse />
 
       {/* 3 — Desarrollos (grid asimétrico: Xo'ok destacado + 4) */}
       <section id="desarrollos" className="scroll-mt-20 bg-canvas px-5 pt-16 pb-20 md:px-10 md:pt-24 md:pb-28">
