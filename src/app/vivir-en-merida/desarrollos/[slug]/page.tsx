@@ -70,8 +70,11 @@ export default async function DesarrolloPage({
   ]);
 
   const content = getDevelopmentContent(slug);
-  const hero = images[0];
-  const gallery = images.slice(1);
+  // Los planos/masterplan del desarrollador llevan el nombre comercial impreso en el pixel:
+  // se excluyen de la galería pública (el grep de HTML no los cacha, la marca va en la imagen).
+  const publicImages = images.filter((i) => !/master-?plan|plano/i.test(i.url));
+  const hero = publicImages[0];
+  const gallery = publicImages.slice(1);
   const place = [dev.city, dev.state].filter(Boolean).join(", ");
   // Sin nombre comercial: identidad pública = heading por ubicación.
   const nombre = dev.heading ?? place ?? "Desarrollo en Yucatán";
@@ -84,7 +87,7 @@ export default async function DesarrolloPage({
     <>
       <JsonLd
         data={[
-          realEstateListingJsonLd(dev, images),
+          realEstateListingJsonLd(dev, publicImages),
           breadcrumbJsonLd([
             { name: "Inicio", url: "/vivir-en-merida" },
             ...(zona

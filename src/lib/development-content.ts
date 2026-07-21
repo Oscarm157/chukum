@@ -5,7 +5,8 @@
 //
 // La DB gobierna los campos core (heading, ubicación, etapa, tipos, specs, imágenes). Este módulo
 // añade las secciones ricas (por qué es opción ideal, amenidades, lugares cercanos) que aún no
-// viven en la DB. Se cruza por slug. Piloto: solo "selva-maya"; el resto degrada elegante (sin secciones).
+// viven en la DB. Se cruza por slug. Poblados los tres activos (selva-maya, norte-de-merida,
+// progreso-frente-al-mar); los demos y cualquier slug sin entrada degradan elegante (sin secciones).
 
 export type DevelopmentContent = {
   // Frase de una línea, factual, sin nombre comercial. Encabeza el hero.
@@ -40,6 +41,54 @@ export const DEVELOPMENT_CONTENT: Record<string, DevelopmentContent> = {
       { label: "Mérida", hint: "Conectividad hacia la ciudad" },
       { label: "Cenotes", hint: "Cenotes y acuíferos naturales de la zona" },
       { label: "Costa", hint: "Playas de la costa yucateca" },
+    ],
+  },
+
+  "norte-de-merida": {
+    tagline:
+      "Comunidad planeada de gran escala al norte de Mérida, con casas club, ciclovías y zonas comerciales, conectada al periférico.",
+    whyIdeal: [
+      "Comunidad planeada con lotes residenciales y townhouses, con unidades ya entregándose.",
+      "Conectada al periférico, a minutos de plazas comerciales, hospitales y universidades.",
+      "Casas club con alberca, canchas deportivas y áreas sociales dentro del complejo.",
+      "Ciclovías, áreas verdes y zonas comerciales integradas al plan maestro.",
+    ],
+    amenities: [
+      "Casas club con alberca, terrazas y espacios sociales",
+      "Canchas deportivas y ciclovías",
+      "Áreas infantiles y zonas de lectura",
+      "Espacios culturales y de eventos",
+      "Área de food trucks y bike park",
+      "Acceso controlado, vigilancia 24/7 e instalaciones subterráneas",
+    ],
+    nearby: [
+      { label: "Periférico de Mérida", hint: "Conexión directa a la ciudad" },
+      { label: "Plazas, hospitales y universidades", hint: "A minutos del complejo" },
+      { label: "Club de playa", hint: "En la costa de Yucatán, para los residentes" },
+    ],
+  },
+
+  "progreso-frente-al-mar": {
+    tagline:
+      "Comunidad planeada en la costa de Yucatán, a 14 km de la playa de Progreso y 19 km de Mérida, con club de playa, privadas con casa club y lago con muelle.",
+    whyIdeal: [
+      "En construcción: lotes residenciales dentro de un plan maestro por etapas.",
+      "A 14 km de la playa de Progreso y 19 km de Mérida, con acceso directo al periférico.",
+      "16 privadas residenciales, cada una con su casa club.",
+      "Club de playa con alberca, bar y rooftop, lago con muelle y manantiales naturales.",
+    ],
+    amenities: [
+      "Club de playa con alberca, bar y rooftop",
+      "16 privadas residenciales con casa club",
+      "Lago con muelle, canales de agua y manantiales naturales",
+      "Ciclovías y canchas deportivas",
+      "Más de 174,000 m² de áreas verdes y 60,000 m² de zonas comerciales",
+      "Calles pavimentadas, acceso controlado e instalaciones subterráneas",
+    ],
+    nearby: [
+      { label: "Playa de Progreso", hint: "A 14 km, playa con bandera azul" },
+      { label: "Mérida", hint: "A 19 km, con acceso directo al periférico" },
+      { label: "Chicxulub", hint: "Puerto y museo del meteorito en la zona" },
     ],
   },
 };
