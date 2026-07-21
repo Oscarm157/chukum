@@ -70,6 +70,7 @@ export function DirectoryExplorer({ places, zonas, soloCategorias }: Props) {
   const mapRef = useRef<MlMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const markerEls = useRef<Map<string, HTMLElement>>(new Map());
+  const didFit = useRef(false);
   const [ready, setReady] = useState(false);
   const mlRef = useRef<typeof import("maplibre-gl") | null>(null);
 
@@ -85,6 +86,9 @@ export function DirectoryExplorer({ places, zonas, soloCategorias }: Props) {
         center: [-89.617, 20.99],
         zoom: 11.6,
         attributionControl: { compact: true },
+        // El scroll de la página pasa por encima del mapa sin hacer zoom (zoom con ctrl+rueda o
+        // los botones). Evita que el mapa "atrape" el scroll y se sienta activo.
+        cooperativeGestures: true,
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
       mapRef.current = map;
@@ -166,24 +170,21 @@ export function DirectoryExplorer({ places, zonas, soloCategorias }: Props) {
       markerEls.current.set(p.slug, el);
     });
 
-    if (filtradas.length > 0) {
+    // Encuadre una sola vez, al primer render de marcadores. Al filtrar, los pines aparecen o
+    // desaparecen pero el mapa NO salta: se queda quieto.
+    if (filtradas.length > 0 && !didFit.current) {
       const bounds = new maplibregl.LngLatBounds();
       filtradas.forEach((p) => bounds.extend([p.lng, p.lat]));
-      map.fitBounds(bounds, { padding: 80, maxZoom: 14.5, duration: 650 });
+      map.fitBounds(bounds, { padding: 80, maxZoom: 14.5, duration: 0 });
+      didFit.current = true;
     }
   }, [filtradas, ready]);
 
-  // Sincroniza el hover card <-> pin.
+  // Resalta el pin de la tarjeta con hover. El mapa NO se mueve: solo se marca el pin.
   useEffect(() => {
     markerEls.current.forEach((el, slug) => {
       el.classList.toggle("is-active", slug === hover);
     });
-    const map = mapRef.current;
-    if (map && hover) {
-      const p = filtradas.find((x) => x.slug === hover);
-      if (p) map.easeTo({ center: [p.lng, p.lat], duration: 500 });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hover]);
 
   const hayFiltro = categoria !== null || zona !== null;
@@ -191,9 +192,9 @@ export function DirectoryExplorer({ places, zonas, soloCategorias }: Props) {
   const resto = filtradas.slice(1);
 
   return (
-    <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-      {/* Columna izquierda: riel editorial */}
-      <div className="order-2 lg:order-1">
+    <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+      {/* Lista/tarjetas: derecha en desktop, debajo del mapa en mobile */}
+      <div className="order-2">
         {/* Filtros */}
         <div className="sticky top-0 z-10 border-y border-hairline bg-canvas/95 px-6 py-4 backdrop-blur md:px-10">
           <div className="flex flex-wrap items-center gap-2">
@@ -233,8 +234,7 @@ export function DirectoryExplorer({ places, zonas, soloCategorias }: Props) {
             )}
           </div>
           <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-2">
-            {filtradas.length} {filtradas.length === 1 ? "lugar" : "lugares"} · ranking por reseñas ·
-            datos de Google
+            {filtradas.length} {filtradas.length === 1 ? "lugar" : "lugares"} · datos de Google
           </p>
         </div>
 
@@ -280,9 +280,9 @@ export function DirectoryExplorer({ places, zonas, soloCategorias }: Props) {
         </div>
       </div>
 
-      {/* Columna derecha: mapa de marca, sticky */}
-      <div className="order-1 lg:order-2 lg:sticky lg:top-0 lg:h-[100dvh]">
-        <div ref={mapContainer} className="h-[46vh] w-full lg:h-full" />
+      {/* Mapa de marca: izquierda en desktop (sticky), banda arriba en mobile */}
+      <div className="order-1 lg:sticky lg:top-0 lg:h-[100dvh]">
+        <div ref={mapContainer} className="h-[42vh] w-full lg:h-full" />
       </div>
     </div>
   );
@@ -328,15 +328,31 @@ function PlaceImage({
   );
 }
 
-function Meta({ place }: { place: RankedPlace }) {
+// Lo principal del directorio: calificación, número de reseñas y precio, en grande. La foto importa,
+// pero el dato de Google es lo que la gente busca primero. `size="lg"` para el destacado.
+function Rating({ place, size = "md" }: { place: RankedPlace; size?: "md" | "lg" }) {
+  const big = size === "lg";
   return (
-    <div className="flex items-center gap-3 text-xs text-ink-2">
-      <span className="inline-flex items-center gap-1 text-ink">
-        <Star className="h-3.5 w-3.5 fill-terracota text-terracota" />
-        <span className="tabular-nums">{place.rating.toFixed(1)}</span>
+    <div className="flex items-center gap-3">
+      <span className="inline-flex items-baseline gap-1.5">
+        <Star
+          className={`${big ? "h-6 w-6" : "h-[17px] w-[17px]"} shrink-0 translate-y-0.5 fill-terracota text-terracota`}
+        />
+        <span
+          className={`font-display leading-none tabular-nums text-ink ${big ? "text-4xl md:text-5xl" : "text-2xl"}`}
+        >
+          {place.rating.toFixed(1)}
+        </span>
       </span>
-      <span className="tabular-nums">{place.reviewsCount.toLocaleString("es-MX")} reseñas</span>
-      <span>{"$".repeat(place.priceLevel)}</span>
+      <span className={`w-px self-stretch bg-hairline ${big ? "my-1" : ""}`} />
+      <span className={`leading-tight text-ink-2 ${big ? "text-sm" : "text-xs"}`}>
+        <span className="block tabular-nums text-ink">
+          {place.reviewsCount.toLocaleString("es-MX")} reseñas
+        </span>
+        <span className="block">
+          <span className="tabular-nums">{"$".repeat(place.priceLevel)}</span> · datos de Google
+        </span>
+      </span>
     </div>
   );
 }
@@ -425,10 +441,10 @@ function FeaturedEntry({
         </h3>
         <ZonaTag zona={zona} />
       </div>
-      <p className="mt-3 max-w-xl text-base leading-relaxed text-ink-2">{place.editorialNote}</p>
       <div className="mt-4">
-        <Meta place={place} />
+        <Rating place={place} size="lg" />
       </div>
+      <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-2">{place.editorialNote}</p>
     </article>
   );
 }
@@ -473,12 +489,12 @@ function PlaceRow({
         <div className="mt-1">
           <ZonaTag zona={zona} />
         </div>
-        <p className="mt-2 line-clamp-2 max-w-prose text-sm leading-relaxed text-ink-2">
+        <div className="mt-2">
+          <Rating place={place} />
+        </div>
+        <p className="mt-2.5 line-clamp-2 max-w-prose text-sm leading-relaxed text-ink-2">
           {place.editorialNote}
         </p>
-        <div className="mt-2.5">
-          <Meta place={place} />
-        </div>
       </div>
     </li>
   );
