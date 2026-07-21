@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 
-// Sonido de olas de fondo (solo olas, ~44s con fade out). Los navegadores bloquean el autoplay
-// con sonido, así que arranca en la PRIMERA interacción del usuario (click/scroll/tecla) a volumen
-// bajo. Botón flotante para silenciar/reanudar. No es loop: suena un rato y se desvanece.
+// Ambiente de fondo: mar constante y sutil + jazz muy bajo (~48s en loop continuo). Los navegadores
+// bloquean el autoplay con sonido, así que arranca en la PRIMERA interacción del usuario
+// (click/scroll/tecla) a volumen bajo. Botón flotante para silenciar/reanudar. Hace loop.
 export function AmbientAudio() {
   const ref = useRef<HTMLAudioElement>(null);
   const started = useRef(false);
@@ -54,7 +54,7 @@ export function AmbientAudio() {
 
   return (
     <>
-      <audio ref={ref} src="/hero/olas-bg.mp3" preload="auto" onEnded={() => setOn(false)} />
+      <audio ref={ref} src="/hero/olas-bg.mp3" preload="auto" loop />
       <button
         onClick={toggle}
         aria-label={on ? "Silenciar olas" : "Escuchar olas"}
