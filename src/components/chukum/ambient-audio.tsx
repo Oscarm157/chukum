@@ -54,7 +54,7 @@ export function AmbientAudio() {
 
   return (
     <>
-      <audio ref={ref} src="/hero/olas-bg.mp3?v=3" preload="auto" loop />
+      <audio ref={ref} src="/hero/olas-bg.mp3?v=4" preload="auto" loop />
       <button
         onClick={toggle}
         aria-label={on ? "Silenciar olas" : "Escuchar olas"}
