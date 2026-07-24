@@ -327,6 +327,7 @@
    Se activa con data-crm-theme="light" en <html>; aplica al shell y a los modales
    (ambos son .crm-root). Mayor especificidad que .crm-root, así que gana. ===== */
 html[data-crm-theme="light"] .crm-root {
+  color-scheme: light;
   --crm-bg: #f4f6fa;
   --crm-surface: #ffffff;
   --crm-surface-2: #ffffff;
@@ -347,6 +348,10 @@ html[data-crm-theme="light"] .crm-root {
 }
 
 .crm-root {
+  /* Controles nativos (checkbox, select, scrollbar) en modo oscuro: sin esto los
+     checkbox sin marcar salen como cajas blancas. accent-color los pone verdes al marcar. */
+  color-scheme: dark;
+  accent-color: var(--crm-accent);
   /* ===== Scaffold neutro casi-negro frío (familia Linear/Rox) =====
      Elevación por capa de color + hairline, NO por sombra. Re-marcable:
      toda la identidad vive en --crm-accent; el resto es neutro. */

@@ -26,7 +26,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <Separator orientation="vertical" className="mr-1 h-5" />
           <span className="text-[13px] font-medium text-[var(--crm-ink-soft)]">Chukum · Panel</span>
         </header>
-        <main className="mx-auto w-full max-w-[1380px] px-4 py-7 sm:px-7 sm:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1380px] px-4 py-7 pb-24 sm:px-7 sm:py-8 sm:pb-8">{children}</main>
       </SidebarInset>
       <Suspense fallback={null}>
         <Asistente />

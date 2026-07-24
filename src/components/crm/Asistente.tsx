@@ -419,7 +419,9 @@ export function Asistente() {
     });
   }
 
-  if (!montado) return null;
+  // Solo en Keywords y Grupos: en Leads/Zonas/Desarrollos no tiene datos que mover ni consultar,
+  // así que la burbuja solo estorbaría.
+  if (!montado || !enKeywords) return null;
 
   if (!abierto) {
     return (

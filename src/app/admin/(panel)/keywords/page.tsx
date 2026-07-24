@@ -76,7 +76,7 @@ export default async function KeywordsPage({
         >
           Todas
         </Link>
-        {plazas.slice(0, CHIPS).map((p) => (
+        {plazas.slice(0, 6).map((p) => (
           <Link
             key={p.plaza}
             href={url(p.plaza === plaza ? undefined : p.plaza, mercado)}
@@ -85,6 +85,22 @@ export default async function KeywordsPage({
             {p.plaza}
           </Link>
         ))}
+        {/* En móvil se ocultan (14 chips comen media pantalla); el wrapper lleva el
+            `hidden` para no pelear con el display propio de .crm-btn. La activa siempre se ve. */}
+        <span className="contents max-sm:hidden">
+          {plazas.slice(6, CHIPS).map((p) => (
+            <Link
+              key={p.plaza}
+              href={url(p.plaza === plaza ? undefined : p.plaza, mercado)}
+              className={`crm-btn crm-btn-sm ${p.plaza === plaza ? "crm-btn-primary" : "crm-btn-secondary"}`}
+            >
+              {p.plaza}
+            </Link>
+          ))}
+        </span>
+        {plaza && plazas.slice(6, CHIPS).some((p) => p.plaza === plaza) && (
+          <span className="crm-btn crm-btn-sm crm-btn-primary sm:hidden">{plaza}</span>
+        )}
         {plaza && !plazas.slice(0, CHIPS).some((p) => p.plaza === plaza) && (
           <span className="crm-btn crm-btn-sm crm-btn-primary">{plaza}</span>
         )}
