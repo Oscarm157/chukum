@@ -16,7 +16,7 @@ function conFormato(texto: string): ReactNode[] {
       return (
         <span
           key={i}
-          className="mx-0.5 inline-block rounded bg-[var(--crm-accent-soft,rgba(16,185,129,0.12))] px-1.5 py-px text-[12.5px] font-medium text-[var(--crm-accent-strong)]"
+          className="mx-0.5 rounded bg-[color-mix(in_srgb,var(--crm-accent)_14%,transparent)] px-1.5 py-px font-medium text-[var(--crm-accent-strong)] ring-1 ring-[color-mix(in_srgb,var(--crm-accent)_30%,transparent)] ring-inset"
         >
           {p.slice(2, -2)}
         </span>

@@ -508,7 +508,7 @@ export function Asistente() {
                       className={`overflow-hidden rounded-[var(--crm-r-md)] border-2 ${
                         c.resuelta
                           ? "border-[var(--crm-line)]"
-                          : "border-[var(--crm-accent)] shadow-[0_0_0_4px_var(--crm-accent-soft,rgba(16,185,129,0.10))]"
+                          : "border-[var(--crm-accent)] shadow-[0_0_0_4px_color-mix(in_srgb,var(--crm-accent)_15%,transparent)]"
                       }`}
                     >
                       <div className="flex items-center gap-2 bg-[var(--crm-accent)] px-3 py-1.5">
@@ -623,7 +623,7 @@ function TarjetaAccion({ herramienta, texto }: { herramienta: string; texto: str
   const a = ACCIONES[herramienta] ?? { icono: Sparkles, label: "Acción" };
   const Icono = a.icono;
   return (
-    <div className="flex items-start gap-2.5 rounded-[var(--crm-r-md)] border border-[var(--crm-accent)]/40 bg-[var(--crm-accent-soft,rgba(16,185,129,0.10))] px-3 py-2.5">
+    <div className="flex items-start gap-2.5 rounded-[var(--crm-r-md)] border border-[color-mix(in_srgb,var(--crm-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--crm-accent)_10%,transparent)] px-3 py-2.5">
       <span className="mt-px flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--crm-accent)]">
         <Icono className="size-3.5 text-white" />
       </span>
