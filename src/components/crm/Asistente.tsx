@@ -10,6 +10,7 @@ import {
   type Columna,
 } from "@/app/admin/(panel)/keywords/KeywordsContext";
 import { crearGrupo } from "@/app/admin/(panel)/keywords/actions";
+import { Markdown } from "./Markdown";
 
 /**
  * Asistente de pauta: chatea y además mueve la pantalla (filtra, ordena, selecciona).
@@ -36,7 +37,7 @@ type Propuesta = {
   porque?: string;
 };
 
-type Turno = { rol: "yo" | "asistente"; texto: string; tarjetas: Tarjeta[] };
+type Turno = { rol: "yo" | "asistente"; texto: string; avance: string; tarjetas: Tarjeta[] };
 
 const SUGERENCIAS = [
   "¿Dónde pauto 1,000 USD para vender 3 casas al mes?",
@@ -175,7 +176,7 @@ export function Asistente() {
   async function enviar(texto: string) {
     if (!texto.trim() || pensando) return;
     setEntrada("");
-    setTurnos((t) => [...t, { rol: "yo", texto, tarjetas: [] }]);
+    setTurnos((t) => [...t, { rol: "yo", texto, avance: "", tarjetas: [] }]);
     historial.current.push({ role: "user", content: texto });
     await correr();
   }
@@ -183,7 +184,7 @@ export function Asistente() {
   /** Un turno completo: stream de texto, acciones y, si las hubo, otra vuelta con resultados. */
   async function correr() {
     setPensando(true);
-    setTurnos((t) => [...t, { rol: "asistente", texto: "", tarjetas: [] }]);
+    setTurnos((t) => [...t, { rol: "asistente", texto: "", avance: "", tarjetas: [] }]);
 
     try {
       const res = await fetch("/api/asistente", {
@@ -217,6 +218,8 @@ export function Asistente() {
 
           if (evento.type === "texto") {
             actualizarUltimo((t) => ({ ...t, texto: t.texto + evento.texto }));
+          } else if (evento.type === "pensamiento") {
+            actualizarUltimo((t) => ({ ...t, avance: t.avance + evento.texto }));
           } else if (evento.type === "accion") {
             const resumen = aplicarAccion(evento.nombre, evento.input);
             resultados.push({ type: "tool_result", tool_use_id: evento.id, content: resumen });
@@ -377,11 +380,12 @@ export function Asistente() {
               </p>
             ) : (
               <div className="space-y-2">
-                {t.texto && (
-                  <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-[var(--crm-ink)]">
-                    {t.texto}
+                {!t.texto && t.avance && (
+                  <p className="border-l-2 border-[var(--crm-line)] pl-2.5 text-[12.5px] leading-relaxed text-[var(--crm-ink-faint)]">
+                    {t.avance.trim().split("\n").at(-1)?.slice(-180)}
                   </p>
                 )}
+                {t.texto && <Markdown texto={t.texto} />}
                 {t.tarjetas.map((c, j) =>
                   c.tipo === "accion" ? (
                     <p
@@ -438,7 +442,7 @@ export function Asistente() {
           </div>
         ))}
 
-        {pensando && (
+        {pensando && !turnos.at(-1)?.avance && !turnos.at(-1)?.texto && (
           <p className="text-[13px] text-[var(--crm-ink-faint)]">Pensando...</p>
         )}
         <div ref={finRef} />

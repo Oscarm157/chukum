@@ -112,8 +112,10 @@ export async function POST(req: Request) {
         const llamada = anthropic.messages.stream({
           model: "claude-opus-4-8",
           max_tokens: 8000,
-          thinking: { type: "adaptive" },
-          output_config: { effort: "medium" },
+          // Esfuerzo bajo: casi todo son acciones de pantalla o aritmética sobre datos
+          // que ya van en el prompt. Pensar más solo agregaba espera.
+          thinking: { type: "adaptive", display: "summarized" },
+          output_config: { effort: "low" },
           // El prompt estable va primero y cacheado; el estado de pantalla queda después.
           system: [
             { type: "text", text: SYSTEM_ASISTENTE, cache_control: { type: "ephemeral" } },
@@ -123,8 +125,13 @@ export async function POST(req: Request) {
         });
 
         for await (const evento of llamada) {
-          if (evento.type === "content_block_delta" && evento.delta.type === "text_delta") {
+          if (evento.type !== "content_block_delta") continue;
+          if (evento.delta.type === "text_delta") {
             emit({ type: "texto", texto: evento.delta.text });
+          } else if (evento.delta.type === "thinking_delta") {
+            // Se muestra mientras razona: así se ve el avance y no un "pensando"
+            // mudo de medio minuto.
+            emit({ type: "pensamiento", texto: evento.delta.thinking });
           }
         }
 
@@ -189,6 +196,9 @@ export async function POST(req: Request) {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      // Sin esto el proxy puede acumular el stream y entregarlo al final: se ve
+      // "Pensando" durante todo el turno aunque el modelo ya esté escribiendo.
+      "X-Accel-Buffering": "no",
     },
   });
 }
