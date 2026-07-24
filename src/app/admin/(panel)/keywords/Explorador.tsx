@@ -35,14 +35,24 @@ export function Explorador({
     filtros,
     orden,
     elegidas,
+    destello,
+    gen,
     setFiltros,
     setOrden,
     alternar,
     alternarTodas,
     limpiarSeleccion,
+    limpiarDestello,
   } = useKeywords();
   const [copiado, setCopiado] = useState(false);
   const [mostrar, setMostrar] = useState(PAGINA);
+
+  // El destello del asistente dura poco: se limpia solo tras la animación.
+  useEffect(() => {
+    if (!destello.size) return;
+    const t = setTimeout(limpiarDestello, 1200);
+    return () => clearTimeout(t);
+  }, [destello, limpiarDestello]);
 
   // Las cifras del panel salen de la selección; sin selección, de lo que está a la vista.
   const base = seleccion.length ? seleccion : visibles;
@@ -206,15 +216,24 @@ export function Explorador({
                 </Th>
               </tr>
             </thead>
-            <tbody>
-              {enPantalla.map((k) => {
-                const elegida = elegidas.has(claveIdea(k));
+            <tbody key={gen}>
+              {enPantalla.map((k, i) => {
+                const clave = claveIdea(k);
+                const elegida = elegidas.has(clave);
+                const destella = destello.has(clave);
                 return (
                   <tr
-                    key={claveIdea(k)}
+                    key={clave}
                     onClick={() => alternar(k)}
-                    className="crm-row cursor-pointer border-t border-[var(--crm-line)]"
-                    style={elegida ? { background: "var(--crm-surface-3)" } : undefined}
+                    // crm-fade: cascada al re-montar por cambio de orden/plaza (gen).
+                    // crm-flash: destello verde de lo que el asistente acaba de marcar.
+                    className={`crm-row crm-fade cursor-pointer border-t border-[var(--crm-line)] ${
+                      destella ? "crm-flash" : ""
+                    }`}
+                    style={{
+                      animationDelay: `${Math.min(i, 16) * 22}ms`,
+                      ...(elegida && !destella ? { background: "var(--crm-surface-3)" } : {}),
+                    }}
                   >
                     <td className="crm-td pr-0">
                       <input

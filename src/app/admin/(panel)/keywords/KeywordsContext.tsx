@@ -35,6 +35,10 @@ type Estado = {
   elegidas: Set<string>;
   /** Sube las seleccionadas al principio: si el asistente elige 8 de 600, que se vean. */
   subirSeleccionadas: boolean;
+  /** Las que el asistente acaba de marcar: destellan un momento y se limpian. */
+  destello: Set<string>;
+  /** Sube al cambiar orden o plaza para re-animar la cascada; NO al teclear búsqueda. */
+  gen: number;
 };
 
 let estado: Estado = {
@@ -43,6 +47,8 @@ let estado: Estado = {
   orden: { col: "volumen", desc: true },
   elegidas: new Set(),
   subirSeleccionadas: false,
+  destello: new Set(),
+  gen: 0,
 };
 
 const suscriptores = new Set<() => void>();
@@ -65,14 +71,14 @@ export const keywordsStore = {
   cargarIdeas(ideas: IdeaFila[]) {
     // Al cambiar de filtro de ciudad la página trae otras keywords: la selección
     // previa ya no aplica.
-    set({ ideas, elegidas: new Set(), subirSeleccionadas: false });
+    set({ ideas, elegidas: new Set(), subirSeleccionadas: false, gen: estado.gen + 1 });
   },
   setFiltros(parcial: Partial<Filtros>) {
     set({ filtros: { ...estado.filtros, ...parcial } });
   },
   setOrden(orden: Orden) {
     // Si el usuario ordena a mano, manda su orden: deja de subir las seleccionadas.
-    set({ orden, subirSeleccionadas: false });
+    set({ orden, subirSeleccionadas: false, gen: estado.gen + 1 });
   },
   alternar(k: IdeaFila) {
     const next = new Set(estado.elegidas);
@@ -95,9 +101,17 @@ export const keywordsStore = {
     const buscadas = new Set(keywords.map((k) => k.trim().toLowerCase()));
     const encontradas = estado.ideas.filter((k) => buscadas.has(k.keyword.toLowerCase()));
     const next = reemplazar ? new Set<string>() : new Set(estado.elegidas);
-    encontradas.forEach((k) => next.add(claveIdea(k)));
-    set({ elegidas: next, subirSeleccionadas: next.size > 0 });
+    const nuevas = new Set<string>();
+    encontradas.forEach((k) => {
+      const c = claveIdea(k);
+      if (!estado.elegidas.has(c)) nuevas.add(c);
+      next.add(c);
+    });
+    set({ elegidas: next, subirSeleccionadas: next.size > 0, destello: nuevas });
     return encontradas.length;
+  },
+  limpiarDestello() {
+    if (estado.destello.size) set({ destello: new Set() });
   },
 };
 
@@ -152,6 +166,7 @@ export function useKeywords() {
     ...snapshot,
     visibles,
     seleccion,
+    limpiarDestello: keywordsStore.limpiarDestello,
     setFiltros: keywordsStore.setFiltros,
     setOrden: keywordsStore.setOrden,
     alternar: keywordsStore.alternar,
