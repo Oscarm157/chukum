@@ -90,10 +90,21 @@ export async function POST(req: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const encoder = new TextEncoder();
 
+  // Si el navegador se va a media respuesta, hay que dejar de escribir: enqueue sobre
+  // un stream cerrado lanza y tumbaba el turno completo.
+  let cerrado = false;
+  let llamadaEnCurso: { abort: () => void } | null = null;
+
   const stream = new ReadableStream({
     async start(controller) {
-      const emit = (data: unknown) =>
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+      const emit = (data: unknown) => {
+        if (cerrado) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          cerrado = true;
+        }
+      };
 
       try {
         const mensajes = [
@@ -107,7 +118,9 @@ export async function POST(req: Request) {
           // Sonnet 5: la mitad de costo que Opus y de sobra para ejecutar acciones
           // y hacer cuentas sobre datos que ya van en el prompt.
           model: "claude-sonnet-5",
-          max_tokens: 2000,
+          // Alto a propósito: solo se cobra lo que genera, y con 2000 las respuestas
+          // con tabla se cortaban a media frase.
+          max_tokens: 8000,
           // Esfuerzo bajo: casi todo son acciones de pantalla o aritmética sobre datos
           // que ya van en el prompt. Pensar más solo agregaba espera.
           thinking: { type: "adaptive", display: "summarized" },
@@ -120,7 +133,10 @@ export async function POST(req: Request) {
           messages: mensajes,
         });
 
+        llamadaEnCurso = llamada;
+
         for await (const evento of llamada) {
+          if (cerrado) break; // el usuario cerró: no seguir gastando tokens
           if (evento.type !== "content_block_delta") continue;
           if (evento.delta.type === "text_delta") {
             emit({ type: "texto", texto: evento.delta.text });
@@ -146,6 +162,20 @@ export async function POST(req: Request) {
             const datos: Record<string, unknown> = {};
             if (que === "plazas" || que === "ambos") datos.plazas = await getPlazas();
             if (que === "grupos" || que === "ambos") datos.grupos = await getGrupos();
+            // Sin esto el turno se ve mudo: el modelo consulta y el usuario no ve nada.
+            const plazas = (datos.plazas as unknown[])?.length ?? 0;
+            const grupos = (datos.grupos as unknown[])?.length ?? 0;
+            emit({
+              type: "accion",
+              id: `${bloque.id}-vista`,
+              nombre: "consultar_mercado",
+              resumen: [
+                plazas ? `${plazas} plazas` : "",
+                grupos ? `${grupos} grupos` : "",
+              ]
+                .filter(Boolean)
+                .join(" y "),
+            });
             resultadosServidor.push({
               type: "tool_result",
               tool_use_id: bloque.id,
@@ -182,8 +212,20 @@ export async function POST(req: Request) {
         );
         emit({ type: "error", mensaje: "No se pudo completar la respuesta." });
       } finally {
-        controller.close();
+        if (!cerrado) {
+          cerrado = true;
+          try {
+            controller.close();
+          } catch {
+            // ya estaba cerrado por el lado del cliente
+          }
+        }
       }
+    },
+    cancel() {
+      // El navegador cortó la conexión: abortar la llamada al modelo.
+      cerrado = true;
+      llamadaEnCurso?.abort();
     },
   });
 

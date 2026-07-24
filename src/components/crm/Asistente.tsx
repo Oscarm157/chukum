@@ -2,7 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { PanelRightClose, Sparkles, ArrowUp, Check, X } from "lucide-react";
+import {
+  PanelRightClose,
+  Sparkles,
+  ArrowUp,
+  Check,
+  X,
+  Filter,
+  ArrowUpDown,
+  MousePointerClick,
+  Compass,
+  FolderPlus,
+  Database,
+} from "lucide-react";
 import {
   keywordsStore,
   calcularVisibles,
@@ -28,7 +40,7 @@ type Bloque = { type: string; [k: string]: unknown };
 type Mensaje = { role: "user" | "assistant"; content: string | Bloque[] };
 
 type Tarjeta =
-  | { tipo: "accion"; texto: string }
+  | { tipo: "accion"; texto: string; herramienta: string }
   | { tipo: "propuesta"; id: string; input: Propuesta; resuelta?: "si" | "no" };
 
 type Propuesta = {
@@ -265,11 +277,29 @@ export function Asistente() {
           } else if (evento.type === "pensamiento") {
             actualizarUltimo((t) => ({ ...t, avance: t.avance + evento.texto }));
           } else if (evento.type === "accion") {
+            if (evento.resumen) {
+              // Herramienta de servidor: solo se informa, no toca la pantalla.
+              actualizarUltimo((tu) => ({
+                ...tu,
+                tarjetas: [
+                  ...tu.tarjetas,
+                  {
+                    tipo: "accion",
+                    texto: `Consulté los datos medidos: ${evento.resumen}`,
+                    herramienta: "consultar_mercado",
+                  },
+                ],
+              }));
+              continue;
+            }
             const resumen = aplicarAccion(evento.nombre, evento.input);
             resultados.push({ type: "tool_result", tool_use_id: evento.id, content: resumen });
             actualizarUltimo((t) => ({
               ...t,
-              tarjetas: [...t.tarjetas, { tipo: "accion", texto: resumen }],
+              tarjetas: [
+                ...t.tarjetas,
+                { tipo: "accion", texto: resumen, herramienta: evento.nombre },
+              ],
             }));
           } else if (evento.type === "propuesta") {
             actualizarUltimo((t) => ({
@@ -286,12 +316,20 @@ export function Asistente() {
             });
           } else if (evento.type === "fin") {
             finalContent = evento.mensaje as Bloque[];
+            if (evento.stop === "max_tokens") {
+              actualizarUltimo((tu) => ({
+                ...tu,
+                texto: `${tu.texto}\n\n_(La respuesta llegó al límite de largo y se cortó aquí. Pídeme que continúe.)_`,
+              }));
+            }
             for (const r of evento.resultadosServidor ?? []) resultados.push(r);
           } else if (evento.type === "error") {
             actualizarUltimo((t) => ({ ...t, texto: t.texto || evento.mensaje }));
           }
         }
       }
+
+      actualizarUltimo((tu) => ({ ...tu, avance: "" }));
 
       if (!finalContent.length) {
         // El stream terminó sin el evento de cierre: se cortó a medias.
@@ -302,6 +340,12 @@ export function Asistente() {
         return;
       }
       historial.current.push({ role: "assistant", content: finalContent });
+
+      actualizarUltimo((tu) =>
+        tu.texto || tu.tarjetas.length
+          ? tu
+          : { ...tu, texto: "Terminé sin nada que responder. Vuelve a preguntarme." },
+      );
 
       // Si hubo herramientas, el modelo necesita saber qué pasó de verdad.
       if (resultados.length) {
@@ -457,52 +501,76 @@ export function Asistente() {
                 {t.texto && <Markdown texto={t.texto} />}
                 {t.tarjetas.map((c, j) =>
                   c.tipo === "accion" ? (
-                    <p
+                    <div
                       key={j}
-                      className="crm-num rounded-[var(--crm-r-md)] border border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-3 py-2 text-[12.5px] text-[var(--crm-ink-soft)]"
+                      className="flex items-start gap-2.5 rounded-[var(--crm-r-md)] border-l-2 border-[var(--crm-accent)] bg-[var(--crm-surface-2)] px-3 py-2.5"
                     >
-                      {c.texto}
-                    </p>
+                      <IconoAccion nombre={c.herramienta} />
+                      <span className="text-[12.5px] leading-snug text-[var(--crm-ink)]">
+                        {c.texto}
+                      </span>
+                    </div>
                   ) : (
                     <div
                       key={j}
-                      className="rounded-[var(--crm-r-md)] border border-[var(--crm-line)] bg-[var(--crm-surface-2)] p-3"
+                      className={`overflow-hidden rounded-[var(--crm-r-md)] border-2 ${
+                        c.resuelta
+                          ? "border-[var(--crm-line)]"
+                          : "border-[var(--crm-accent)] shadow-[0_0_0_4px_var(--crm-accent-soft,rgba(16,185,129,0.10))]"
+                      }`}
                     >
-                      <p className="text-[13.5px] font-medium text-[var(--crm-ink)]">
-                        {c.input.nombre}
-                      </p>
-                      <p className="mt-0.5 text-[12px] text-[var(--crm-ink-mute)]">
-                        {c.input.plaza} · {c.input.tema} · {c.input.keywords.length} keywords
-                      </p>
-                      {c.input.porque && (
-                        <p className="mt-1.5 text-[12.5px] text-[var(--crm-ink-soft)]">
-                          {c.input.porque}
+                      <div className="flex items-center gap-2 bg-[var(--crm-accent)] px-3 py-1.5">
+                        <FolderPlus className="size-3.5 text-white" />
+                        <span className="text-[12px] font-semibold tracking-wide text-white uppercase">
+                          {c.resuelta ? "Propuesta" : "Confirma para guardar"}
+                        </span>
+                      </div>
+                      <div className="bg-[var(--crm-surface-2)] p-3">
+                        <p className="text-[15px] font-semibold text-[var(--crm-ink)]">
+                          {c.input.nombre}
                         </p>
-                      )}
-                      {c.resuelta ? (
-                        <p className="mt-2 text-[12.5px] text-[var(--crm-ink-mute)]">
-                          {c.resuelta === "si" ? "Grupo creado." : "Descartado."}
+                        <p className="mt-0.5 text-[12px] text-[var(--crm-ink-mute)]">
+                          {c.input.plaza} · {c.input.tema} · {c.input.keywords.length} keywords
                         </p>
-                      ) : (
-                        <div className="mt-2.5 flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => aceptarPropuesta(i, j, c.input)}
-                            className="crm-btn crm-btn-sm crm-btn-primary"
-                          >
-                            <Check className="size-3.5" />
-                            Crear grupo
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => marcarPropuesta(i, j, "no")}
-                            className="crm-btn crm-btn-sm crm-btn-secondary"
-                          >
-                            <X className="size-3.5" />
-                            No
-                          </button>
-                        </div>
-                      )}
+                        {c.input.porque && (
+                          <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--crm-ink-soft)]">
+                            {c.input.porque}
+                          </p>
+                        )}
+                        {c.resuelta ? (
+                          <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--crm-ink)]">
+                            {c.resuelta === "si" ? (
+                              <>
+                                <Check className="size-3.5 text-[var(--crm-accent-strong)]" />
+                                Grupo creado
+                              </>
+                            ) : (
+                              <>
+                                <X className="size-3.5" />
+                                Descartado
+                              </>
+                            )}
+                          </p>
+                        ) : (
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => aceptarPropuesta(i, j, c.input)}
+                              className="crm-btn crm-btn-primary flex-1"
+                            >
+                              <Check className="size-4" />
+                              Crear grupo
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => marcarPropuesta(i, j, "no")}
+                              className="crm-btn crm-btn-secondary"
+                            >
+                              <X className="size-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ),
                 )}
@@ -548,6 +616,17 @@ export function Asistente() {
       </form>
     </aside>
   );
+}
+
+/** Cada acción con su icono: se distingue de un vistazo qué tocó el asistente. */
+function IconoAccion({ nombre }: { nombre: string }) {
+  const clase = "size-3.5 shrink-0 text-[var(--crm-accent-strong)] mt-px";
+  if (nombre === "aplicar_filtros") return <Filter className={clase} />;
+  if (nombre === "ordenar") return <ArrowUpDown className={clase} />;
+  if (nombre === "seleccionar_keywords") return <MousePointerClick className={clase} />;
+  if (nombre === "navegar") return <Compass className={clase} />;
+  if (nombre === "consultar_mercado") return <Database className={clase} />;
+  return <Sparkles className={clase} />;
 }
 
 /** Qué está viendo ahora mismo, para que los dos miren lo mismo. */
