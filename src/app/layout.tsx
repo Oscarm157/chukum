@@ -40,10 +40,8 @@ export default function RootLayout({
       <head>
         <BotIdClient protect={PROTEGIDOS} />
       </head>
-      <head>
-        <BotIdClient protect={PROTEGIDOS} />
-      </head>
       <body className="min-h-full flex flex-col font-sans">
+        <BotIdClient protect={PROTEGIDOS} />
         <SmoothScroll />
         {children}
         <Toaster />
