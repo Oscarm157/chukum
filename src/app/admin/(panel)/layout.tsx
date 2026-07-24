@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator";
 import { Toaster } from "@/components/ui/sonner";
 import { FlashToaster } from "@/components/crm/FlashToaster";
+import { Asistente } from "@/components/crm/Asistente";
 
 // Gate de todo el grupo (panel): un solo admin. Sin login → /login; con contraseña
 // temporal → /change-password (rutas ya existentes en chukum).
@@ -27,6 +28,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </header>
         <main className="mx-auto w-full max-w-[1380px] px-4 py-7 sm:px-7 sm:py-8">{children}</main>
       </SidebarInset>
+      <Suspense fallback={null}>
+        <Asistente />
+      </Suspense>
       <Toaster position="bottom-right" />
       <Suspense fallback={null}>
         <FlashToaster />

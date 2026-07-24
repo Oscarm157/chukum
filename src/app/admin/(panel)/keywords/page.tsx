@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/crm/PageShell";
 import { getGruposBreve, getIdeas, getPlazas, getResumen } from "@/lib/keywords-data";
 import type { KwMercado } from "@/lib/schema";
 import { Explorador } from "./Explorador";
+import { KeywordsProvider } from "./KeywordsContext";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Keywords", robots: { index: false } };
@@ -109,7 +110,9 @@ export default async function KeywordsPage({
         ))}
       </div>
 
-      <Explorador ideas={ideas} total={resumen.keywords} grupos={grupos} />
+      <KeywordsProvider ideas={ideas}>
+        <Explorador total={resumen.keywords} grupos={grupos} />
+      </KeywordsProvider>
 
       {/* Comparativo de plazas: para decidir dónde entrar, no para el día a día */}
       <h2 id="plazas" className="crm-h2 mb-3 scroll-mt-20">

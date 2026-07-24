@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowDown, ArrowUp, Copy, Check } from "lucide-react";
 import type { IdeaFila } from "@/lib/keywords-data";
 import { AgregarAGrupo } from "./AgregarAGrupo";
 import { Calculadora } from "./Calculadora";
+import { claveIdea, useKeywords, type Columna, type Orden } from "./KeywordsContext";
 
 /**
  * Explora las keywords del filtro activo: orden por cualquier columna, búsqueda,
@@ -14,63 +15,30 @@ import { Calculadora } from "./Calculadora";
 
 const MERCADOS: Record<string, string> = { nacional_es: "Nacional", extranjero_en: "Extranjero" };
 const COMPETENCIA: Record<string, string> = { LOW: "Baja", MEDIUM: "Media", HIGH: "Alta" };
-const PESO: Record<string, number> = { LOW: 1, MEDIUM: 2, HIGH: 3 };
-
-type Columna = "keyword" | "plaza" | "volumen" | "competencia" | "cpc";
-type Orden = { col: Columna; desc: boolean };
 
 const num = (n: number, d = 0) =>
   n.toLocaleString("es-MX", { minimumFractionDigits: d, maximumFractionDigits: d });
 
-const clave = (k: IdeaFila) => `${k.keyword}·${k.mercado}`;
-
 export function Explorador({
-  ideas,
   total,
   grupos,
 }: {
-  ideas: IdeaFila[];
   total: number;
   grupos: Array<{ id: string; nombre: string; plaza: string; tema: string }>;
 }) {
-  const [busqueda, setBusqueda] = useState("");
-  const [minVolumen, setMinVolumen] = useState(0);
-  const [competencias, setCompetencias] = useState<string[]>([]);
-  const [soloConPuja, setSoloConPuja] = useState(false);
-  const [orden, setOrden] = useState<Orden>({ col: "volumen", desc: true });
-  const [elegidas, setElegidas] = useState<Set<string>>(new Set());
+  const {
+    visibles,
+    seleccion,
+    filtros,
+    orden,
+    elegidas,
+    setFiltros,
+    setOrden,
+    alternar,
+    alternarTodas,
+    limpiarSeleccion,
+  } = useKeywords();
   const [copiado, setCopiado] = useState(false);
-
-  const visibles = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    const filtradas = ideas.filter((k) => {
-      if (q && !k.keyword.toLowerCase().includes(q)) return false;
-      if (k.volumen < minVolumen) return false;
-      if (competencias.length && !competencias.includes(k.competencia)) return false;
-      if (soloConPuja && k.cpc <= 0) return false;
-      return true;
-    });
-    const signo = orden.desc ? -1 : 1;
-    return filtradas.sort((a, b) => {
-      switch (orden.col) {
-        case "keyword":
-          return signo * a.keyword.localeCompare(b.keyword);
-        case "plaza":
-          return signo * (a.plaza.localeCompare(b.plaza) || b.volumen - a.volumen);
-        case "competencia":
-          return signo * ((PESO[a.competencia] ?? 0) - (PESO[b.competencia] ?? 0) || a.indice - b.indice);
-        case "cpc":
-          return signo * (a.cpc - b.cpc);
-        default:
-          return signo * (a.volumen - b.volumen);
-      }
-    });
-  }, [ideas, busqueda, minVolumen, competencias, soloConPuja, orden]);
-
-  const seleccion = useMemo(
-    () => visibles.filter((k) => elegidas.has(clave(k))),
-    [visibles, elegidas],
-  );
 
   // Las cifras del panel salen de la selección; sin selección, de lo que está a la vista.
   const base = seleccion.length ? seleccion : visibles;
@@ -82,30 +50,13 @@ export function Explorador({
       Math.max(1, conPuja.reduce((a, k) => a + k.volumen, 0))
     : 0;
 
-  const todasElegidas = visibles.length > 0 && visibles.every((k) => elegidas.has(clave(k)));
-
-  function alternarTodas() {
-    setElegidas((prev) => {
-      const next = new Set(prev);
-      if (todasElegidas) visibles.forEach((k) => next.delete(clave(k)));
-      else visibles.forEach((k) => next.add(clave(k)));
-      return next;
-    });
-  }
-
-  function alternar(k: IdeaFila) {
-    setElegidas((prev) => {
-      const next = new Set(prev);
-      const c = clave(k);
-      if (next.has(c)) next.delete(c);
-      else next.add(c);
-      return next;
-    });
-  }
+  const todasElegidas = visibles.length > 0 && visibles.every((k) => elegidas.has(claveIdea(k)));
 
   function ordenarPor(col: Columna) {
-    setOrden((prev) =>
-      prev.col === col ? { col, desc: !prev.desc } : { col, desc: col !== "keyword" && col !== "plaza" },
+    setOrden(
+      orden.col === col
+        ? { col, desc: !orden.desc }
+        : { col, desc: col !== "keyword" && col !== "plaza" },
     );
   }
 
@@ -121,16 +72,16 @@ export function Explorador({
       <div className="crm-card mb-3 flex flex-wrap items-center gap-2.5 p-3">
         <input
           type="search"
-          value={busqueda}
-          onChange={(ev) => setBusqueda(ev.target.value)}
+          value={filtros.busqueda}
+          onChange={(ev) => setFiltros({ busqueda: ev.target.value })}
           placeholder="Buscar en las keywords"
           className="crm-input w-full sm:w-[260px]"
         />
         <label className="flex items-center gap-2 text-[13px] text-[var(--crm-ink-soft)]">
           Volumen mínimo
           <select
-            value={minVolumen}
-            onChange={(ev) => setMinVolumen(Number(ev.target.value))}
+            value={filtros.minVolumen}
+            onChange={(ev) => setFiltros({ minVolumen: Number(ev.target.value) })}
             className="crm-select w-[100px]"
           >
             {[0, 50, 100, 500, 1000].map((v) => (
@@ -146,12 +97,14 @@ export function Explorador({
               key={c}
               type="button"
               onClick={() =>
-                setCompetencias((prev) =>
-                  prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
-                )
+                setFiltros({
+                  competencias: filtros.competencias.includes(c)
+                    ? filtros.competencias.filter((x) => x !== c)
+                    : [...filtros.competencias, c],
+                })
               }
               className={`crm-btn crm-btn-sm ${
-                competencias.includes(c) ? "crm-btn-primary" : "crm-btn-secondary"
+                filtros.competencias.includes(c) ? "crm-btn-primary" : "crm-btn-secondary"
               }`}
             >
               {COMPETENCIA[c]}
@@ -161,8 +114,8 @@ export function Explorador({
         <label className="flex items-center gap-2 text-[13px] text-[var(--crm-ink-soft)]">
           <input
             type="checkbox"
-            checked={soloConPuja}
-            onChange={(ev) => setSoloConPuja(ev.target.checked)}
+            checked={filtros.soloConPuja}
+            onChange={(ev) => setFiltros({ soloConPuja: ev.target.checked })}
             className="size-3.5 accent-[var(--crm-accent)]"
           />
           Solo con puja
@@ -188,7 +141,7 @@ export function Explorador({
             <AgregarAGrupo
               seleccion={seleccion}
               grupos={grupos}
-              onListo={() => setElegidas(new Set())}
+              onListo={limpiarSeleccion}
             />
             <button type="button" onClick={copiar} className="crm-btn crm-btn-sm crm-btn-secondary">
               {copiado ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -196,7 +149,7 @@ export function Explorador({
             </button>
             <button
               type="button"
-              onClick={() => setElegidas(new Set())}
+              onClick={limpiarSeleccion}
               className="crm-btn crm-btn-sm crm-btn-ghost"
             >
               Limpiar
@@ -245,10 +198,10 @@ export function Explorador({
             </thead>
             <tbody>
               {visibles.map((k) => {
-                const elegida = elegidas.has(clave(k));
+                const elegida = elegidas.has(claveIdea(k));
                 return (
                   <tr
-                    key={clave(k)}
+                    key={claveIdea(k)}
                     onClick={() => alternar(k)}
                     className="crm-row cursor-pointer border-t border-[var(--crm-line)]"
                     style={elegida ? { background: "var(--crm-surface-3)" } : undefined}
