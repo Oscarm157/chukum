@@ -810,6 +810,6 @@ html[data-crm-theme="light"] .crm-logo-navy { display: block; }
 }
 @media (min-width: 640px) {
   html[data-asistente="abierto"] .crm-inset {
-    padding-right: 400px;
+    padding-right: var(--asistente-ancho, 400px);
   }
 }

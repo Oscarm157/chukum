@@ -165,7 +165,7 @@ export function Explorador({
           </p>
         </div>
       ) : (
-        <div className="crm-card mb-6 overflow-hidden">
+        <div className="crm-card mb-6 overflow-x-auto">
           <table className="crm-table">
             <thead className="crm-thead">
               <tr>

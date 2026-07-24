@@ -26,10 +26,17 @@ function conNegritas(texto: string) {
   });
 }
 
+/** Fila de tabla markdown: | a | b | c | */
+const esFilaTabla = (l: string) => l.startsWith("|") && l.endsWith("|") && l.length > 2;
+const esSeparador = (l: string) => /^\|[\s:|-]+\|$/.test(l);
+const celdas = (l: string) =>
+  l.slice(1, -1).split("|").map((c) => c.trim());
+
 export function Markdown({ texto }: { texto: string }) {
   const lineas = texto.split("\n");
   const bloques: React.ReactNode[] = [];
   let lista: string[] = [];
+  let tabla: string[] = [];
 
   const cerrarLista = () => {
     if (!lista.length) return;
@@ -46,8 +53,59 @@ export function Markdown({ texto }: { texto: string }) {
     lista = [];
   };
 
+  const cerrarTabla = () => {
+    if (!tabla.length) return;
+    const filas = tabla.filter((l) => !esSeparador(l)).map(celdas);
+    const [encabezado, ...cuerpo] = filas;
+    bloques.push(
+      <div key={`t${bloques.length}`} className="-mx-1 overflow-x-auto">
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr>
+              {encabezado.map((c, i) => (
+                <th
+                  key={i}
+                  className={`border-b border-[var(--crm-line)] px-2 py-1.5 font-medium text-[var(--crm-ink-mute)] ${
+                    i === 0 ? "text-left" : "text-right"
+                  }`}
+                >
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {cuerpo.map((fila, i) => (
+              <tr key={i} className="border-b border-[var(--crm-line-soft,var(--crm-line))]">
+                {fila.map((c, j) => (
+                  <td
+                    key={j}
+                    className={`px-2 py-1.5 ${
+                      j === 0
+                        ? "text-left text-[var(--crm-ink)]"
+                        : "crm-num text-right text-[var(--crm-ink-soft)]"
+                    }`}
+                  >
+                    {conNegritas(c)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>,
+    );
+    tabla = [];
+  };
+
   for (const linea of lineas) {
     const l = linea.trim();
+    if (esFilaTabla(l)) {
+      cerrarLista();
+      tabla.push(l);
+      continue;
+    }
+    cerrarTabla();
     if (/^[-*•]\s+/.test(l)) {
       lista.push(l.replace(/^[-*•]\s+/, ""));
       continue;
@@ -69,6 +127,7 @@ export function Markdown({ texto }: { texto: string }) {
     bloques.push(<p key={bloques.length}>{conNegritas(l)}</p>);
   }
   cerrarLista();
+  cerrarTabla();
 
   return (
     <div className="space-y-2 text-[13.5px] leading-relaxed text-[var(--crm-ink)]">{bloques}</div>

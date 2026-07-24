@@ -19,7 +19,10 @@ import { Markdown } from "./Markdown";
  */
 
 const CLAVE_ABIERTO = "asistente-abierto";
-const MUESTRA_MAX = 60; // keywords que ve el modelo por turno
+const CLAVE_ANCHO = "asistente-ancho";
+const ANCHO_MIN = 320;
+const ANCHO_MAX = 720;
+const MUESTRA_MAX = 25; // keywords que ve el modelo por turno; el resto las pide con consultar_mercado
 
 type Bloque = { type: string; [k: string]: unknown };
 type Mensaje = { role: "user" | "assistant"; content: string | Bloque[] };
@@ -47,12 +50,22 @@ const SUGERENCIAS = [
 
 const num = (n: number) => n.toLocaleString("es-MX", { maximumFractionDigits: 0 });
 
+/** La última frase completa del razonamiento: ni el párrafo entero ni tres palabras sueltas. */
+function ultimaFrase(texto: string) {
+  const limpio = texto.replace(/\s+/g, " ").trim();
+  if (!limpio) return "";
+  const frases = limpio.split(/(?<=[.:;?!])\s+/).filter((f) => f.length > 12);
+  const ultima = frases.at(-1) ?? limpio;
+  return ultima.length > 200 ? `...${ultima.slice(-200)}` : ultima;
+}
+
 export function Asistente() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [abierto, setAbierto] = useState(false);
+  const [ancho, setAncho] = useState(400);
   const [montado, setMontado] = useState(false);
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [entrada, setEntrada] = useState("");
@@ -64,6 +77,9 @@ export function Asistente() {
     try {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAbierto(localStorage.getItem(CLAVE_ABIERTO) === "1");
+      const guardado = Number(localStorage.getItem(CLAVE_ANCHO));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (guardado >= ANCHO_MIN && guardado <= ANCHO_MAX) setAncho(guardado);
     } catch {
       // sin localStorage arranca cerrado
     }
@@ -76,14 +92,36 @@ export function Asistente() {
     if (!montado) return;
     localStorage.setItem(CLAVE_ABIERTO, abierto ? "1" : "0");
     document.documentElement.dataset.asistente = abierto ? "abierto" : "cerrado";
+    // El recorrido del contenido lee este ancho: así no se descuadran al arrastrar.
+    document.documentElement.style.setProperty("--asistente-ancho", `${ancho}px`);
     return () => {
       delete document.documentElement.dataset.asistente;
     };
-  }, [montado, abierto]);
+  }, [montado, abierto, ancho]);
 
   useEffect(() => {
     finRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [turnos, pensando]);
+
+  function arrastrar(e: React.MouseEvent) {
+    e.preventDefault();
+    const mover = (ev: MouseEvent) => {
+      const nuevo = Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, window.innerWidth - ev.clientX));
+      setAncho(nuevo);
+    };
+    const soltar = () => {
+      window.removeEventListener("mousemove", mover);
+      window.removeEventListener("mouseup", soltar);
+      document.body.style.userSelect = "";
+      setAncho((a) => {
+        localStorage.setItem(CLAVE_ANCHO, String(a));
+        return a;
+      });
+    };
+    document.body.style.userSelect = "none"; // sin esto se selecciona texto al arrastrar
+    window.addEventListener("mousemove", mover);
+    window.addEventListener("mouseup", soltar);
+  }
 
   const enKeywords = pathname.startsWith("/admin/keywords");
 
@@ -354,7 +392,17 @@ export function Asistente() {
   }
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-30 flex w-full flex-col border-l border-[var(--crm-line)] bg-[var(--crm-surface)] sm:w-[400px]">
+    <aside
+      style={{ ["--ancho" as string]: `${ancho}px` }}
+      className="fixed inset-y-0 right-0 z-30 flex w-full flex-col border-l border-[var(--crm-line)] bg-[var(--crm-surface)] sm:w-[var(--ancho)]"
+    >
+      {/* Tirador para ajustar el ancho */}
+      <div
+        onMouseDown={arrastrar}
+        role="separator"
+        aria-label="Ajustar ancho del asistente"
+        className="absolute inset-y-0 -left-1 hidden w-2 cursor-col-resize hover:bg-[var(--crm-accent)]/30 sm:block"
+      />
       <header className="flex items-center gap-2 border-b border-[var(--crm-line)] px-4 py-3">
         <Sparkles className="size-4 text-[var(--crm-accent-strong)]" />
         <div className="min-w-0 flex-1">
@@ -373,7 +421,7 @@ export function Asistente() {
         </button>
       </header>
 
-      <div className="crm-scroll flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div data-lenis-prevent className="crm-scroll flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {turnos.length === 0 && (
           <div className="space-y-2">
             <p className="text-[13px] leading-relaxed text-[var(--crm-ink-soft)]">
@@ -403,7 +451,7 @@ export function Asistente() {
               <div className="space-y-2">
                 {!t.texto && t.avance && (
                   <p className="border-l-2 border-[var(--crm-line)] pl-2.5 text-[12.5px] leading-relaxed text-[var(--crm-ink-faint)]">
-                    {t.avance.trim().split("\n").at(-1)?.slice(-180)}
+                    {ultimaFrase(t.avance)}
                   </p>
                 )}
                 {t.texto && <Markdown texto={t.texto} />}

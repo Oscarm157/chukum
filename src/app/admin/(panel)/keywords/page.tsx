@@ -118,7 +118,7 @@ export default async function KeywordsPage({
       <h2 id="plazas" className="crm-h2 mb-3 scroll-mt-20">
         Las plazas comparadas
       </h2>
-      <div className="crm-card overflow-hidden">
+      <div className="crm-card overflow-x-auto">
         <table className="crm-table">
           <thead className="crm-thead">
             <tr>

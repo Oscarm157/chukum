@@ -141,7 +141,7 @@ export function DetalleGrupo({
           </p>
         </div>
       ) : (
-        <div className="crm-card mb-5 overflow-hidden">
+        <div className="crm-card mb-5 overflow-x-auto">
           <table className="crm-table">
             <thead className="crm-thead">
               <tr>

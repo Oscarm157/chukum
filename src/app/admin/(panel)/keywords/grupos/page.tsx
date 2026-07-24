@@ -74,7 +74,7 @@ export default async function GruposPage({
         }
       />
 
-      <div className="crm-card overflow-hidden">
+      <div className="crm-card overflow-x-auto">
         <table className="crm-table">
           <thead className="crm-thead">
             <tr>
