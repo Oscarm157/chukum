@@ -186,11 +186,17 @@ export function Asistente() {
     setPensando(true);
     setTurnos((t) => [...t, { rol: "asistente", texto: "", avance: "", tarjetas: [] }]);
 
+    // Sin esto, si el stream se corta sin cerrar (timeout del proxy, función que
+    // excede su límite) la UI se queda en "Pensando" para siempre.
+    const corte = new AbortController();
+    const reloj = setTimeout(() => corte.abort(), 90_000);
+
     try {
       const res = await fetch("/api/asistente", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: historial.current, contexto: contextoActual() }),
+        signal: corte.signal,
       });
 
       if (!res.ok || !res.body) {
@@ -249,9 +255,15 @@ export function Asistente() {
         }
       }
 
-      if (finalContent.length) {
-        historial.current.push({ role: "assistant", content: finalContent });
+      if (!finalContent.length) {
+        // El stream terminó sin el evento de cierre: se cortó a medias.
+        actualizarUltimo((t) => ({
+          ...t,
+          texto: t.texto || "La respuesta se cortó antes de terminar. Vuelve a intentar.",
+        }));
+        return;
       }
+      historial.current.push({ role: "assistant", content: finalContent });
 
       // Si hubo herramientas, el modelo necesita saber qué pasó de verdad.
       if (resultados.length) {
@@ -260,9 +272,18 @@ export function Asistente() {
         await correr();
         return;
       }
-    } catch {
-      actualizarUltimo((t) => ({ ...t, texto: t.texto || "Se cortó la conexión." }));
+    } catch (e) {
+      const abortado = e instanceof Error && e.name === "AbortError";
+      actualizarUltimo((t) => ({
+        ...t,
+        texto:
+          t.texto ||
+          (abortado
+            ? "Se tardó más de 90 segundos y lo corté. Vuelve a intentar."
+            : "Se cortó la conexión."),
+      }));
     } finally {
+      clearTimeout(reloj);
       setPensando(false);
     }
   }

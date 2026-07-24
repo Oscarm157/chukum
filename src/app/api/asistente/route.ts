@@ -8,7 +8,7 @@ import { SYSTEM_ASISTENTE } from "@/lib/asistente/prompt";
 import { TOOLS, esToolCliente } from "@/lib/asistente/tools";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 const MAX_MENSAJES = 24;
 const MAX_CHARS = 6000;
