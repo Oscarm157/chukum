@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, MapPin, UtensilsCrossed, Inbox, MessageSquare, LogOut, Sun, Moon } from "lucide-react";
+import { Building2, MapPin, UtensilsCrossed, Inbox, MessageSquare, TrendingUp, LogOut, Sun, Moon } from "lucide-react";
 import {
   Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup,
   SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -30,6 +30,7 @@ const GROUPS: Group[] = [
     label: "Comercial",
     items: [
       { href: "/admin/leads", label: "Leads", icon: Inbox },
+      { href: "/admin/keywords", label: "Keywords", icon: TrendingUp },
       { href: "/admin/feedback", label: "Comentarios del sitio", icon: MessageSquare },
     ],
   },
