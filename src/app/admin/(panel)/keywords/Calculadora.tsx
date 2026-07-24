@@ -9,10 +9,6 @@ import { useEffect, useState } from "react";
  */
 const CLAVE = "kw-escenario";
 
-// De cada búsqueda de la plaza, cuántas terminan en clic tuyo aunque domines la subasta.
-// No todas las búsquedas muestran anuncios y no todo el que ve el anuncio hace clic.
-const CAPTURA_MAXIMA = 0.05;
-
 export function Calculadora({
   cpcSugerido,
   volumen,
@@ -26,11 +22,13 @@ export function Calculadora({
   const [e, setE] = useState({
     presupuesto: 500,
     cpc: cpcSugerido || 1,
-    conversion: 2,
+    ctr: 8, // de cada 100 veces que sale el anuncio, cuántas reciben clic
+    cobertura: 65, // de todas las búsquedas, en cuántas alcanzas a aparecer
+    conversion: 2, // de cada 100 clics, cuántos dejan sus datos
     tipoCambio: 18.5,
   });
   const [listo, setListo] = useState(false);
-  const { presupuesto, cpc, conversion, tipoCambio } = e;
+  const { presupuesto, cpc, ctr, cobertura, conversion, tipoCambio } = e;
 
   // El escenario se restaura tras montar: localStorage no existe en el servidor.
   useEffect(() => {
@@ -51,15 +49,17 @@ export function Calculadora({
   const setCampo = (campo: keyof typeof e) => (v: number) =>
     setE((prev) => ({ ...prev, [campo]: v }));
 
-  // El presupuesto compra clics hasta donde alcance la demanda: no se pueden comprar
-  // más clics de los que la plaza genera, por mucho presupuesto que haya.
-  const techo = volumen * CAPTURA_MAXIMA;
+  // El techo de clics sale de dos cosas, no de una: de cuántas búsquedas alcanzas a
+  // aparecer (cobertura) y de cuántas de esas te dan clic (CTR). El presupuesto compra
+  // clics hasta ese techo; más presupuesto no compra demanda que no existe.
+  const techo = volumen * (cobertura / 100) * (ctr / 100);
   const clicsQuePaga = cpc > 0 ? presupuesto / cpc : 0;
   const clics = Math.min(clicsQuePaga, techo);
   const topado = clicsQuePaga > techo;
   const gastoReal = clics * cpc;
   const leads = clics * (conversion / 100);
   const costoLead = leads > 0 ? gastoReal / leads : 0;
+  const costoLeadMxn = costoLead * tipoCambio;
 
   const num = (n: number, d = 0) =>
     n.toLocaleString("es-MX", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -80,7 +80,7 @@ export function Calculadora({
         </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">
         <Campo
           label="Presupuesto al mes (USD)"
           valor={presupuesto}
@@ -100,15 +100,6 @@ export function Calculadora({
           formato={(v) => `$${v.toFixed(2)}`}
         />
         <Campo
-          label="Conversión del sitio"
-          valor={conversion}
-          min={0.5}
-          max={10}
-          paso={0.5}
-          onChange={setCampo("conversion")}
-          formato={(v) => `${v}%`}
-        />
-        <Campo
           label="Tipo de cambio"
           valor={tipoCambio}
           min={15}
@@ -117,13 +108,43 @@ export function Calculadora({
           onChange={setCampo("tipoCambio")}
           formato={(v) => `$${v.toFixed(2)}`}
         />
+        <Campo
+          label="CTR estimado"
+          ayuda="de cada 100 veces que sale tu anuncio, cuántas reciben clic"
+          valor={ctr}
+          min={2}
+          max={15}
+          paso={0.5}
+          onChange={setCampo("ctr")}
+          formato={(v) => `${v}%`}
+        />
+        <Campo
+          label="Cobertura"
+          ayuda="de todas las búsquedas, en cuántas alcanzas a aparecer"
+          valor={cobertura}
+          min={20}
+          max={90}
+          paso={5}
+          onChange={setCampo("cobertura")}
+          formato={(v) => `${v}%`}
+        />
+        <Campo
+          label="Conversión del sitio"
+          ayuda="de cada 100 clics, cuántos dejan sus datos"
+          valor={conversion}
+          min={0.5}
+          max={10}
+          paso={0.5}
+          onChange={setCampo("conversion")}
+          formato={(v) => `${v}%`}
+        />
       </div>
 
       <div className="mt-5 grid gap-px overflow-hidden rounded-[var(--crm-r-md)] border border-[var(--crm-line)] bg-[var(--crm-line)] sm:grid-cols-4">
         <Kpi label="Clics al mes" valor={num(clics)} />
         <Kpi label="Leads al mes" valor={num(leads, 1)} destacado />
         <Kpi label="Costo por lead" valor={`$${num(costoLead, 2)} USD`} />
-        <Kpi label="Gasto real al mes" valor={`$${num(gastoReal)} USD`} />
+        <Kpi label="Costo por lead" valor={`$${num(costoLeadMxn)} MXN`} />
       </div>
 
       {topado ? (
@@ -132,15 +153,16 @@ export function Calculadora({
             Sobra presupuesto: no hay tanta demanda que comprar.
           </b>{" "}
           Con ${num(presupuesto)} al mes pagarías {num(clicsQuePaga)} clics, pero {origen} suman{" "}
-          {num(volumen)} búsquedas al mes y de ahí salen unos {num(techo)} clics como techo, aunque
-          aparezcas en todas. El resto del presupuesto no encuentra dónde gastarse: se usan{" "}
-          ${num(gastoReal)} y sobran ${num(presupuesto - gastoReal)}.
+          {num(volumen)} búsquedas al mes y de ahí salen unos {num(techo)} clics como techo con esta
+          cobertura y CTR. Solo se usan ${num(gastoReal)} y sobran ${num(presupuesto - gastoReal)}.
+          Para gastar más, la palanca es subir la puja o la cobertura (ganar más subastas), no el
+          presupuesto.
         </p>
       ) : (
         <p className="mt-3 text-[12.5px] leading-relaxed text-[var(--crm-ink-faint)]">
-          Techo: {num(techo)} clics al mes sobre {num(volumen)} búsquedas. Aritmética
-          sobre el CPC medido, no un pronóstico de Google: el costo real depende de la calidad del
-          anuncio y de quién más esté pujando ese mes.
+          Techo: {num(techo)} clics al mes ({num(volumen)} búsquedas × {cobertura}% de cobertura ×{" "}
+          {ctr}% de CTR). Aritmética sobre el CPC medido, no un pronóstico de Google: el costo real
+          depende de la calidad del anuncio y de quién más esté pujando ese mes.
         </p>
       )}
     </div>
@@ -148,9 +170,10 @@ export function Calculadora({
 }
 
 function Campo({
-  label, valor, min, max, paso, onChange, formato,
+  label, ayuda, valor, min, max, paso, onChange, formato,
 }: {
   label: string;
+  ayuda?: string;
   valor: number;
   min: number;
   max: number;
@@ -160,12 +183,13 @@ function Campo({
 }) {
   return (
     <div>
-      <div className="mb-1.5 flex items-baseline justify-between gap-2">
+      <div className="flex items-baseline justify-between gap-2">
         <label className="text-[13px] text-[var(--crm-ink-soft)]">{label}</label>
         <span className="crm-num text-[13px] font-medium text-[var(--crm-ink)]">
           {formato(valor)}
         </span>
       </div>
+      {ayuda && <p className="mb-1 text-[11px] leading-tight text-[var(--crm-ink-faint)]">{ayuda}</p>}
       <input
         type="range"
         min={min}
@@ -173,7 +197,7 @@ function Campo({
         step={paso}
         value={valor}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-[var(--crm-accent)]"
+        className={`w-full accent-[var(--crm-accent)] ${ayuda ? "" : "mt-1.5"}`}
       />
     </div>
   );

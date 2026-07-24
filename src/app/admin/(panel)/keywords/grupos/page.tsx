@@ -11,10 +11,10 @@ const TEMAS: Record<string, string> = {
   departamentos: "Departamentos",
   otro: "Otro",
 };
-const ESTADOS: Record<string, string> = {
-  borrador: "Borrador",
-  listo: "Listo",
-  lanzado: "Lanzado",
+const ESTADOS: Record<string, { label: string; clase: string }> = {
+  borrador: { label: "Borrador", clase: "" },
+  listo: { label: "Listo", clase: "crm-badge-amber" },
+  lanzado: { label: "Lanzado", clase: "crm-badge-emerald" },
 };
 
 const num = (n: number, d = 0) =>
@@ -128,7 +128,9 @@ export default async function GruposPage({
                   ${num(g.costoMes)}
                 </td>
                 <td className="crm-td text-right">
-                  <span className="crm-badge">{ESTADOS[g.estado] ?? g.estado}</span>
+                  <span className={`crm-badge ${ESTADOS[g.estado]?.clase ?? ""}`}>
+                    {ESTADOS[g.estado]?.label ?? g.estado}
+                  </span>
                 </td>
               </tr>
             ))}
@@ -137,9 +139,10 @@ export default async function GruposPage({
       </div>
 
       <p className="mt-3 max-w-prose text-[12.5px] leading-relaxed text-[var(--crm-ink-faint)]">
-        Clics techo es lo máximo que da la demanda del grupo (5% de las búsquedas), no lo que
-        alcanza a pagar un presupuesto. Costo/mes es ese techo por el CPC: lo que costaría
-        llevarse toda la demanda alcanzable, no el presupuesto mínimo para empezar.
+        Clics techo es lo máximo que da la demanda del grupo con supuestos de arranque (aparecer en
+        el 65% de las búsquedas y 8% de clic por impresión). No es lo que alcanza a pagar un
+        presupuesto: en la calculadora puedes ajustar esos dos supuestos. Costo/mes es ese techo
+        por el CPC.
       </p>
     </div>
   );

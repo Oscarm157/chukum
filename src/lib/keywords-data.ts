@@ -149,9 +149,11 @@ export type GrupoResumen = {
   actualizado: Date | null;
 };
 
-// De cada búsqueda, cuántas terminan en clic tuyo aunque domines la subasta.
-// Mismo supuesto que la calculadora de la pantalla.
-const CAPTURA_MAXIMA = 0.05;
+// Clics techo = cobertura × CTR, los mismos defaults de la calculadora (65% × 8% ≈ 5.2%).
+// El ranking no tiene sliders, así que usa el default; la calculadora sí deja ajustarlo.
+const COBERTURA_DEFAULT = 0.65;
+const CTR_DEFAULT = 0.08;
+const CAPTURA_MAXIMA = COBERTURA_DEFAULT * CTR_DEFAULT;
 
 export async function getGrupos(): Promise<GrupoResumen[]> {
   const { rows } = await db.execute<{
