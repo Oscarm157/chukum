@@ -14,7 +14,7 @@ const TEMAS: Record<string, string> = {
 const ESTADOS: Record<string, { label: string; clase: string }> = {
   borrador: { label: "Borrador", clase: "" },
   listo: { label: "Listo", clase: "crm-badge-amber" },
-  lanzado: { label: "Lanzado", clase: "crm-badge-emerald" },
+  lanzado: { label: "Correr en Google Ads", clase: "crm-badge-violet" },
 };
 
 const num = (n: number, d = 0) =>

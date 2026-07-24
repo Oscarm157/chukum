@@ -14,7 +14,7 @@ import { actualizarGrupo, borrarGrupo, quitarKeyword } from "../../actions";
 const ESTADOS = [
   { valor: "borrador", label: "Borrador" },
   { valor: "listo", label: "Listo para lanzar" },
-  { valor: "lanzado", label: "Lanzado" },
+  { valor: "lanzado", label: "Correr en Google Ads" },
 ] as const;
 
 const COMPETENCIA: Record<string, string> = { LOW: "Baja", MEDIUM: "Media", HIGH: "Alta" };
@@ -37,6 +37,7 @@ export function DetalleGrupo({
   const [notasGuardadas, setNotasGuardadas] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [confirmaBorrar, setConfirmaBorrar] = useState(false);
+  const [confirmaLanzar, setConfirmaLanzar] = useState(false);
 
   const volumen = keywords.reduce((a, k) => a + k.volumen, 0);
   const conPuja = keywords.filter((k) => k.cpc > 0);
@@ -46,6 +47,15 @@ export function DetalleGrupo({
     : 0;
 
   function cambiarEstado(estado: string) {
+    // "Correr en Google Ads" toca dinero real: pide confirmación antes de marcarlo.
+    if (estado === "lanzado" && grupo.estado !== "lanzado") {
+      setConfirmaLanzar(true);
+      return;
+    }
+    aplicarEstado(estado);
+  }
+
+  function aplicarEstado(estado: string) {
     arranca(async () => {
       await actualizarGrupo({ id: grupo.id, estado: estado as (typeof ESTADOS)[number]["valor"] });
       router.refresh();
@@ -208,6 +218,44 @@ export function DetalleGrupo({
           )}
         </div>
       </div>
+
+      {confirmaLanzar && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setConfirmaLanzar(false)}
+        >
+          <div
+            className="crm-card w-full max-w-[400px] p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="crm-h2 text-[16px]">Vas a lanzar campañas reales</h3>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--crm-ink-soft)]">
+              Estás por marcar este grupo para correr en Google Ads. Esto significa poner anuncios
+              en vivo, con presupuesto real. Confirma solo si ya revisaste las keywords, las
+              negativas y el presupuesto.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmaLanzar(false)}
+                className="crm-btn crm-btn-sm crm-btn-secondary"
+              >
+                Regresar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmaLanzar(false);
+                  aplicarEstado("lanzado");
+                }}
+                className="crm-btn crm-btn-sm crm-btn-primary"
+              >
+                OK, entiendo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
