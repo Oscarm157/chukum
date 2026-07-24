@@ -33,6 +33,8 @@ type Estado = {
   filtros: Filtros;
   orden: Orden;
   elegidas: Set<string>;
+  /** Sube las seleccionadas al principio: si el asistente elige 8 de 600, que se vean. */
+  subirSeleccionadas: boolean;
 };
 
 let estado: Estado = {
@@ -40,6 +42,7 @@ let estado: Estado = {
   filtros: FILTROS_VACIOS,
   orden: { col: "volumen", desc: true },
   elegidas: new Set(),
+  subirSeleccionadas: false,
 };
 
 const suscriptores = new Set<() => void>();
@@ -62,13 +65,14 @@ export const keywordsStore = {
   cargarIdeas(ideas: IdeaFila[]) {
     // Al cambiar de filtro de ciudad la página trae otras keywords: la selección
     // previa ya no aplica.
-    set({ ideas, elegidas: new Set() });
+    set({ ideas, elegidas: new Set(), subirSeleccionadas: false });
   },
   setFiltros(parcial: Partial<Filtros>) {
     set({ filtros: { ...estado.filtros, ...parcial } });
   },
   setOrden(orden: Orden) {
-    set({ orden });
+    // Si el usuario ordena a mano, manda su orden: deja de subir las seleccionadas.
+    set({ orden, subirSeleccionadas: false });
   },
   alternar(k: IdeaFila) {
     const next = new Set(estado.elegidas);
@@ -84,7 +88,7 @@ export const keywordsStore = {
     set({ elegidas: next });
   },
   limpiarSeleccion() {
-    set({ elegidas: new Set() });
+    set({ elegidas: new Set(), subirSeleccionadas: false });
   },
   /** Selecciona por texto exacto. Es lo que usa el asistente; devuelve cuántas encontró. */
   seleccionarPorTexto(keywords: string[], reemplazar = true) {
@@ -92,7 +96,7 @@ export const keywordsStore = {
     const encontradas = estado.ideas.filter((k) => buscadas.has(k.keyword.toLowerCase()));
     const next = reemplazar ? new Set<string>() : new Set(estado.elegidas);
     encontradas.forEach((k) => next.add(claveIdea(k)));
-    set({ elegidas: next });
+    set({ elegidas: next, subirSeleccionadas: next.size > 0 });
     return encontradas.length;
   },
 };
@@ -109,7 +113,7 @@ export function calcularVisibles(estado: Estado): IdeaFila[] {
     return true;
   });
   const signo = orden.desc ? -1 : 1;
-  return [...filtradas].sort((a, b) => {
+  const ordenadas = [...filtradas].sort((a, b) => {
     switch (orden.col) {
       case "keyword":
         return signo * a.keyword.localeCompare(b.keyword);
@@ -125,6 +129,12 @@ export function calcularVisibles(estado: Estado): IdeaFila[] {
         return signo * (a.volumen - b.volumen);
     }
   });
+
+  if (!estado.subirSeleccionadas || estado.elegidas.size === 0) return ordenadas;
+  // Estable: las elegidas conservan entre sí el orden de la columna activa.
+  const elegidas = ordenadas.filter((k) => estado.elegidas.has(claveIdea(k)));
+  const resto = ordenadas.filter((k) => !estado.elegidas.has(claveIdea(k)));
+  return [...elegidas, ...resto];
 }
 
 export function useKeywords() {
