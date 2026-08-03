@@ -10,6 +10,7 @@ import { WhatsAppButton } from "@/components/vivir/whatsapp-button";
 import { JsonLd } from "@/components/vivir/json-ld";
 import { organizationJsonLd } from "@/lib/seo";
 import { STATUS_LABEL } from "@/lib/site";
+import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
 import {
   getZonasPublicadas,
   getDevelopmentBySlug,
@@ -225,16 +226,7 @@ export default async function HomePage() {
                   <p className="max-w-md leading-relaxed text-ink-2">{dev.descriptionEs}</p>
                 </Reveal>
                 <Reveal>
-                  <div className="flex flex-wrap gap-2">
-                    {dev.propertyTypes?.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-hairline bg-canvas px-3 py-1 text-xs capitalize text-ink-2"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
+                  <PropertyTypeBadges tipos={dev.propertyTypes} />
                 </Reveal>
                 <Reveal>
                   <Link

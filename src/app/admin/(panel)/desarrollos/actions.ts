@@ -21,10 +21,11 @@ import { uploadImage } from "@/lib/blob";
 import { requireAdmin } from "@/lib/session";
 import { safeParseForm } from "@/lib/validate";
 import { str, int, csv, isUniqueViolation } from "@/lib/form-values";
+import { PROPERTY_TYPES } from "@/lib/property-types";
 
 const MACRO_ZONAS: MacroZona[] = ["merida", "costa", "caribe", "selva"];
 const USOS: Uso[] = ["invertir", "vivir"];
-const UNIT_TYPES: UnitType[] = ["terreno", "casa", "departamento", "townhouse", "local_comercial"];
+const UNIT_TYPES: UnitType[] = PROPERTY_TYPES;
 const UNIT_STATUSES: UnitStatus[] = ["disponible", "apartado", "vendido"];
 const DEV_STATUSES: DevelopmentStatus[] = ["preventa", "en_construccion", "entrega_inmediata", "vendido"];
 

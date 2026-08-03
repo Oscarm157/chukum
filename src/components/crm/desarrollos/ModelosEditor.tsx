@@ -6,21 +6,16 @@ import type { Unit } from "@/lib/desarrollos-data";
 import { Modal } from "@/components/crm/Modal";
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { addModelo, updateModelo, deleteModelo } from "@/app/admin/(panel)/desarrollos/actions";
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABEL } from "@/lib/property-types";
 
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
-const TIPOS = [
-  ["terreno", "Terreno"],
-  ["casa", "Casa"],
-  ["departamento", "Departamento"],
-  ["townhouse", "Townhouse"],
-  ["local_comercial", "Local comercial"],
-] as const;
+const TIPOS = PROPERTY_TYPES.map((val) => [val, PROPERTY_TYPE_LABEL[val]] as const);
+const TIPO_LABEL = PROPERTY_TYPE_LABEL;
 const STATUSES = [
   ["disponible", "Disponible"],
   ["apartado", "Apartado"],
   ["vendido", "Vendido"],
 ] as const;
-const TIPO_LABEL = Object.fromEntries(TIPOS) as Record<string, string>;
 const STATUS_LABEL = Object.fromEntries(STATUSES) as Record<string, string>;
 
 const money = (n: number | null) =>

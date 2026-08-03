@@ -25,13 +25,13 @@ import {
 } from "lucide-react";
 import {
   matchDevelopments,
-  tiposLabel,
   ZONA_LABEL,
   TIPO_LABEL,
   type QuizAnswers,
   type Development,
 } from "@/lib/developments";
 import { STATUS_LABEL } from "@/lib/site";
+import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
 
 type Option = { value: string; label: string; hint?: string; icon: LucideIcon };
 type Question = { key: keyof QuizAnswers; title: string; options: Option[] };
@@ -409,7 +409,7 @@ function ResultCard({ d, rank }: { d: Development; rank: number }) {
         </span>
       </div>
       <div className="p-5">
-        <p className="text-xs uppercase tracking-[0.14em] text-cenote">{tiposLabel(d.tipos)}</p>
+        <PropertyTypeBadges tipos={d.tipos} className="mb-1" />
         <h4 className="mt-1 font-display text-2xl tracking-[-0.02em]">{d.heading}</h4>
         <p className="mt-2 text-sm leading-relaxed text-ink-2">{d.blurb}</p>
         <div className="mt-3">

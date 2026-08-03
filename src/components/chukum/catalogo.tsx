@@ -6,8 +6,9 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { MessageCircle, ArrowRight, X } from "lucide-react";
 import { SectionHead } from "@/components/chukum/section-head";
-import { ciudadesDe, tiposLabel, type Development } from "@/lib/developments";
+import { ciudadesDe, type Development } from "@/lib/developments";
 import { waLink, STATUS_LABEL } from "@/lib/site";
+import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
 
 // Catálogo con filtro por ciudad. Los pills seleccionan 1 o varias ciudades; sin selección
 // se muestran todos. El pill "Borrar" limpia la selección completa.
@@ -114,7 +115,7 @@ function DevCard({ d, flip }: { d: Development; flip: boolean }) {
         )}
       </div>
       <div className="flex flex-col justify-center p-7 md:w-1/2 md:p-10">
-        <p className="text-xs uppercase tracking-[0.16em] text-cenote">{tiposLabel(d.tipos)}</p>
+        <PropertyTypeBadges tipos={d.tipos} className="mb-1" />
         <h3 className="mt-1 font-display text-3xl tracking-[-0.02em] md:text-4xl">{d.heading}</h3>
         <p className="mt-3 max-w-md leading-relaxed text-ink-2">{d.blurb}</p>
         {d.specs && (

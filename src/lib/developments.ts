@@ -3,9 +3,12 @@
 // dependencias de servidor. NO inventar precios: el único monto real es el de Xo'ok; el
 // resto es "disponibilidad y precios bajo solicitud" a propósito.
 
+import { PROPERTY_TYPE_LABEL, type PropertyType } from "@/lib/property-types";
+
 // Macro-zonas reales del catálogo (las cuatro que existen hoy).
 export type Zona = "merida" | "costa" | "caribe" | "selva";
-export type Tipo = "terreno" | "casa" | "departamento";
+// El home solo sabe pintar estos 3 tipos de los 5 que existen en la DB (ver queries.ts).
+export type Tipo = Extract<PropertyType, "terreno" | "casa" | "departamento">;
 export type Uso = "invertir" | "vivir";
 // Reusa las etiquetas de DevelopmentStatus del dominio (ver STATUS_LABEL en site.ts).
 export type Etapa = "preventa" | "en_construccion" | "entrega_inmediata";
@@ -39,9 +42,9 @@ export const ZONA_LABEL: Record<Zona, string> = {
 };
 
 export const TIPO_LABEL: Record<Tipo, string> = {
-  terreno: "Terreno",
-  casa: "Casa",
-  departamento: "Departamento",
+  terreno: PROPERTY_TYPE_LABEL.terreno,
+  casa: PROPERTY_TYPE_LABEL.casa,
+  departamento: PROPERTY_TYPE_LABEL.departamento,
 };
 
 export const DEVELOPMENTS: Development[] = [

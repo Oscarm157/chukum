@@ -1,5 +1,6 @@
 import type { Development } from "@/lib/schema";
 import { SectionHeader } from "@/components/crm/PageShell";
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABEL } from "@/lib/property-types";
 
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
@@ -16,13 +17,7 @@ const STATUSES = [
   ["entrega_inmediata", "Entrega inmediata"],
   ["vendido", "Vendido"],
 ] as const;
-const TIPOS = [
-  ["terreno", "Terreno"],
-  ["casa", "Casa"],
-  ["departamento", "Departamento"],
-  ["townhouse", "Townhouse"],
-  ["local_comercial", "Local comercial"],
-] as const;
+const TIPOS = PROPERTY_TYPES.map((val) => [val, PROPERTY_TYPE_LABEL[val]] as const);
 const USOS = [
   ["invertir", "Invertir"],
   ["vivir", "Vivir"],

@@ -11,6 +11,7 @@ import { ContactForm } from "@/components/vivir/contact-form";
 import { WhatsAppButton } from "@/components/vivir/whatsapp-button";
 import { JsonLd } from "@/components/vivir/json-ld";
 import { breadcrumbJsonLd, placeJsonLd } from "@/lib/seo";
+import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
 import {
   getZonasPublicadas,
   getZonaBySlug,
@@ -232,16 +233,7 @@ function DevCard({
           Desarrollo 0{index + 1}
         </p>
         <h3 className="mt-2 font-display text-2xl tracking-[-0.01em]">{dev.heading ?? dev.city}</h3>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {dev.propertyTypes?.map((t) => (
-            <span
-              key={t}
-              className="rounded-full border border-hairline px-2.5 py-0.5 text-xs capitalize text-ink-2"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
+        <PropertyTypeBadges tipos={dev.propertyTypes} className="mt-4" />
         <span className="mt-5 inline-flex items-center gap-2 text-sm text-terracota">
           Ver desarrollo
           <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
