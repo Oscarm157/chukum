@@ -1,5 +1,5 @@
 /**
- * Edición de foto con Nano Banana (`google/nano-banana`, estándar) en Replicate.
+ * Edición de foto con Nano Banana (`google/nano-banana-2`) en Replicate.
  * Server-only: lee `REPLICATE_API_TOKEN`, nunca se importa desde un componente cliente.
  *
  * Puerto de /root/clinica/src/lib/replicate.ts (mismo caso de uso, ya en producción),
@@ -9,12 +9,16 @@
  *   un dominio que todavía no sirve el archivo nuevo).
  * - No se manda `aspect_ratio`: su default `match_input_image` es justo lo que se quiere,
  *   la proporción ya la decidió el recorte de la Fase 1.
- * - A diferencia de `google/nano-banana-pro`, este modelo NO acepta `resolution` — mandarlo
- *   no rompe la llamada pero no hace nada, así que ni se incluye en el input.
+ * - `resolution: "2K"` explícito — a diferencia de `google/nano-banana` (el estándar
+ *   original, sin este parámetro), `nano-banana-2` SÍ lo soporta (enum 1K/2K/4K,
+ *   confirmado contra su OpenAPI). Probado en vivo: sin este control, una foto de
+ *   4000x2250 volvía editada en 1344x768 — el cuello de botella era la salida del
+ *   modelo, no el tamaño de envío (eso ya se había subido a 2048px sin corregir el
+ *   problema real). Este es el fix de fondo del pixelado en posts publicados.
  */
 
 const API = "https://api.replicate.com/v1";
-const MODELO = "google/nano-banana";
+const MODELO = "google/nano-banana-2";
 
 // `Prefer: wait` deja la conexión abierta hasta ~60s. En la prueba real una generación
 // tardó 102s, así que el polling cubre 90s más; el techo (~150s) cabe en el
@@ -105,6 +109,7 @@ export async function editarFoto({
       // overlay de plantillas, que sí controla la tipografía.
       prompt: `Edita esta fotografía: ${prompt}. Conserva el encuadre, la iluminación y el realismo fotográfico del original. No agregues texto, logotipos ni marcas de agua.`,
       image_input: [dataUri],
+      resolution: "2K",
     });
 
     if (!pred || pred.status !== "succeeded") {
