@@ -121,6 +121,11 @@ export function ImageWorkspace({
     setTrabajo({ url, file });
     setCambios((prev) => [...prev.filter((c) => c.paso !== id), { paso: id, label }]);
     setError(null);
+    // Sin esto, la herramienta se recarga con SU PROPIO resultado listo para repetirse
+    // (recortar la ya recortada, etc.) y se ve como si hubiera aplicado el paso dos
+    // veces. Pasar al siguiente paso deja claro que ya se aplicó y sigue el encadenado.
+    const idx = PASOS.findIndex((p) => p.id === id);
+    if (idx >= 0 && idx < PASOS.length - 1) setPaso(PASOS[idx + 1].id);
   }
 
   async function guardar() {

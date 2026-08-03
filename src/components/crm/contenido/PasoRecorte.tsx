@@ -14,10 +14,14 @@ import { PasoLayout, controlLabel } from "@/components/crm/contenido/PasoLayout"
  * encuadre se queda con todo el espacio del lienzo.
  */
 
+// `minW`/`minH`: tamaño mínimo recomendado por Instagram/Facebook para que el feed no
+// la escale hacia arriba (que es lo que la ve pixelada) — el recorte nunca agranda, así
+// que si la foto de origen no llega a esto, el resultado sale más chico de lo ideal.
 const FORMATOS = [
-  { ratio: "1:1", valor: 1, label: "Feed cuadrado" },
-  { ratio: "4:5", valor: 4 / 5, label: "Feed vertical" },
-  { ratio: "9:16", valor: 9 / 16, label: "Story/Reel" },
+  { ratio: "1:1", valor: 1, label: "Feed cuadrado", minW: 1080, minH: 1080 },
+  { ratio: "4:5", valor: 4 / 5, label: "Feed vertical", minW: 1080, minH: 1350 },
+  { ratio: "9:16", valor: 9 / 16, label: "Story/Reel", minW: 1080, minH: 1920 },
+  { ratio: "16:9", valor: 16 / 9, label: "Panorámico", minW: 1920, minH: 1080 },
 ] as const;
 
 export function PasoRecorte({
@@ -38,6 +42,7 @@ export function PasoRecorte({
   const [zoom, setZoom] = useState(1);
   const [areaPx, setAreaPx] = useState<Area | null>(null);
   const [cargada, setCargada] = useState(false);
+  const [tamanoOriginal, setTamanoOriginal] = useState<{ w: number; h: number } | null>(null);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,8 +58,15 @@ export function PasoRecorte({
     setZoom(1);
     setAreaPx(null);
     setCargada(false);
+    setTamanoOriginal(null);
     setError(null);
   }
+
+  // Foto de origen más chica que lo que ese formato necesita para verse nítida: el
+  // recorte nunca agranda, así que el resultado saldría por debajo del mínimo. No
+  // bloquea nada, solo avisa (la fuente real es subir una foto más grande al catálogo).
+  const pocaResolucion =
+    tamanoOriginal !== null && (tamanoOriginal.w < formato.minW || tamanoOriginal.h < formato.minH);
 
   async function aplicar() {
     if (!areaPx) return;
@@ -128,8 +140,18 @@ export function PasoRecorte({
 
           <p className="mt-5 text-[12px] leading-snug text-[var(--crm-ink-mute)]">
             Arrastra la foto para mover el encuadre. Queda en <span className="crm-num">{formato.ratio}</span>, máximo{" "}
-            <span className="crm-num">{MAX_LADO}</span> px de lado.
+            <span className="crm-num">{MAX_LADO}</span> px de lado. Para verse nítida en este formato, lo ideal es que
+            la foto original mida al menos <span className="crm-num">{formato.minW}</span>×
+            <span className="crm-num">{formato.minH}</span>px.
           </p>
+          {pocaResolucion && (
+            <p className="mt-2 text-[12px] leading-snug" style={{ color: "var(--destructive)" }}>
+              Esta foto es de {tamanoOriginal!.w}×{tamanoOriginal!.h}px — por debajo de lo recomendado para {
+                formato.ratio
+              }. El recorte no agranda, así que puede verse borrosa al publicarse. Si puedes, sube una versión más
+              grande de esta foto al catálogo.
+            </p>
+          )}
         </>
       }
       acciones={
@@ -163,7 +185,10 @@ export function PasoRecorte({
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={(_, px) => setAreaPx(px)}
-            onMediaLoaded={() => setCargada(true)}
+            onMediaLoaded={(media) => {
+              setCargada(true);
+              setTamanoOriginal({ w: media.naturalWidth, h: media.naturalHeight });
+            }}
             mediaProps={{
               crossOrigin: "anonymous",
               onError: () => setError("No se pudo cargar la imagen para recortarla."),
