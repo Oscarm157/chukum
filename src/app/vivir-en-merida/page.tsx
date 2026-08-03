@@ -11,6 +11,7 @@ import { JsonLd } from "@/components/vivir/json-ld";
 import { organizationJsonLd } from "@/lib/seo";
 import { STATUS_LABEL } from "@/lib/site";
 import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
+import { AdminDevName } from "@/components/chukum/admin-dev-name";
 import {
   getZonasPublicadas,
   getDevelopmentBySlug,
@@ -221,6 +222,7 @@ export default async function HomePage() {
                   <h2 className="font-display text-4xl font-light leading-[1.05] tracking-[-0.02em] md:text-5xl">
                     {dev.heading ?? dev.city}
                   </h2>
+                  <AdminDevName slug={dev.slug} />
                 </Reveal>
                 <Reveal>
                   <p className="max-w-md leading-relaxed text-ink-2">{dev.descriptionEs}</p>

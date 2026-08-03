@@ -9,6 +9,7 @@ import { SectionHead } from "@/components/chukum/section-head";
 import { ciudadesDe, TIPO_LABEL, type Development, type Tipo } from "@/lib/developments";
 import { waLink, STATUS_LABEL } from "@/lib/site";
 import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
+import { AdminDevName } from "@/components/chukum/admin-dev-name";
 
 function toggleInSet<T>(setFn: (updater: (prev: Set<T>) => Set<T>) => void, value: T) {
   setFn((prev) => {
@@ -156,6 +157,7 @@ function DevCard({ d, flip }: { d: Development; flip: boolean }) {
       <div className="flex flex-col justify-center p-7 md:w-1/2 md:p-10">
         <PropertyTypeBadges tipos={d.tipos} className="mb-1" />
         <h3 className="mt-1 font-display text-3xl tracking-[-0.02em] md:text-4xl">{d.heading}</h3>
+        <AdminDevName slug={d.slug} />
         <p className="mt-3 max-w-md leading-relaxed text-ink-2">{d.blurb}</p>
         {d.specs && (
           <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3">

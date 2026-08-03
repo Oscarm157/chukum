@@ -32,6 +32,7 @@ import {
 } from "@/lib/developments";
 import { STATUS_LABEL } from "@/lib/site";
 import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
+import { AdminDevName } from "@/components/chukum/admin-dev-name";
 
 type Option = { value: string; label: string; hint?: string; icon: LucideIcon };
 type Question = { key: keyof QuizAnswers; title: string; options: Option[] };
@@ -411,6 +412,7 @@ function ResultCard({ d, rank }: { d: Development; rank: number }) {
       <div className="p-5">
         <PropertyTypeBadges tipos={d.tipos} className="mb-1" />
         <h4 className="mt-1 font-display text-2xl tracking-[-0.02em]">{d.heading}</h4>
+        <AdminDevName slug={d.slug} />
         <p className="mt-2 text-sm leading-relaxed text-ink-2">{d.blurb}</p>
         <div className="mt-3">
           <Badge>{STATUS_LABEL[d.etapa]}</Badge>

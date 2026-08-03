@@ -12,6 +12,7 @@ import { WhatsAppButton } from "@/components/vivir/whatsapp-button";
 import { JsonLd } from "@/components/vivir/json-ld";
 import { breadcrumbJsonLd, placeJsonLd } from "@/lib/seo";
 import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
+import { AdminDevName } from "@/components/chukum/admin-dev-name";
 import {
   getZonasPublicadas,
   getZonaBySlug,
@@ -233,6 +234,7 @@ function DevCard({
           Desarrollo 0{index + 1}
         </p>
         <h3 className="mt-2 font-display text-2xl tracking-[-0.01em]">{dev.heading ?? dev.city}</h3>
+        <AdminDevName slug={dev.slug} />
         <PropertyTypeBadges tipos={dev.propertyTypes} className="mt-4" />
         <span className="mt-5 inline-flex items-center gap-2 text-sm text-terracota">
           Ver desarrollo
