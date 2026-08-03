@@ -4,6 +4,9 @@ import { PageHeader } from "@/components/crm/PageShell";
 import { NuevoPostForm } from "@/components/crm/contenido/NuevoPostForm";
 
 export const dynamic = "force-dynamic";
+// Techo de las server actions de esta página. La edición con IA tarda entre 30s y ~100s
+// (medido contra Replicate); con el default se cortaría a media generación.
+export const maxDuration = 180;
 export const metadata = { title: "Nuevo post", robots: { index: false } };
 
 export default async function NuevoPostPage() {

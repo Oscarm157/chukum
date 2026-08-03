@@ -8,6 +8,7 @@ import { generarBorrador } from "@/app/admin/(panel)/contenido/actions";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
 import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
+import { AiPhotoEditor } from "@/components/crm/contenido/AiPhotoEditor";
 
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
@@ -29,8 +30,10 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
   const [dragOver, setDragOver] = useState(false);
   const [recortando, setRecortando] = useState(false);
   const [escribiendo, setEscribiendo] = useState(false);
+  const [editandoIA, setEditandoIA] = useState(false);
   const [formato, setFormato] = useState<string | null>(null);
   const [conTexto, setConTexto] = useState(false);
+  const [conIA, setConIA] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,6 +66,14 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
     reemplazarImagen(f);
     setConTexto(true);
     setEscribiendo(false);
+  }
+
+  // La edición con IA también trabaja sobre el archivo local: lo que se sube al generar el
+  // borrador es la versión editada, la original nunca llega al servidor.
+  function aplicarIA(f: File) {
+    reemplazarImagen(f);
+    setConIA(true);
+    setEditandoIA(false);
   }
 
   function reemplazarImagen(f: File) {
@@ -252,6 +263,14 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                     <Type className="size-3.5" strokeWidth={2} />
                     Agregar texto
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditandoIA(true)}
+                    className="crm-btn crm-btn-sm crm-btn-secondary"
+                  >
+                    <Sparkles className="size-3.5" strokeWidth={2} />
+                    Editar con IA
+                  </button>
                   <p className="text-[12px] text-[var(--crm-ink-mute)]">
                     {formato ? (
                       <>
@@ -261,6 +280,7 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                       "Sin recortar se sube con las proporciones originales."
                     )}
                     {conTexto && " Con texto aplicado."}
+                    {conIA && " Editada con IA."}
                   </p>
                 </div>
               )}
@@ -306,6 +326,12 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
             src={preview}
             onClose={() => setEscribiendo(false)}
             onAplicar={aplicarTexto}
+          />
+          <AiPhotoEditor
+            open={editandoIA}
+            src={preview}
+            onClose={() => setEditandoIA(false)}
+            onAplicar={aplicarIA}
           />
         </>
       )}

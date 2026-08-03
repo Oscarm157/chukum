@@ -8,6 +8,9 @@ import { DescartarPostButton } from "@/components/crm/contenido/DescartarPostBut
 import { EstadoBadge, PlataformaBadges, EDITABLE, fmtFecha } from "@/components/crm/contenido/badges";
 
 export const dynamic = "force-dynamic";
+// Techo de las server actions de esta página. La edición con IA tarda entre 30s y ~100s
+// (medido contra Replicate); con el default se cortaría a media generación.
+export const maxDuration = 180;
 export const metadata = { title: "Post", robots: { index: false } };
 
 export default async function PostDetail({ params }: { params: Promise<{ id: string }> }) {

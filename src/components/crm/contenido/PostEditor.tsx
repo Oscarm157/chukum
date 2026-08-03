@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Send, Save, Crop, Type } from "lucide-react";
+import { Loader2, Send, Save, Crop, Type, Sparkles } from "lucide-react";
 import type { SocialAccount } from "@/lib/schema";
 import { guardarEdicion, aprobarYProgramar, actualizarImagen } from "@/app/admin/(panel)/contenido/actions";
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
 import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
+import { AiPhotoEditor } from "@/components/crm/contenido/AiPhotoEditor";
 import { SincronizarCuentasButton } from "@/components/crm/contenido/SincronizarCuentasButton";
 import { PLATFORM_LABEL, fmtFecha } from "@/components/crm/contenido/badges";
 
@@ -32,6 +33,7 @@ export function PostEditor({
   const [confirmando, setConfirmando] = useState(false);
   const [recortando, setRecortando] = useState(false);
   const [escribiendo, setEscribiendo] = useState(false);
+  const [editandoIA, setEditandoIA] = useState(false);
   const [pending, start] = useTransition();
 
   const disponibles = [...new Set(cuentas.map((c) => c.platform))];
@@ -56,6 +58,13 @@ export function PostEditor({
     await guardarImagen(file);
     setEscribiendo(false);
     toast.success("Texto aplicado y guardado.");
+  }
+
+  // La edición con IA llega ya resuelta como archivo: se guarda igual que las otras dos.
+  async function aplicarIA(file: File) {
+    await guardarImagen(file);
+    setEditandoIA(false);
+    toast.success("Imagen editada y guardada.");
   }
 
   async function guardarImagen(file: File) {
@@ -158,11 +167,20 @@ export function PostEditor({
                 <Type className="size-3.5" strokeWidth={2} />
                 Agregar texto
               </button>
+              <button
+                type="button"
+                onClick={() => setEditandoIA(true)}
+                disabled={pending}
+                className="crm-btn crm-btn-sm crm-btn-secondary"
+              >
+                <Sparkles className="size-3.5" strokeWidth={2} />
+                Editar con IA
+              </button>
             </div>
             <p className="max-w-[400px] text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-              Elige el formato (feed cuadrado, feed vertical o story) y el encuadre, o pon el título encima con una de
-              las tres plantillas. Al aplicarlo se guarda de inmediato como la imagen del post; la original queda
-              intacta en el catálogo.
+              Elige el formato (feed cuadrado, feed vertical o story) y el encuadre, pon el título encima con una de las
+              tres plantillas, o pide un cambio en la foto misma (quitar un letrero, cambiar el cielo). Al aplicarlo se
+              guarda de inmediato como la imagen del post; la original queda intacta en el catálogo.
             </p>
           </div>
         </div>
@@ -283,6 +301,13 @@ export function PostEditor({
         src={imageUrl}
         onClose={() => setEscribiendo(false)}
         onAplicar={aplicarTexto}
+      />
+
+      <AiPhotoEditor
+        open={editandoIA}
+        src={imageUrl}
+        onClose={() => setEditandoIA(false)}
+        onAplicar={aplicarIA}
       />
     </div>
   );

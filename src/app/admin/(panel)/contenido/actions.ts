@@ -16,6 +16,7 @@ import {
 } from "@/lib/schema";
 import { requireAdmin } from "@/lib/session";
 import { uploadImage } from "@/lib/blob";
+import { editarFoto } from "@/lib/nanobanana";
 import { BRAND } from "@/lib/site";
 import { buildCaptionPrompt, type CaptionPromptInput } from "@/lib/contenido/prompt";
 import { listAccounts, uploadMedia, createSocialPost, type PostForMeAccount } from "@/lib/postforme";
@@ -220,6 +221,37 @@ export async function actualizarImagen(
   revalidatePath("/admin/contenido");
   revalidatePath(`/admin/contenido/${id}`);
   return { ok: true, url: uploaded.url };
+}
+
+// ===================== Editar la foto con IA =====================
+
+const generarEdicionIASchema = z.object({
+  prompt: z
+    .string()
+    .trim()
+    .min(3, "Escribe qué quieres cambiar en la foto.")
+    .max(300, "La instrucción no puede pasar de 300 caracteres."),
+  // La foto ya guardada llega por URL (el servidor la descarga). En la pantalla de alta
+  // todavía no existe en Blob, así que ahí llega el archivo ya reducido por el navegador.
+  imageUrl: z.string().url("La imagen debe ser una URL válida.").optional(),
+  imageFile: z.instanceof(File).optional(),
+});
+
+// Solo genera el preview: no toca la base ni Blob. Persistir la edición pasa por
+// `actualizarImagen`, igual que el recorte y el overlay de texto.
+export async function generarEdicionIA(
+  input: unknown
+): Promise<{ ok: true; resultUrl: string } | { error: string }> {
+  const user = await requireAdmin();
+
+  const parsed = generarEdicionIASchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  const { prompt, imageUrl, imageFile } = parsed.data;
+
+  const imagen = imageFile instanceof File && imageFile.size > 0 ? imageFile : imageUrl;
+  if (!imagen) return { error: "Falta la imagen que se va a editar." };
+
+  return editarFoto({ imagen, prompt, usuario: user.id });
 }
 
 // ===================== Aprobar y programar/publicar =====================
