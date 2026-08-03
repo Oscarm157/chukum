@@ -38,7 +38,17 @@ export async function generarBorrador(
   input: unknown
 ): Promise<{ ok: true; id: string } | { error: string }> {
   const user = await requireAdmin();
+  return generarBorradorInterno(input, user.id);
+}
 
+// Núcleo sin el guard de sesión: lo reusa el webhook de Telegram
+// (`/api/telegram/contenido`), que no tiene cookie de admin — ahí el guard de auth real
+// es el secret token + chat_id validados en el route handler antes de llegar aquí.
+// `generarBorrador` sigue siendo la única vía desde el panel, con `requireAdmin()`.
+export async function generarBorradorInterno(
+  input: unknown,
+  userId: string
+): Promise<{ ok: true; id: string } | { error: string }> {
   const parsed = generarBorradorSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
   const v = parsed.data;
@@ -116,7 +126,7 @@ export async function generarBorrador(
     console.info(
       JSON.stringify({
         evento: "contenido_generar_borrador",
-        usuario: user.id,
+        usuario: userId,
         ms: Date.now() - inicio,
         entrada: mensaje.usage.input_tokens,
         salida: mensaje.usage.output_tokens,
@@ -126,7 +136,7 @@ export async function generarBorrador(
     console.error(
       JSON.stringify({
         evento: "contenido_generar_borrador_error",
-        usuario: user.id,
+        usuario: userId,
         error: e instanceof Error ? e.message : String(e),
       })
     );
@@ -144,7 +154,7 @@ export async function generarBorrador(
       imagePathname,
       platforms: [],
       status: "borrador",
-      createdBy: user.id,
+      createdBy: userId,
     })
     .returning({ id: socialPosts.id });
 
@@ -481,7 +491,16 @@ export async function aprobarYProgramar(
   platforms: string[]
 ): Promise<{ ok: true; status: SocialPostStatus } | { error: string }> {
   const user = await requireAdmin();
+  return aprobarYProgramarInterno(id, scheduledAtISO, platforms, user.id);
+}
 
+// Núcleo sin el guard de sesión, mismo motivo que `generarBorradorInterno`.
+export async function aprobarYProgramarInterno(
+  id: string,
+  scheduledAtISO: string | null,
+  platforms: string[],
+  userId: string
+): Promise<{ ok: true; status: SocialPostStatus } | { error: string }> {
   if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
   const parsed = aprobarSchema.safeParse({ scheduledAt: scheduledAtISO, platforms });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
@@ -546,7 +565,7 @@ export async function aprobarYProgramar(
     console.info(
       JSON.stringify({
         evento: "contenido_aprobar_programar",
-        usuario: user.id,
+        usuario: userId,
         post: id,
         ms: Date.now() - inicio,
         status,
@@ -566,7 +585,7 @@ export async function aprobarYProgramar(
     console.error(
       JSON.stringify({
         evento: "contenido_aprobar_programar_error",
-        usuario: user.id,
+        usuario: userId,
         post: id,
         error: mensaje,
       })
@@ -588,7 +607,11 @@ export async function aprobarYProgramar(
 // pasó vive en Post for Me. Mismo patrón que `deleteDesarrollo`.
 export async function descartarPost(id: string): Promise<{ ok: true } | { error: string }> {
   await requireAdmin();
+  return descartarPostInterno(id);
+}
 
+// Núcleo sin el guard de sesión, mismo motivo que `generarBorradorInterno`.
+export async function descartarPostInterno(id: string): Promise<{ ok: true } | { error: string }> {
   if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
 
   const rows = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
