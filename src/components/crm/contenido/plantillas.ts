@@ -33,8 +33,8 @@ export const PLANTILLAS: { id: PlantillaId; label: string; usaBadge: boolean; us
   { id: "banda", label: "Banda inferior", usaBadge: false, usaSubtitulo: true },
   { id: "banda_superior", label: "Banda superior", usaBadge: false, usaSubtitulo: true },
   { id: "badge", label: "Badge y centro", usaBadge: true, usaSubtitulo: false },
-  { id: "franja", label: "Franja lateral", usaBadge: false, usaSubtitulo: true },
-  { id: "franja_derecha", label: "Franja lateral (derecha)", usaBadge: false, usaSubtitulo: true },
+  { id: "franja", label: "Franja izquierda", usaBadge: false, usaSubtitulo: true },
+  { id: "franja_derecha", label: "Franja derecha", usaBadge: false, usaSubtitulo: true },
   { id: "marco", label: "Marco", usaBadge: false, usaSubtitulo: true },
 ];
 
@@ -200,12 +200,15 @@ function badge(W: number, H: number, fuentes: Fuentes): Composicion {
     ...MOVIBLE,
   });
 
+  // 0.35 se leía bien en fotos oscuras pero se perdía contra fachadas claras (el título
+  // quedaba directo sobre la foto sin contraste real). 0.6 sostiene la lectura en cualquier
+  // foto sin que la banda se vea como un bloque negro plano.
   const velo = new Rect({
     left: 0,
     top: H / 3,
     width: W,
     height: H / 3,
-    fill: "rgba(0,0,0,0.35)",
+    fill: "rgba(0,0,0,0.6)",
     ...ESTATICO,
   });
 
@@ -407,10 +410,11 @@ function marco(W: number, H: number, fuentes: Fuentes): Composicion {
 }
 
 /**
- * Firma del vendedor: capa opcional, independiente de la plantilla. Va siempre en la
- * esquina superior derecha, la única que ninguna de las seis plantillas ocupa (la banda
- * inferior, la franja izquierda y el badge superior izquierdo quedan libres). Se mueve en
- * bloque: foto, nombre y teléfono no se arrastran por separado.
+ * Firma del vendedor: capa opcional, independiente de la plantilla. Por default va en la
+ * esquina superior derecha, la única que la banda, la franja izquierda y el badge dejan
+ * libre. La franja derecha sí ocupa esa esquina (columna completa de arriba a abajo), así
+ * que para esa plantilla la firma se manda a la izquierda en su lugar. Se mueve en bloque:
+ * foto, nombre y teléfono no se arrastran por separado.
  */
 export type Firma = { grupo: Group; zona: Zona };
 
@@ -419,13 +423,15 @@ export function construirFirma(
   H: number,
   perfil: { name: string; phone: string | null },
   fuentes: Fuentes,
-  foto: HTMLImageElement | null
+  foto: HTMLImageElement | null,
+  plantilla: PlantillaId
 ): Firma {
   const margen = 0.04 * W;
   const padCaja = 0.018 * W;
   const diametro = 0.08 * W;
   const gapFoto = 0.016 * W;
   const gapTexto = 0.008 * W;
+  const izquierda = plantilla === "franja_derecha";
 
   const nombre = new FabricText(perfil.name, {
     fontSize: 0.023 * W,
@@ -452,7 +458,7 @@ export function construirFirma(
   const altoTexto = nombre.height + (telefono ? gapTexto + telefono.height : 0);
   const anchoCaja = 2 * padCaja + (imagen ? diametro + gapFoto : 0) + anchoTexto;
   const altoCaja = 2 * padCaja + Math.max(imagen ? diametro : 0, altoTexto);
-  const left = W - margen - anchoCaja;
+  const left = izquierda ? margen : W - margen - anchoCaja;
   const top = margen;
   const centro = top + altoCaja / 2;
 
@@ -465,7 +471,7 @@ export function construirFirma(
     height: altoCaja,
     rx: altoCaja * 0.26,
     ry: altoCaja * 0.26,
-    fill: "rgba(0,0,0,0.35)",
+    fill: "rgba(0,0,0,0.6)",
     ...ESTATICO,
   });
 
@@ -485,9 +491,12 @@ export function construirFirma(
 
   return {
     grupo,
-    // Se mueve por la mitad superior derecha del lienzo, nunca sobre la banda inferior ni
-    // sobre el badge de la esquina contraria.
-    zona: { left: W / 2, top: 0.025 * H, width: W / 2 - 0.025 * W, height: 0.32 * H },
+    // Se mueve por la mitad superior libre del lienzo (derecha por default, izquierda con
+    // la franja derecha), nunca sobre la banda inferior ni sobre el badge de la esquina
+    // contraria.
+    zona: izquierda
+      ? { left: 0.025 * W, top: 0.025 * H, width: W / 2 - 0.025 * W, height: 0.32 * H }
+      : { left: W / 2, top: 0.025 * H, width: W / 2 - 0.025 * W, height: 0.32 * H },
   };
 }
 

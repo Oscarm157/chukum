@@ -11,9 +11,15 @@ import { PasoIA } from "@/components/crm/contenido/PasoIA";
 
 /**
  * Editor de la imagen del post: una vista de pantalla completa, no un diálogo. Los tres
- * pasos (recorte, texto, IA) trabajan encadenados sobre una imagen que vive en memoria:
+ * pasos (recorte, IA, texto) trabajan encadenados sobre una imagen que vive en memoria:
  * cada uno recibe el resultado del anterior y ninguno persiste nada. La subida a Blob y el
  * guardado ocurren una sola vez, en "Guardar cambios en la imagen", que llama `onGuardar`.
+ *
+ * El texto va AL FINAL a propósito: el prompt de "Editar con IA" le pide al modelo que no
+ * agregue texto, y si el texto ya estaba puesto cuando se manda a editar, el modelo lo borra
+ * en vez de respetarlo (lo agarró en QA: una edición de IA después del texto se comía el
+ * título y la firma sin avisar). Con la IA antes, el texto siempre queda encima de lo que
+ * ya se editó y sobrevive.
  *
  * El continente es propio (portal a <body>, `fixed inset-0`) en vez de `Modal`: el editor
  * necesita todo el alto y el ancho de la pantalla, y el panel de un modal está topado.
@@ -33,8 +39,8 @@ const useMontado = () =>
 
 const PASOS: { id: Paso; label: string; Icono: typeof Crop }[] = [
   { id: "recorte", label: "Recortar", Icono: Crop },
-  { id: "texto", label: "Texto", Icono: Type },
   { id: "ia", label: "Editar con IA", Icono: Sparkles },
+  { id: "texto", label: "Texto", Icono: Type },
 ];
 
 export function ImageWorkspace({
@@ -256,14 +262,6 @@ export function ImageWorkspace({
                       onAplicar={(file, formato) => aplicarPaso(file, "recorte", `Recorte ${formato}`)}
                     />
                   )}
-                  {paso === "texto" && (
-                    <PasoTexto
-                      src={trabajo.url}
-                      pestanas={pestanas}
-                      onBusy={setOcupado}
-                      onAplicar={(file) => aplicarPaso(file, "texto", "Con texto")}
-                    />
-                  )}
                   {paso === "ia" && (
                     <PasoIA
                       src={trabajo.url}
@@ -271,6 +269,15 @@ export function ImageWorkspace({
                       onBusy={setOcupado}
                       onVer={lightbox.abrir}
                       onAplicar={(file) => aplicarPaso(file, "ia", "Editada con IA")}
+                    />
+                  )}
+                  {paso === "texto" && (
+                    <PasoTexto
+                      src={trabajo.url}
+                      pestanas={pestanas}
+                      onBusy={setOcupado}
+                      onAplicar={(file) => aplicarPaso(file, "texto", "Con texto")}
+                      yaAplicado={cambios.some((c) => c.paso === "texto")}
                     />
                   )}
                 </motion.div>

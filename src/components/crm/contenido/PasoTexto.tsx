@@ -51,6 +51,7 @@ export function PasoTexto({
   pestanas,
   onAplicar,
   onBusy,
+  yaAplicado,
 }: {
   /** Imagen de trabajo actual: object URL local o URL ya persistida. */
   src: string;
@@ -58,6 +59,12 @@ export function PasoTexto({
   pestanas: React.ReactNode;
   onAplicar: (file: File) => void | Promise<void>;
   onBusy: (busy: boolean) => void;
+  /**
+   * Ya se aplicó texto sobre esta imagen de trabajo en esta misma sesión de edición. El
+   * texto se aplana sobre los píxeles al aplicar (no hay capas), así que reabrir este paso
+   * y volver a aplicar dibuja el nuevo texto ENCIMA del anterior en vez de reemplazarlo.
+   */
+  yaAplicado?: boolean;
 }) {
   const [plantilla, setPlantilla] = useState<PlantillaId>("banda");
   const [headline, setHeadline] = useState("");
@@ -79,9 +86,12 @@ export function PasoTexto({
   const compRef = useRef<Composicion | null>(null);
   const granoRef = useRef<Pattern | null>(null);
   const multiplicadorRef = useRef(1);
-  // La firma vive fuera de la composición: sobrevive al cambio de plantilla.
+  // La firma vive fuera de la composición: sobrevive al cambio de plantilla. Su posición sí
+  // depende de la plantilla (la franja derecha ocupa el lado donde la firma vive por
+  // default), así que se reconstruye si `plantilla` cambió desde la última vez.
   const firmaRef = useRef<Group | null>(null);
   const zonaFirmaRef = useRef<Zona | null>(null);
+  const plantillaFirmaRef = useRef<PlantillaId | null>(null);
 
   const fuente = mismoOrigen(src);
   const def = PLANTILLAS.find((p) => p.id === plantilla)!;
@@ -229,11 +239,20 @@ export function PasoTexto({
         compRef.current?.zonas.delete(firmaRef.current);
         firmaRef.current = null;
         zonaFirmaRef.current = null;
+        plantillaFirmaRef.current = null;
         canvas.requestRenderAll();
       }
       return;
     }
-    if (firmaRef.current) return;
+    if (firmaRef.current && plantillaFirmaRef.current === plantilla) return;
+    if (firmaRef.current) {
+      // Cambió la plantilla desde que se armó la firma: se reconstruye en la posición que
+      // le toca a la nueva (evita que quede clavada del lado que ahora ocupa la franja).
+      canvas.remove(firmaRef.current);
+      compRef.current?.zonas.delete(firmaRef.current);
+      firmaRef.current = null;
+      zonaFirmaRef.current = null;
+    }
 
     let cancelado = false;
     (async () => {
@@ -245,21 +264,26 @@ export function PasoTexto({
       const comp = compRef.current;
       if (cancelado || !comp || canvasRef.current !== canvas) return;
 
-      const firma = construirFirma(canvas.width, canvas.height, perfil, {
-        display: fraunces.style.fontFamily,
-        cuerpo: inter.style.fontFamily,
-      }, foto);
+      const firma = construirFirma(
+        canvas.width,
+        canvas.height,
+        perfil,
+        { display: fraunces.style.fontFamily, cuerpo: inter.style.fontFamily },
+        foto,
+        plantilla
+      );
       canvas.add(firma.grupo);
       comp.zonas.set(firma.grupo, firma.zona);
       firmaRef.current = firma.grupo;
       zonaFirmaRef.current = firma.zona;
+      plantillaFirmaRef.current = plantilla;
       canvas.requestRenderAll();
     })();
 
     return () => {
       cancelado = true;
     };
-  }, [listo, conFirma, perfil]);
+  }, [listo, conFirma, perfil, plantilla]);
 
   async function aplicar() {
     const canvas = canvasRef.current;
@@ -298,6 +322,15 @@ export function PasoTexto({
       error={error}
       controles={
         <>
+          {yaAplicado && (
+            <p
+              className="mb-4 text-[12px] leading-snug"
+              style={{ color: "var(--destructive)" }}
+            >
+              Esta imagen ya lleva texto aplicado. Si aplicas de nuevo, el texto nuevo se dibuja
+              encima del anterior, no lo reemplaza — no hay forma de quitar el primero desde aquí.
+            </p>
+          )}
           <div role="radiogroup" aria-label="Plantilla">
             <span className={controlLabel}>Plantilla</span>
             <div className="grid grid-cols-2 gap-1.5">
