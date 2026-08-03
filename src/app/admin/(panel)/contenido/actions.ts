@@ -306,9 +306,20 @@ export async function descartarPost(id: string): Promise<{ ok: true } | { error:
   return { ok: true };
 }
 
-// ===================== Sincronizar cuentas =====================
+// ===================== Conectar cuentas =====================
+// Dos pasos a propósito: la misma API key de Post for Me puede traer cuentas de OTROS
+// negocios de Oscar (no solo Chukum). Listar nunca escribe; conectar exige que Oscar
+// elija explícitamente cuáles son las de Chukum, para no poder publicar sin querer en
+// la página de otro cliente.
 
-export async function sincronizarCuentas(): Promise<{ ok: true; count: number } | { error: string }> {
+export type CuentaDisponible = PostForMeAccount & {
+  platform: SocialPlatform;
+  yaConectada: boolean;
+};
+
+export async function listarCuentasDisponibles(): Promise<
+  { ok: true; cuentas: CuentaDisponible[] } | { error: string }
+> {
   await requireAdmin();
 
   if (!process.env.POSTFORME_API_KEY) return { error: "Falta POSTFORME_API_KEY." };
@@ -320,13 +331,51 @@ export async function sincronizarCuentas(): Promise<{ ok: true; count: number } 
     return { error: e instanceof Error ? e.message : "No se pudo consultar Post for Me." };
   }
 
-  // Solo facebook/instagram: son las únicas plataformas que soporta este módulo.
-  const soportadas = cuentas.filter(
-    (c): c is PostForMeAccount & { platform: SocialPlatform } =>
-      c.platform === "facebook" || c.platform === "instagram"
+  const conectadas = new Set(
+    (await db.select({ id: socialAccounts.postForMeAccountId }).from(socialAccounts)).map((c) => c.id)
   );
 
-  for (const c of soportadas) {
+  // Solo facebook/instagram: son las únicas plataformas que soporta este módulo.
+  const soportadas = cuentas
+    .filter(
+      (c): c is PostForMeAccount & { platform: SocialPlatform } =>
+        c.platform === "facebook" || c.platform === "instagram"
+    )
+    .map((c) => ({ ...c, yaConectada: conectadas.has(c.id) }));
+
+  return { ok: true, cuentas: soportadas };
+}
+
+const conectarCuentasSchema = z.object({
+  postForMeAccountIds: z.array(z.string().min(1)).min(1, "Elige al menos una cuenta."),
+});
+
+export async function conectarCuentas(
+  input: unknown
+): Promise<{ ok: true; count: number } | { error: string }> {
+  await requireAdmin();
+
+  const parsed = conectarCuentasSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+
+  if (!process.env.POSTFORME_API_KEY) return { error: "Falta POSTFORME_API_KEY." };
+
+  // Nunca se confía platform/username que mande el cliente: se vuelve a pedir la lista
+  // fresca a Post for Me y solo se guardan los ids que el propio Oscar marcó.
+  let cuentas: PostForMeAccount[];
+  try {
+    cuentas = await listAccounts();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "No se pudo consultar Post for Me." };
+  }
+
+  const elegidas = cuentas.filter(
+    (c): c is PostForMeAccount & { platform: SocialPlatform } =>
+      parsed.data.postForMeAccountIds.includes(c.id) &&
+      (c.platform === "facebook" || c.platform === "instagram")
+  );
+
+  for (const c of elegidas) {
     await db
       .insert(socialAccounts)
       .values({ platform: c.platform, postForMeAccountId: c.id, username: c.username })
@@ -337,5 +386,5 @@ export async function sincronizarCuentas(): Promise<{ ok: true; count: number } 
   }
 
   revalidatePath("/admin/contenido");
-  return { ok: true, count: soportadas.length };
+  return { ok: true, count: elegidas.length };
 }
