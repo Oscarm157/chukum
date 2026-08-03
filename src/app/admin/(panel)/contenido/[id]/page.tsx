@@ -56,12 +56,15 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
 
       <section className="crm-card crm-fade mb-5 p-5">
         <div className="flex flex-col gap-5 sm:flex-row">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.imageUrl}
-            alt=""
-            className="w-full shrink-0 rounded-lg border border-[var(--crm-line)] object-cover sm:h-[220px] sm:w-[220px]"
-          />
+          {/* Editable: la imagen vive en el editor (con el recorte), no se repite aquí. */}
+          {!editable && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={post.imageUrl}
+              alt=""
+              className="w-full shrink-0 rounded-lg border border-[var(--crm-line)] object-cover sm:h-[220px] sm:w-[220px]"
+            />
+          )}
           <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 self-start text-[13px]">
             <div>
               <dt className="text-[12px] text-[var(--crm-ink-mute)]">Creado</dt>

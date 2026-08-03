@@ -2,10 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Crop } from "lucide-react";
 import type { DesarrolloOption } from "@/lib/contenido-data";
 import { generarBorrador } from "@/app/admin/(panel)/contenido/actions";
 import { SectionHeader } from "@/components/crm/PageShell";
+import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
 
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
@@ -25,6 +26,8 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [recortando, setRecortando] = useState(false);
+  const [formato, setFormato] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +45,18 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
       if (prev) URL.revokeObjectURL(prev);
       return URL.createObjectURL(f);
     });
+  }
+
+  // El recorte reemplaza el archivo que se va a subir: lo que se guarda es la versión
+  // recortada, no la original.
+  function aplicarRecorte(f: File, ratio: string) {
+    setFile(f);
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(f);
+    });
+    setFormato(ratio);
+    setRecortando(false);
   }
 
   function submit(e: React.FormEvent) {
@@ -205,6 +220,27 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                   </>
                 )}
               </div>
+              {preview && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setRecortando(true)}
+                    className="crm-btn crm-btn-sm crm-btn-secondary"
+                  >
+                    <Crop className="size-3.5" strokeWidth={2} />
+                    Recortar imagen
+                  </button>
+                  <p className="text-[12px] text-[var(--crm-ink-mute)]">
+                    {formato ? (
+                      <>
+                        Recortada a <span className="crm-num">{formato}</span>.
+                      </>
+                    ) : (
+                      "Sin recortar se sube con las proporciones originales."
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -233,6 +269,15 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
             : "Genera un borrador editable. No se publica nada todavía."}
         </p>
       </div>
+
+      {preview && (
+        <ImageCropper
+          open={recortando}
+          src={preview}
+          onClose={() => setRecortando(false)}
+          onAplicar={aplicarRecorte}
+        />
+      )}
     </form>
   );
 }

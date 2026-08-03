@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Send, Save } from "lucide-react";
+import { Loader2, Send, Save, Crop } from "lucide-react";
 import type { SocialAccount } from "@/lib/schema";
-import { guardarEdicion, aprobarYProgramar } from "@/app/admin/(panel)/contenido/actions";
+import { guardarEdicion, aprobarYProgramar, actualizarImagen } from "@/app/admin/(panel)/contenido/actions";
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { SectionHeader } from "@/components/crm/PageShell";
+import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
 import { SincronizarCuentasButton } from "@/components/crm/contenido/SincronizarCuentasButton";
 import { PLATFORM_LABEL, fmtFecha } from "@/components/crm/contenido/badges";
 
@@ -23,10 +24,12 @@ export function PostEditor({
 }) {
   const router = useRouter();
   const [caption, setCaption] = useState(post.caption);
+  const [imageUrl, setImageUrl] = useState(post.imageUrl);
   const [platforms, setPlatforms] = useState<string[]>(post.platforms);
   const [cuando, setCuando] = useState(toLocalInput(post.scheduledAt));
   const [error, setError] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  const [recortando, setRecortando] = useState(false);
   const [pending, start] = useTransition();
 
   const disponibles = [...new Set(cuentas.map((c) => c.platform))];
@@ -38,10 +41,21 @@ export function PostEditor({
     setPlatforms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
   }
 
+  // El recorte se persiste solo: sube el JPEG nuevo y deja el post apuntando a él. Si
+  // falla, el error se lanza para que el modal de recorte lo muestre sin cerrarse.
+  async function aplicarRecorte(file: File) {
+    const res = await actualizarImagen(post.id, { imageFile: file });
+    if ("error" in res) throw new Error(res.error);
+    setImageUrl(res.url);
+    setRecortando(false);
+    toast.success("Imagen recortada y guardada.");
+    router.refresh();
+  }
+
   function guardar() {
     setError(null);
     start(async () => {
-      const res = await guardarEdicion(post.id, { caption: caption.trim(), imageUrl: post.imageUrl, platforms });
+      const res = await guardarEdicion(post.id, { caption: caption.trim(), imageUrl, platforms });
       if ("error" in res) {
         setError(res.error);
         return;
@@ -78,7 +92,7 @@ export function PostEditor({
       // este paso una edición sin guardar se publicaría con el texto viejo.
       const guardado = await guardarEdicion(post.id, {
         caption: caption.trim(),
-        imageUrl: post.imageUrl,
+        imageUrl,
         platforms,
       });
       if ("error" in guardado) {
@@ -102,6 +116,34 @@ export function PostEditor({
   return (
     <div className="flex flex-col gap-5">
       <section className="crm-card crm-fade p-6" style={{ animationDelay: "0ms" }}>
+        <SectionHeader title="Imagen del post" className="mb-4" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            className="max-h-[240px] w-full rounded-lg border border-[var(--crm-line)] object-contain sm:w-[240px]"
+            style={{ background: "var(--crm-surface)" }}
+          />
+          <div className="flex flex-col items-start gap-2">
+            <button
+              type="button"
+              onClick={() => setRecortando(true)}
+              disabled={pending}
+              className="crm-btn crm-btn-sm crm-btn-secondary"
+            >
+              <Crop className="size-3.5" strokeWidth={2} />
+              Recortar imagen
+            </button>
+            <p className="max-w-[400px] text-[12px] leading-snug text-[var(--crm-ink-mute)]">
+              Elige el formato (feed cuadrado, feed vertical o story) y el encuadre. Al aplicarlo se guarda de
+              inmediato como la imagen del post; la original queda intacta en el catálogo.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="crm-card crm-fade p-6" style={{ animationDelay: "55ms" }}>
         <SectionHeader title="Texto del post" className="mb-4" />
         <textarea
           id="caption"
@@ -116,7 +158,7 @@ export function PostEditor({
         </p>
       </section>
 
-      <section className="crm-card crm-fade p-6" style={{ animationDelay: "55ms" }}>
+      <section className="crm-card crm-fade p-6" style={{ animationDelay: "110ms" }}>
         <SectionHeader title="Dónde se publica" className="mb-4" />
         {disponibles.length === 0 ? (
           <div className="flex flex-col items-start gap-3">
@@ -149,7 +191,7 @@ export function PostEditor({
         )}
       </section>
 
-      <section className="crm-card crm-fade p-6" style={{ animationDelay: "110ms" }}>
+      <section className="crm-card crm-fade p-6" style={{ animationDelay: "165ms" }}>
         <SectionHeader title="Cuándo se publica" className="mb-4" />
         <div className="max-w-[280px]">
           <label className={label} htmlFor="cuando">
@@ -202,6 +244,13 @@ export function PostEditor({
         }
         confirmLabel={fechaOk ? "Programar" : "Publicar ahora"}
         pending={pending}
+      />
+
+      <ImageCropper
+        open={recortando}
+        src={imageUrl}
+        onClose={() => setRecortando(false)}
+        onAplicar={aplicarRecorte}
       />
     </div>
   );

@@ -82,7 +82,30 @@ export function SincronizarCuentasButton({ variante = "secondary" }: { variante?
         </p>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Elegir cuentas de Chukum" maxWidth={480}>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Elegir cuentas de Chukum"
+        maxWidth={480}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setOpen(false)} className="crm-btn crm-btn-sm crm-btn-ghost">
+              Cancelar
+            </button>
+            {cuentas && cuentas.length > 0 && (
+              <button
+                type="button"
+                onClick={conectar}
+                disabled={pending}
+                className="crm-btn crm-btn-sm crm-btn-primary"
+              >
+                {pending && <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />}
+                Guardar selección
+              </button>
+            )}
+          </div>
+        }
+      >
         <p className="mb-3 text-[12.5px] leading-relaxed text-[var(--crm-ink-mute)]">
           Post for Me puede traer cuentas de otros negocios conectados con la misma llave. Marca
           solo las que sean de Chukum: las demás no se guardan aquí.
@@ -124,23 +147,6 @@ export function SincronizarCuentasButton({ variante = "secondary" }: { variante?
                 <span className="truncate text-[var(--crm-ink)]">{c.username ?? c.id}</span>
               </label>
             ))}
-          </div>
-        )}
-
-        {cuentas && cuentas.length > 0 && (
-          <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="crm-btn crm-btn-sm crm-btn-ghost">
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={conectar}
-              disabled={pending}
-              className="crm-btn crm-btn-sm crm-btn-primary"
-            >
-              {pending && <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />}
-              Guardar selección
-            </button>
           </div>
         )}
       </Modal>

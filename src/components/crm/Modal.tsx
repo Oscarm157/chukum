@@ -10,18 +10,24 @@ import { X } from "lucide-react";
  * escapar cualquier ancestro con transform/overflow, y deja que TODO el overlay
  * scrollee (el panel es un hijo normal centrado, nunca se recorta arriba/abajo
  * en pantallas bajas). Cierra con Esc y click fuera; bloquea el scroll del body.
+ *
+ * Con `footer`, el panel pasa a tres zonas: título fijo arriba, `children` con su
+ * propio scroll (max 70vh) y los botones abajo, siempre visibles. Sin `footer` se
+ * comporta igual que siempre (panel completo, scroll del overlay).
  */
 export function Modal({
   open,
   onClose,
   title,
   children,
+  footer,
   maxWidth = 460,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
   maxWidth?: number;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -80,28 +86,45 @@ export function Modal({
               exit={{ opacity: 0, y: 8, scale: 0.985 }}
               transition={{ type: "spring", stiffness: 360, damping: 30 }}
               style={{ maxWidth }}
-              className="crm-card w-full p-6 shadow-[var(--crm-shadow-pop)]"
+              className={
+                footer === undefined
+                  ? "crm-card w-full p-6 shadow-[var(--crm-shadow-pop)]"
+                  : "crm-card flex w-full flex-col overflow-hidden shadow-[var(--crm-shadow-pop)]"
+              }
               onMouseDown={(e) => e.stopPropagation()}
             >
-              {title && (
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <h2 className="font-semibold text-[20px] tracking-tight text-[var(--crm-ink)]">{title}</h2>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    aria-label="Close"
-                    className="crm-btn crm-btn-ghost crm-btn-sm !px-1.5"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
+              {footer === undefined ? (
+                <>
+                  {title && <Header title={title} onClose={onClose} />}
+                  {children}
+                </>
+              ) : (
+                <>
+                  {title && (
+                    <div className="px-6 pt-6">
+                      <Header title={title} onClose={onClose} />
+                    </div>
+                  )}
+                  <div className="max-h-[70vh] overflow-y-auto overscroll-contain px-6 pb-5">{children}</div>
+                  <div className="border-t border-[var(--crm-line)] px-6 py-4">{footer}</div>
+                </>
               )}
-              {children}
             </motion.div>
           </div>
         </motion.div>
       )}
     </AnimatePresence>,
     document.body
+  );
+}
+
+function Header({ title, onClose }: { title: string; onClose: () => void }) {
+  return (
+    <div className="mb-4 flex items-center justify-between gap-4">
+      <h2 className="font-semibold text-[20px] tracking-tight text-[var(--crm-ink)]">{title}</h2>
+      <button type="button" onClick={onClose} aria-label="Close" className="crm-btn crm-btn-ghost crm-btn-sm !px-1.5">
+        <X className="size-4" />
+      </button>
+    </div>
   );
 }

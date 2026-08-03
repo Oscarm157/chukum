@@ -183,6 +183,45 @@ export async function guardarEdicion(
   return { ok: true };
 }
 
+// ===================== Reemplazar la imagen (recorte) =====================
+
+const actualizarImagenSchema = z.object({ imageFile: z.instanceof(File) });
+
+// Guarda el recorte que resolvió el navegador. La imagen anterior no se borra de Blob:
+// en un post de `desarrollo` la URL original es una foto de la galería del catálogo y
+// borrarla se llevaría el archivo del desarrollo.
+export async function actualizarImagen(
+  id: string,
+  input: unknown
+): Promise<{ ok: true; url: string } | { error: string }> {
+  await requireAdmin();
+
+  if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
+  const parsed = actualizarImagenSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+
+  const rows = await db
+    .select({ id: socialPosts.id, status: socialPosts.status })
+    .from(socialPosts)
+    .where(eq(socialPosts.id, id));
+  if (!rows[0]) return { error: "Ese post no existe." };
+  if (rows[0].status === "programado" || rows[0].status === "publicado") {
+    return { error: "Este post ya se envió y no se puede editar." };
+  }
+
+  const uploaded = await uploadImage("contenido", parsed.data.imageFile);
+  if ("error" in uploaded) return { error: uploaded.error };
+
+  await db
+    .update(socialPosts)
+    .set({ imageUrl: uploaded.url, imagePathname: uploaded.pathname, updatedAt: new Date() })
+    .where(eq(socialPosts.id, id));
+
+  revalidatePath("/admin/contenido");
+  revalidatePath(`/admin/contenido/${id}`);
+  return { ok: true, url: uploaded.url };
+}
+
 // ===================== Aprobar y programar/publicar =====================
 
 const aprobarSchema = z.object({
