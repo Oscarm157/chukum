@@ -4,7 +4,7 @@ import { useState } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import { Loader2, Crop } from "lucide-react";
 import { Modal } from "@/components/crm/Modal";
-import { BRAND } from "@/lib/site";
+import { MAX_LADO, mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
 
 /**
  * Recorte de la imagen del post en el navegador: se elige formato y zoom, y al aplicar
@@ -16,10 +16,6 @@ const FORMATOS = [
   { ratio: "4:5", valor: 4 / 5, label: "Feed vertical" },
   { ratio: "9:16", valor: 9 / 16, label: "Story/Reel" },
 ] as const;
-
-// Tope del lado largo del recorte. Instagram no muestra más de ~1440px de ancho y un
-// JPEG de 4000px se pasa del límite de 8MB de `uploadImage`.
-const MAX_LADO = 2048;
 
 export function ImageCropper({
   open,
@@ -42,10 +38,7 @@ export function ImageCropper({
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Las fotos del catálogo se guardan con la URL absoluta del sitio. Servidas desde el
-  // mismo origen el canvas puede leerlas; con el dominio completo, en local serían
-  // cross-origin y el recorte fallaría por tainted canvas.
-  const fuente = src.startsWith(BRAND.url) ? src.slice(BRAND.url.length) : src;
+  const fuente = mismoOrigen(src);
 
   // Cada apertura (y cada imagen distinta) arranca con el encuadre en cero. Se ajusta en
   // el render, no en un efecto: así no hay un frame con el estado del recorte anterior.
@@ -212,15 +205,5 @@ async function recortar(src: string, area: Area): Promise<Blob> {
       // Tainted canvas: la imagen vino de otro origen sin permiso de lectura.
       reject(new Error("Esta imagen no se puede recortar desde el navegador por su origen."));
     }
-  });
-}
-
-function cargarImagen(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("No se pudo cargar la imagen para recortarla."));
-    img.src = src;
   });
 }

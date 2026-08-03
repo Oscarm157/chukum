@@ -2,11 +2,12 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Crop } from "lucide-react";
+import { Loader2, Sparkles, Crop, Type } from "lucide-react";
 import type { DesarrolloOption } from "@/lib/contenido-data";
 import { generarBorrador } from "@/app/admin/(panel)/contenido/actions";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
+import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
 
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
@@ -27,7 +28,9 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
   const [preview, setPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [recortando, setRecortando] = useState(false);
+  const [escribiendo, setEscribiendo] = useState(false);
   const [formato, setFormato] = useState<string | null>(null);
+  const [conTexto, setConTexto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,13 +53,24 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
   // El recorte reemplaza el archivo que se va a subir: lo que se guarda es la versión
   // recortada, no la original.
   function aplicarRecorte(f: File, ratio: string) {
+    reemplazarImagen(f);
+    setFormato(ratio);
+    setRecortando(false);
+  }
+
+  // El overlay también trabaja sobre el archivo local: se sube ya aplanado con el texto.
+  function aplicarTexto(f: File) {
+    reemplazarImagen(f);
+    setConTexto(true);
+    setEscribiendo(false);
+  }
+
+  function reemplazarImagen(f: File) {
     setFile(f);
     setPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return URL.createObjectURL(f);
     });
-    setFormato(ratio);
-    setRecortando(false);
   }
 
   function submit(e: React.FormEvent) {
@@ -230,6 +244,14 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                     <Crop className="size-3.5" strokeWidth={2} />
                     Recortar imagen
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setEscribiendo(true)}
+                    className="crm-btn crm-btn-sm crm-btn-secondary"
+                  >
+                    <Type className="size-3.5" strokeWidth={2} />
+                    Agregar texto
+                  </button>
                   <p className="text-[12px] text-[var(--crm-ink-mute)]">
                     {formato ? (
                       <>
@@ -238,6 +260,7 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                     ) : (
                       "Sin recortar se sube con las proporciones originales."
                     )}
+                    {conTexto && " Con texto aplicado."}
                   </p>
                 </div>
               )}
@@ -271,12 +294,20 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
       </div>
 
       {preview && (
-        <ImageCropper
-          open={recortando}
-          src={preview}
-          onClose={() => setRecortando(false)}
-          onAplicar={aplicarRecorte}
-        />
+        <>
+          <ImageCropper
+            open={recortando}
+            src={preview}
+            onClose={() => setRecortando(false)}
+            onAplicar={aplicarRecorte}
+          />
+          <TextOverlayEditor
+            open={escribiendo}
+            src={preview}
+            onClose={() => setEscribiendo(false)}
+            onAplicar={aplicarTexto}
+          />
+        </>
       )}
     </form>
   );

@@ -60,3 +60,4 @@ next-env.d.ts
 .db-check.mjs
 .gen-jazz.mjs
 .db-rename.mjs
+.overlay-shots/

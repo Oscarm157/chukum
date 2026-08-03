@@ -3,12 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Send, Save, Crop } from "lucide-react";
+import { Loader2, Send, Save, Crop, Type } from "lucide-react";
 import type { SocialAccount } from "@/lib/schema";
 import { guardarEdicion, aprobarYProgramar, actualizarImagen } from "@/app/admin/(panel)/contenido/actions";
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
+import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
 import { SincronizarCuentasButton } from "@/components/crm/contenido/SincronizarCuentasButton";
 import { PLATFORM_LABEL, fmtFecha } from "@/components/crm/contenido/badges";
 
@@ -30,6 +31,7 @@ export function PostEditor({
   const [error, setError] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
   const [recortando, setRecortando] = useState(false);
+  const [escribiendo, setEscribiendo] = useState(false);
   const [pending, start] = useTransition();
 
   const disponibles = [...new Set(cuentas.map((c) => c.platform))];
@@ -44,11 +46,22 @@ export function PostEditor({
   // El recorte se persiste solo: sube el JPEG nuevo y deja el post apuntando a él. Si
   // falla, el error se lanza para que el modal de recorte lo muestre sin cerrarse.
   async function aplicarRecorte(file: File) {
+    await guardarImagen(file);
+    setRecortando(false);
+    toast.success("Imagen recortada y guardada.");
+  }
+
+  // El overlay exporta la imagen ya aplanada con el texto: se guarda igual que el recorte.
+  async function aplicarTexto(file: File) {
+    await guardarImagen(file);
+    setEscribiendo(false);
+    toast.success("Texto aplicado y guardado.");
+  }
+
+  async function guardarImagen(file: File) {
     const res = await actualizarImagen(post.id, { imageFile: file });
     if ("error" in res) throw new Error(res.error);
     setImageUrl(res.url);
-    setRecortando(false);
-    toast.success("Imagen recortada y guardada.");
     router.refresh();
   }
 
@@ -126,18 +139,30 @@ export function PostEditor({
             style={{ background: "var(--crm-surface)" }}
           />
           <div className="flex flex-col items-start gap-2">
-            <button
-              type="button"
-              onClick={() => setRecortando(true)}
-              disabled={pending}
-              className="crm-btn crm-btn-sm crm-btn-secondary"
-            >
-              <Crop className="size-3.5" strokeWidth={2} />
-              Recortar imagen
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setRecortando(true)}
+                disabled={pending}
+                className="crm-btn crm-btn-sm crm-btn-secondary"
+              >
+                <Crop className="size-3.5" strokeWidth={2} />
+                Recortar imagen
+              </button>
+              <button
+                type="button"
+                onClick={() => setEscribiendo(true)}
+                disabled={pending}
+                className="crm-btn crm-btn-sm crm-btn-secondary"
+              >
+                <Type className="size-3.5" strokeWidth={2} />
+                Agregar texto
+              </button>
+            </div>
             <p className="max-w-[400px] text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-              Elige el formato (feed cuadrado, feed vertical o story) y el encuadre. Al aplicarlo se guarda de
-              inmediato como la imagen del post; la original queda intacta en el catálogo.
+              Elige el formato (feed cuadrado, feed vertical o story) y el encuadre, o pon el título encima con una de
+              las tres plantillas. Al aplicarlo se guarda de inmediato como la imagen del post; la original queda
+              intacta en el catálogo.
             </p>
           </div>
         </div>
@@ -251,6 +276,13 @@ export function PostEditor({
         src={imageUrl}
         onClose={() => setRecortando(false)}
         onAplicar={aplicarRecorte}
+      />
+
+      <TextOverlayEditor
+        open={escribiendo}
+        src={imageUrl}
+        onClose={() => setEscribiendo(false)}
+        onAplicar={aplicarTexto}
       />
     </div>
   );
