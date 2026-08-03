@@ -41,11 +41,17 @@ export function Modal({
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    // El elemento que de verdad scrollea en este documento es <html>, no <body> (medido:
+    // `document.scrollingElement` es HTML con recorrido real). Bloquear solo `body` deja
+    // a `html` libre, y eso es lo que se mueve "de fondo" al scrollear sobre el modal.
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
     };
   }, [open, onClose]);
 

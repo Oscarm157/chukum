@@ -6,6 +6,7 @@ import { Loader2, Type } from "lucide-react";
 import { fraunces, inter } from "@/lib/contenido/fonts";
 import { cargarPerfilFirma, type PerfilFirma } from "@/app/admin/(panel)/contenido/perfil-actions";
 import { MAX_LADO, mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
+import { PasoLayout, controlLabel } from "@/components/crm/contenido/PasoLayout";
 import {
   construirPlantilla,
   construirFirma,
@@ -22,27 +23,39 @@ import {
  * Paso de overlay de texto del `ImageWorkspace`: se elige plantilla, se escribe el texto y
  * se arrastra dentro de la zona segura. Al aplicar exporta un JPEG aplanado que pasa a ser
  * la imagen de trabajo; la "receta" (plantilla, texto, posición) no se guarda.
+ *
+ * La plantilla y los campos viven en la columna de controles; el canvas se queda con el
+ * lienzo y se dimensiona al hueco real que le deja esa columna.
  */
 
 // Resolución de trabajo del canvas. La exportación sube a `MAX_LADO` con el multiplicador
 // de fabric, así que dibujar aquí a 1080 mantiene el editor fluido sin perder calidad.
 const LADO_DISENO = 1080;
-// Caja donde se muestra el canvas dentro del modal. En pantalla angosta se achica para
-// que los campos de texto no queden abajo del pliegue.
-function cajaVista() {
-  const angosta = window.innerWidth < 640;
-  return { ancho: Math.min(520, window.innerWidth - 96), alto: angosta ? 240 : 320 };
-}
+// Padding de la caja del lienzo (`p-3`), a descontar del hueco disponible.
+const AIRE_CAJA = 24;
 
-const labelCls = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
+// El canvas se muestra al tamaño que quepa en su caja, sin deformar: la resolución de
+// trabajo (W×H) no cambia, solo su tamaño en CSS.
+function ajustarVista(canvas: Canvas, W: number, H: number, caja: HTMLElement) {
+  const ancho = Math.max(160, caja.clientWidth - AIRE_CAJA);
+  const alto = Math.max(160, caja.clientHeight - AIRE_CAJA);
+  const vista = Math.min(ancho / W, alto / H);
+  canvas.setDimensions(
+    { width: `${Math.round(W * vista)}px`, height: `${Math.round(H * vista)}px` },
+    { cssOnly: true }
+  );
+}
 
 export function PasoTexto({
   src,
+  pestanas,
   onAplicar,
   onBusy,
 }: {
   /** Imagen de trabajo actual: object URL local o URL ya persistida. */
   src: string;
+  /** Selector de paso del workspace; se pinta arriba de la columna de controles. */
+  pestanas: React.ReactNode;
   onAplicar: (file: File) => void | Promise<void>;
   onBusy: (busy: boolean) => void;
 }) {
@@ -53,13 +66,15 @@ export function PasoTexto({
   const [perfil, setPerfil] = useState<PerfilFirma | null>(null);
   const [conFirma, setConFirma] = useState(false);
   const [listo, setListo] = useState(false);
-  const [altoVista, setAltoVista] = useState(320);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // El modal monta su contenido en un portal después del primer render: con un ref normal
+  // El editor monta su contenido en un portal después del primer render: con un ref normal
   // el efecto correría antes de que exista el <canvas>. Con estado se dispara al montarlo.
   const [el, setEl] = useState<HTMLCanvasElement | null>(null);
+  // La caja que le da su tamaño al canvas: se mide, no se supone.
+  const [caja, setCaja] = useState<HTMLDivElement | null>(null);
+  const disenoRef = useRef({ W: 0, H: 0 });
   const canvasRef = useRef<Canvas | null>(null);
   const compRef = useRef<Composicion | null>(null);
   const granoRef = useRef<Pattern | null>(null);
@@ -90,7 +105,7 @@ export function PasoTexto({
   // fuente del sistema), foto de fondo y textura de grano. Si la imagen de trabajo cambia
   // (por ejemplo, se recortó primero), se rearma sobre la nueva.
   useEffect(() => {
-    if (!el) return;
+    if (!el || !caja) return;
 
     let cancelado = false;
 
@@ -123,13 +138,8 @@ export function PasoTexto({
           preserveObjectStacking: true,
           backgroundColor: "#000",
         });
-        const caja = cajaVista();
-        const vista = Math.min(caja.ancho / W, caja.alto / H);
-        canvas.setDimensions(
-          { width: `${Math.round(W * vista)}px`, height: `${Math.round(H * vista)}px` },
-          { cssOnly: true }
-        );
-        setAltoVista(Math.round(H * vista));
+        disenoRef.current = { W, H };
+        ajustarVista(canvas, W, H, caja);
 
         img.set({ left: 0, top: 0, originX: "left", originY: "top", scaleX: W / natW, scaleY: H / natH });
         canvas.backgroundImage = img;
@@ -167,7 +177,19 @@ export function PasoTexto({
       canvasRef.current = null;
       setListo(false);
     };
-  }, [fuente, el]);
+  }, [fuente, el, caja]);
+
+  // Al cambiar el tamaño de la ventana (o al pasar de una columna a dos), el canvas se
+  // vuelve a acomodar al hueco nuevo sin rearmar la composición.
+  useEffect(() => {
+    if (!listo || !caja) return;
+    const observador = new ResizeObserver(() => {
+      const canvas = canvasRef.current;
+      if (canvas) ajustarVista(canvas, disenoRef.current.W, disenoRef.current.H, caja);
+    });
+    observador.observe(caja);
+    return () => observador.disconnect();
+  }, [listo, caja]);
 
   // Cambiar de plantilla rearma las capas y devuelve las posiciones a su sitio; el texto
   // ya escrito se conserva. Escribir solo actualiza los objetos que ya existen.
@@ -271,114 +293,108 @@ export function PasoTexto({
   }
 
   return (
-    <div>
-      <div role="radiogroup" aria-label="Plantilla" className="mb-3 flex gap-2 overflow-x-auto sm:flex-wrap">
-        {PLANTILLAS.map((p) => (
-          <label
-            key={p.id}
-            className="crm-tab shrink-0 cursor-pointer focus-within:ring-2 focus-within:ring-[var(--crm-accent-ring)]"
-            data-active={plantilla === p.id}
-          >
-            <input
-              type="radio"
-              name="plantilla"
-              value={p.id}
-              checked={plantilla === p.id}
-              onChange={() => setPlantilla(p.id)}
-              className="sr-only"
-            />
-            {p.label}
-          </label>
-        ))}
-      </div>
-
-      <div
-        className="relative flex items-center justify-center rounded-lg border border-[var(--crm-line)] p-3"
-        style={{ background: "var(--crm-surface)", minHeight: altoVista + 24 }}
-      >
-        <canvas ref={setEl} className="rounded-[3px]" />
-        {!listo && !error && (
-          <div className="absolute inset-0 flex items-center justify-center gap-2 text-[13px] text-[var(--crm-ink-mute)]">
-            <Loader2 className="size-4 animate-spin" strokeWidth={2} />
-            Preparando el editor…
+    <PasoLayout
+      pestanas={pestanas}
+      error={error}
+      controles={
+        <>
+          <div role="radiogroup" aria-label="Plantilla">
+            <span className={controlLabel}>Plantilla</span>
+            <div className="grid grid-cols-2 gap-1.5">
+              {PLANTILLAS.map((p) => (
+                <label
+                  key={p.id}
+                  className="crm-tab flex cursor-pointer justify-center text-center leading-tight focus-within:ring-2 focus-within:ring-[var(--crm-accent-ring)]"
+                  data-active={plantilla === p.id}
+                >
+                  <input
+                    type="radio"
+                    name="plantilla"
+                    value={p.id}
+                    checked={plantilla === p.id}
+                    onChange={() => setPlantilla(p.id)}
+                    className="sr-only"
+                  />
+                  {p.label}
+                </label>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className={labelCls} htmlFor="ov-headline">
-            Título
-          </label>
-          <input
-            id="ov-headline"
-            value={headline}
-            onChange={(e) => setHeadline(e.target.value)}
-            maxLength={80}
-            className="crm-input"
-            placeholder="Terrenos en la selva de Yucatán"
-          />
-        </div>
-        {def.usaSubtitulo && (
-          <div>
-            <label className={labelCls} htmlFor="ov-subtitulo">
-              Subtítulo (opcional)
+          <div className="mt-5 grid gap-3">
+            <div>
+              <label className={controlLabel} htmlFor="ov-headline">
+                Título
+              </label>
+              <input
+                id="ov-headline"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                maxLength={80}
+                className="crm-input"
+                placeholder="Terrenos en la selva de Yucatán"
+              />
+            </div>
+            {def.usaSubtitulo && (
+              <div>
+                <label className={controlLabel} htmlFor="ov-subtitulo">
+                  Subtítulo (opcional)
+                </label>
+                <input
+                  id="ov-subtitulo"
+                  value={subtitulo}
+                  onChange={(e) => setSubtitulo(e.target.value)}
+                  maxLength={110}
+                  className="crm-input"
+                  placeholder="A 20 minutos de Mérida"
+                />
+              </div>
+            )}
+            {def.usaBadge && (
+              <div>
+                <label className={controlLabel} htmlFor="ov-badge">
+                  Etiqueta (opcional)
+                </label>
+                <input
+                  id="ov-badge"
+                  value={badge}
+                  onChange={(e) => setBadge(e.target.value)}
+                  maxLength={22}
+                  className="crm-input"
+                  placeholder="Preventa"
+                />
+              </div>
+            )}
+          </div>
+
+          {perfil && (
+            <label className="mt-4 flex items-center gap-2 text-[13px] text-[var(--crm-ink-soft)]">
+              <input
+                type="checkbox"
+                checked={conFirma}
+                onChange={(e) => setConFirma(e.target.checked)}
+                className="h-4 w-4 accent-[var(--crm-accent-strong)]"
+              />
+              Incluir mi firma
+              <span className="text-[12px] text-[var(--crm-ink-faint)]">
+                {perfil.name}
+                {perfil.phone ? ` · ${perfil.phone}` : ""}
+              </span>
             </label>
-            <input
-              id="ov-subtitulo"
-              value={subtitulo}
-              onChange={(e) => setSubtitulo(e.target.value)}
-              maxLength={110}
-              className="crm-input"
-              placeholder="A 20 minutos de Mérida"
-            />
-          </div>
-        )}
-        {def.usaBadge && (
-          <div>
-            <label className={labelCls} htmlFor="ov-badge">
-              Etiqueta (opcional)
-            </label>
-            <input
-              id="ov-badge"
-              value={badge}
-              onChange={(e) => setBadge(e.target.value)}
-              maxLength={22}
-              className="crm-input"
-              placeholder="Preventa"
-            />
-          </div>
-        )}
-      </div>
+          )}
 
-      {perfil && (
-        <label className="mt-3 flex items-center gap-2 text-[13px] text-[var(--crm-ink-soft)]">
-          <input
-            type="checkbox"
-            checked={conFirma}
-            onChange={(e) => setConFirma(e.target.checked)}
-            className="h-4 w-4 accent-[var(--crm-accent-strong)]"
-          />
-          Incluir mi firma
-          <span className="text-[12px] text-[var(--crm-ink-faint)]">
-            {perfil.name}
-            {perfil.phone ? ` · ${perfil.phone}` : ""}
-          </span>
-        </label>
-      )}
-
-      {/* Pegada al borde inferior del cuerpo del modal: la acción del paso no se pierde
-          abajo del scroll cuando el contenido es alto. */}
-      <div className="sticky bottom-0 -mx-6 -mb-5 mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-6 py-2.5 sm:justify-between">
-        <p className="hidden max-w-[52ch] text-[12px] leading-snug text-[var(--crm-ink-mute)] sm:block">
-          El texto se arrastra dentro de la zona de la plantilla. Sale un JPEG aplanado de máximo{" "}
-          <span className="crm-num">{MAX_LADO}</span> px de lado.
-        </p>
+          <p className="mt-4 text-[12px] leading-snug text-[var(--crm-ink-mute)]">
+            El texto se arrastra dentro de la zona de la plantilla. Sale un JPEG aplanado de máximo{" "}
+            <span className="crm-num">{MAX_LADO}</span> px de lado.
+          </p>
+        </>
+      }
+      acciones={
         <button
           type="button"
           onClick={aplicar}
           disabled={procesando || !listo || !headline.trim()}
-          className="crm-btn crm-btn-sm crm-btn-secondary"
+          className="crm-btn crm-btn-sm crm-btn-secondary w-full"
         >
           {procesando ? (
             <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
@@ -387,14 +403,23 @@ export function PasoTexto({
           )}
           Aplicar texto
         </button>
-      </div>
-
-      {error && (
-        <p className="mt-3 text-[12.5px] leading-snug" style={{ color: "var(--destructive)" }}>
-          {error}
-        </p>
-      )}
-    </div>
+      }
+      lienzo={
+        <div
+          ref={setCaja}
+          className="relative flex h-[320px] w-full items-center justify-center rounded-lg border border-[var(--crm-line)] p-3 sm:h-[400px] lg:h-auto lg:min-h-0 lg:flex-1"
+          style={{ background: "var(--crm-surface)" }}
+        >
+          <canvas ref={setEl} className="rounded-[3px]" />
+          {!listo && !error && (
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-[13px] text-[var(--crm-ink-mute)]">
+              <Loader2 className="size-4 animate-spin" strokeWidth={2} />
+              Preparando el editor…
+            </div>
+          )}
+        </div>
+      }
+    />
   );
 }
 

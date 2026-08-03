@@ -1,21 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Crop, Type, Sparkles, Loader2, Save, Maximize2 } from "lucide-react";
-import { Modal } from "@/components/crm/Modal";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
+import { Crop, Type, Sparkles, Loader2, Save, Maximize2, X } from "lucide-react";
 import { Lightbox, useLightbox } from "@/components/crm/Lightbox";
 import { PasoRecorte } from "@/components/crm/contenido/PasoRecorte";
 import { PasoTexto } from "@/components/crm/contenido/PasoTexto";
 import { PasoIA } from "@/components/crm/contenido/PasoIA";
 
 /**
- * Editor de la imagen del post en un solo modal. Los tres pasos (recorte, texto, IA)
- * trabajan encadenados sobre una imagen que vive en memoria: cada uno recibe el resultado
- * del anterior y ninguno persiste nada. La subida a Blob y el guardado ocurren una sola
- * vez, en "Guardar cambios en la imagen", que es cuando se llama `onGuardar`.
+ * Editor de la imagen del post: una vista de pantalla completa, no un diálogo. Los tres
+ * pasos (recorte, texto, IA) trabajan encadenados sobre una imagen que vive en memoria:
+ * cada uno recibe el resultado del anterior y ninguno persiste nada. La subida a Blob y el
+ * guardado ocurren una sola vez, en "Guardar cambios en la imagen", que llama `onGuardar`.
+ *
+ * El continente es propio (portal a <body>, `fixed inset-0`) en vez de `Modal`: el editor
+ * necesita todo el alto y el ancho de la pantalla, y el panel de un modal está topado.
  */
 
 type Paso = "recorte" | "texto" | "ia";
+
+// El portal necesita `document.body`, que no existe al prerenderizar. Esto es false en el
+// servidor y true en el cliente, sin escribir estado dentro de un efecto.
+const sinSuscripcion = () => () => {};
+const useMontado = () =>
+  useSyncExternalStore(
+    sinSuscripcion,
+    () => true,
+    () => false
+  );
 
 const PASOS: { id: Paso; label: string; Icono: typeof Crop }[] = [
   { id: "recorte", label: "Recortar", Icono: Crop },
@@ -35,7 +49,7 @@ export function ImageWorkspace({
   onClose: () => void;
   /**
    * Se llama una sola vez, con la imagen final y el resumen de los pasos aplicados. Si
-   * lanza un Error, su mensaje se muestra en el modal y el trabajo no se pierde.
+   * lanza un Error, su mensaje se muestra abajo y el trabajo no se pierde.
    */
   onGuardar: (file: File, resumen: string) => void | Promise<void>;
 }) {
@@ -46,6 +60,7 @@ export function ImageWorkspace({
   const [ocupado, setOcupado] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const montado = useMontado();
   const lightbox = useLightbox();
   // Object URLs creados aquí. Se sueltan al cerrar, no antes: el archivo final se entrega
   // al llamador, que arma el suyo.
@@ -68,6 +83,29 @@ export function ImageWorkspace({
     creadosRef.current.forEach(URL.revokeObjectURL);
     creadosRef.current = [];
   }, [open]);
+
+  const bloqueado = ocupado || guardando;
+
+  // Esc cierra, salvo que el lightbox esté encima (Esc es suyo) o haya un paso corriendo.
+  // El scroll se bloquea en <html> Y en <body>: el elemento que de verdad scrollea en este
+  // documento es <html> (medido), así que bloquear solo `body` deja la página moviéndose
+  // de fondo mientras se edita.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !lightbox.open && !bloqueado) onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, [open, onClose, lightbox.open, bloqueado]);
 
   // El resultado de un paso reemplaza la imagen de trabajo; el siguiente paso lo recibe
   // como su fondo.
@@ -93,137 +131,178 @@ export function ImageWorkspace({
     }
   }
 
-  const bloqueado = ocupado || guardando;
+  const pestanas = (
+    // En pantalla angosta la fila se desliza; en la columna de controles caben las tres.
+    <div role="tablist" aria-label="Paso de edición" className="flex gap-1.5 overflow-x-auto lg:gap-1">
+      {PASOS.map(({ id, label, Icono }) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={paso === id}
+          disabled={bloqueado}
+          onClick={() => setPaso(id)}
+          className="crm-tab shrink-0 disabled:opacity-50 lg:px-2"
+          data-active={paso === id}
+        >
+          <Icono className="size-3.5 shrink-0" strokeWidth={2} />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 
-  return (
+  if (!montado) return null;
+
+  return createPortal(
     <>
-      <Modal
-        open={open}
-        // Con el lightbox encima, Esc y el click fuera son suyos: no deben cerrar el editor
-        // y tirar el trabajo en memoria.
-        onClose={() => {
-          if (!lightbox.open && !bloqueado) onClose();
-        }}
-        title="Editar imagen"
-        maxWidth={900}
-        footer={
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <p
-              className="max-w-[36ch] text-[12px] leading-snug"
-              style={{ color: error ? "var(--destructive)" : "var(--crm-ink-mute)" }}
-            >
-              {error ?? "Los pasos se acumulan sobre la misma imagen. Nada se guarda hasta que lo confirmes aquí."}
-            </p>
-            <div className="flex gap-2">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Editar imagen"
+            initial={{ opacity: 0, scale: 0.995 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.995 }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            style={{ background: "var(--crm-bg)" }}
+            className="crm-root fixed inset-0 z-50 flex flex-col"
+            // Lenis (scroll suave del layout raíz) mueve la página con scrollTo, y eso pasa
+            // por encima de `overflow: hidden`: sin esto el fondo sigue corriéndose al
+            // scrollear sobre el editor, aunque el bloqueo esté puesto. Mismo mecanismo que
+            // ya usan el asistente y el carrusel.
+            data-lenis-prevent
+          >
+            <header className="flex shrink-0 items-center gap-3 border-b border-[var(--crm-line)] bg-[var(--crm-surface)] px-3 py-2.5 sm:px-4">
+              <button
+                type="button"
+                onClick={() => lightbox.abrir(trabajo.url)}
+                aria-label="Ver la imagen de trabajo en grande"
+                className="group relative size-10 shrink-0 overflow-hidden rounded-md border border-[var(--crm-line)]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={trabajo.url} alt="" className="h-full w-full object-cover" />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <Maximize2 className="size-3.5" strokeWidth={2} />
+                </span>
+              </button>
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate font-semibold text-[15px] tracking-tight text-[var(--crm-ink)]">
+                  Editar imagen
+                </h2>
+                {cambios.length === 0 ? (
+                  <p className="truncate text-[12px] text-[var(--crm-ink-mute)]">Imagen actual del post</p>
+                ) : (
+                  <div className="mt-0.5 flex flex-wrap gap-1.5">
+                    {cambios.map((c) => (
+                      <span key={c.paso} className="crm-badge crm-badge-wine">
+                        {c.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* En móvil sobra: la miniatura de al lado ya abre el lightbox. El `hidden` va
+                  en el contenedor porque `.crm-btn` ya fija su propio `display`. */}
+              <span className="hidden shrink-0 sm:block">
+                <button
+                  type="button"
+                  onClick={() => lightbox.abrir(trabajo.url)}
+                  className="crm-btn crm-btn-sm crm-btn-ghost"
+                >
+                  <Maximize2 className="size-3.5" strokeWidth={2} />
+                  Ver en grande
+                </button>
+              </span>
               <button
                 type="button"
                 onClick={onClose}
                 disabled={bloqueado}
-                className="crm-btn crm-btn-sm crm-btn-ghost"
+                aria-label="Cerrar el editor"
+                className="crm-btn crm-btn-ghost crm-btn-sm shrink-0 !px-1.5"
               >
-                Cancelar
+                <X className="size-4" strokeWidth={2} />
               </button>
-              <button
-                type="button"
-                onClick={guardar}
-                disabled={bloqueado || !trabajo.file}
-                className="crm-btn crm-btn-sm crm-btn-primary"
-              >
-                {guardando ? (
-                  <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-                ) : (
-                  <Save className="size-3.5" strokeWidth={2} />
-                )}
-                Guardar cambios en la imagen
-              </button>
+            </header>
+
+            {/* En angosto scrollea este cuerpo; desde lg cada columna del paso scrollea sola. */}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={paso}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  className="lg:h-full"
+                >
+                  {paso === "recorte" && (
+                    <PasoRecorte
+                      src={trabajo.url}
+                      pestanas={pestanas}
+                      onBusy={setOcupado}
+                      onAplicar={(file, formato) => aplicarPaso(file, "recorte", `Recorte ${formato}`)}
+                    />
+                  )}
+                  {paso === "texto" && (
+                    <PasoTexto
+                      src={trabajo.url}
+                      pestanas={pestanas}
+                      onBusy={setOcupado}
+                      onAplicar={(file) => aplicarPaso(file, "texto", "Con texto")}
+                    />
+                  )}
+                  {paso === "ia" && (
+                    <PasoIA
+                      src={trabajo.url}
+                      pestanas={pestanas}
+                      onBusy={setOcupado}
+                      onVer={lightbox.abrir}
+                      onAplicar={(file) => aplicarPaso(file, "ia", "Editada con IA")}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
-          </div>
-        }
-      >
-        <div className="mb-3 flex items-center gap-3 rounded-lg border border-[var(--crm-line)] bg-[var(--crm-surface)] p-2.5">
-          <button
-            type="button"
-            onClick={() => lightbox.abrir(trabajo.url)}
-            aria-label="Ver la imagen de trabajo en grande"
-            className="group relative size-14 shrink-0 overflow-hidden rounded-md border border-[var(--crm-line)]"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={trabajo.url} alt="" className="h-full w-full object-cover" />
-            <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
-              <Maximize2 className="size-4" strokeWidth={2} />
-            </span>
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="text-[12.5px] font-medium text-[var(--crm-ink)]">
-              {cambios.length === 0 ? "Imagen actual del post" : "Imagen de trabajo, sin guardar"}
-            </p>
-            {cambios.length === 0 ? (
-              <p className="mt-1 hidden text-[12px] leading-snug text-[var(--crm-ink-mute)] sm:block">
-                Recorta, ponle texto o pide un cambio con IA. Puedes encadenar los tres sin cerrar esta ventana.
+
+            <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface)] px-3 py-2.5 sm:px-4">
+              <p
+                className="max-w-[52ch] text-[12px] leading-snug lg:max-w-none"
+                style={{ color: error ? "var(--destructive)" : "var(--crm-ink-mute)" }}
+              >
+                {error ?? "Los pasos se acumulan sobre la misma imagen. Nada se guarda hasta que lo confirmes aquí."}
               </p>
-            ) : (
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {cambios.map((c) => (
-                  <span key={c.paso} className="crm-badge crm-badge-wine">
-                    {c.label}
-                  </span>
-                ))}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={bloqueado}
+                  className="crm-btn crm-btn-sm crm-btn-ghost"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={guardar}
+                  disabled={bloqueado || !trabajo.file}
+                  className="crm-btn crm-btn-sm crm-btn-primary"
+                >
+                  {guardando ? (
+                    <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+                  ) : (
+                    <Save className="size-3.5" strokeWidth={2} />
+                  )}
+                  Guardar cambios en la imagen
+                </button>
               </div>
-            )}
-          </div>
-          {/* En móvil sobra: la miniatura de al lado ya abre el lightbox. */}
-          <span className="hidden shrink-0 sm:block">
-            <button
-              type="button"
-              onClick={() => lightbox.abrir(trabajo.url)}
-              className="crm-btn crm-btn-sm crm-btn-ghost"
-            >
-              <Maximize2 className="size-3.5" strokeWidth={2} />
-              Ver en grande
-            </button>
-          </span>
-        </div>
-
-        {/* En pantalla angosta la fila se desliza en vez de partirse en dos renglones. */}
-        <div role="tablist" aria-label="Paso de edición" className="mb-3 flex gap-2 overflow-x-auto sm:flex-wrap">
-          {PASOS.map(({ id, label, Icono }) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={paso === id}
-              disabled={bloqueado}
-              onClick={() => setPaso(id)}
-              className="crm-tab shrink-0 disabled:opacity-50"
-              data-active={paso === id}
-            >
-              <Icono className="size-3.5" strokeWidth={2} />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {paso === "recorte" && (
-          <PasoRecorte
-            src={trabajo.url}
-            onBusy={setOcupado}
-            onAplicar={(file, formato) => aplicarPaso(file, "recorte", `Recorte ${formato}`)}
-          />
+            </footer>
+          </motion.div>
         )}
-        {paso === "texto" && (
-          <PasoTexto src={trabajo.url} onBusy={setOcupado} onAplicar={(file) => aplicarPaso(file, "texto", "Con texto")} />
-        )}
-        {paso === "ia" && (
-          <PasoIA
-            src={trabajo.url}
-            onBusy={setOcupado}
-            onVer={lightbox.abrir}
-            onAplicar={(file) => aplicarPaso(file, "ia", "Editada con IA")}
-          />
-        )}
-      </Modal>
+      </AnimatePresence>
 
       <Lightbox src={lightbox.src} open={lightbox.open} onClose={lightbox.cerrar} />
-    </>
+    </>,
+    document.body
   );
 }

@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
   // Preview de `next dev` por IP del VPS: Next 16 bloquea el origen cruzado de los assets de
   // dev; declarar el IP aquí lo permite (solo afecta a desarrollo, no a producción).
   allowedDevOrigins: ["161.97.87.16"],
+  experimental: {
+    // El editor de imagen manda la foto al server action de edición con IA a 2048px, igual
+    // que exportan los otros pasos. Con el límite default de 1MB había que encogerla a
+    // 1400px y el post terminaba publicándose con esa resolución.
+    serverActions: { bodySizeLimit: "8mb" },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

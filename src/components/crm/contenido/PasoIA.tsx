@@ -3,32 +3,35 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Sparkles, Check, RotateCcw, Maximize2 } from "lucide-react";
 import { generarEdicionIA } from "@/app/admin/(panel)/contenido/actions";
-import { mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
+import { MAX_LADO, mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
+import { PasoLayout, controlLabel } from "@/components/crm/contenido/PasoLayout";
 
 /**
  * Paso de edición con IA del `ImageWorkspace`: se escribe qué cambiar, se ve el resultado
  * contra la imagen de trabajo y solo al aceptarlo pasa a serla. Genera en Replicate (única
  * parte que sí pega al servidor), pero no guarda nada en Blob ni en la base.
+ *
+ * La instrucción y los intentos viven en la columna de controles; la comparación entre la
+ * imagen de trabajo y el resultado ocupa el lienzo.
  */
 
-// Tope del lado largo de la foto que se manda a editar cuando todavía es un archivo local
-// (pantalla de alta o resultado de un paso anterior). El cuerpo de un server action no
-// puede pasar de 1MB; el resultado vuelve en 2K de todos modos.
-const MAX_LADO_ENVIO = 1400;
-
-// Las dos fotos van en cajas idénticas: comparar sirve solo si se ven al mismo tamaño.
-// En pantalla angosta se achican para que el resultado no quede abajo del pliegue.
+// Las dos fotos van en cajas idénticas: comparar sirve solo si se ven al mismo tamaño. En
+// angosto llenan el alto fijo del lienzo; desde lg toman proporción de post (4:5) topada al
+// alto disponible, para no estirarse en marcos altos y vacíos.
 const CAJA =
-  "group relative flex h-[132px] w-full items-center justify-center overflow-hidden rounded-lg border border-[var(--crm-line)] p-2 text-center sm:h-[200px]";
+  "group relative flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-lg border border-[var(--crm-line)] p-2 text-center lg:aspect-[4/5] lg:max-h-full lg:flex-none";
 
 export function PasoIA({
   src,
+  pestanas,
   onAplicar,
   onBusy,
   onVer,
 }: {
   /** Imagen de trabajo actual: object URL local o URL ya persistida. */
   src: string;
+  /** Selector de paso del workspace; se pinta arriba de la columna de controles. */
+  pestanas: React.ReactNode;
   onAplicar: (file: File) => void | Promise<void>;
   onBusy: (busy: boolean) => void;
   /** Abre el lightbox del workspace para comparar en grande. */
@@ -111,120 +114,134 @@ export function PasoIA({
   }
 
   return (
-    <div>
-      <label className="mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]" htmlFor="ia-prompt">
-        Qué quieres cambiar
-      </label>
-      <textarea
-        id="ia-prompt"
-        rows={3}
-        maxLength={300}
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        disabled={ocupado}
-        className="crm-textarea"
-        placeholder="Ejemplos: quita el letrero del fondo, cambia el cielo a un atardecer suave, aclara la imagen."
-      />
-      <p className="mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-        <span className="crm-num">{prompt.length}</span>/300. Es edición de la foto real, no un retoque garantizado:
-        puede salir distinto a lo que pediste. Cada intento genera una imagen nueva en Replicate y tiene costo.
-      </p>
+    <PasoLayout
+      pestanas={pestanas}
+      error={error}
+      controles={
+        <>
+          <label className={controlLabel} htmlFor="ia-prompt">
+            Qué quieres cambiar
+          </label>
+          <textarea
+            id="ia-prompt"
+            rows={5}
+            maxLength={300}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            disabled={ocupado}
+            className="crm-textarea"
+            placeholder="Ejemplos: quita el letrero del fondo, cambia el cielo a un atardecer suave, aclara la imagen."
+          />
+          <p className="mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]">
+            <span className="crm-num">{prompt.length}</span>/300. Es edición de la foto real, no un retoque
+            garantizado: puede salir distinto a lo que pediste. Cada intento genera una imagen nueva en Replicate y
+            tiene costo.
+          </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <figure className="m-0">
-          <figcaption className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Imagen de trabajo</figcaption>
-          <button type="button" onClick={() => onVer(src)} className={CAJA} style={{ background: "var(--crm-surface)" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className="max-h-full max-w-full object-contain" />
-            <VerEnGrande />
+          {intentos.length > 1 && (
+            <div className="mt-5">
+              <span className={controlLabel}>Intentos de esta sesión</span>
+              <div className="flex flex-wrap gap-2">
+                {intentos.map((url) => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => setResultado(url)}
+                    aria-label="Usar este intento"
+                    className="size-12 shrink-0 overflow-hidden rounded-md border-2 p-0"
+                    style={{ borderColor: url === resultado ? "var(--crm-accent-strong)" : "var(--crm-line)" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className="size-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      }
+      acciones={
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={generar}
+            disabled={ocupado || prompt.trim().length < 3}
+            className="crm-btn crm-btn-sm crm-btn-secondary flex-1"
+          >
+            {generando ? (
+              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+            ) : resultado ? (
+              <RotateCcw className="size-3.5" strokeWidth={2} />
+            ) : (
+              <Sparkles className="size-3.5" strokeWidth={2} />
+            )}
+            {generando ? "Generando…" : resultado ? "Reintentar" : "Generar"}
           </button>
-        </figure>
-        <figure className="m-0">
-          <figcaption className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Resultado</figcaption>
-          {resultado ? (
+          {resultado && (
             <button
               type="button"
-              onClick={() => onVer(resultado)}
+              onClick={aceptar}
+              disabled={ocupado}
+              className="crm-btn crm-btn-sm crm-btn-secondary flex-1"
+            >
+              {aplicando ? (
+                <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+              ) : (
+                <Check className="size-3.5" strokeWidth={2} />
+              )}
+              Usar esta versión
+            </button>
+          )}
+        </div>
+      }
+      lienzo={
+        <div className="grid h-[420px] grid-cols-1 gap-3 sm:h-[400px] sm:grid-cols-2 lg:h-auto lg:min-h-0 lg:flex-1">
+          <figure className="m-0 flex min-h-0 flex-col">
+            <figcaption className="mb-1.5 shrink-0 text-[12px] text-[var(--crm-ink-mute)]">
+              Imagen de trabajo
+            </figcaption>
+            <button
+              type="button"
+              onClick={() => onVer(src)}
               className={CAJA}
               style={{ background: "var(--crm-surface)" }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={resultado} alt="Foto editada" className="max-h-full max-w-full object-contain" />
+              <img src={src} alt="" className="max-h-full max-w-full object-contain" />
               <VerEnGrande />
             </button>
-          ) : (
-            <div className={CAJA} style={{ background: "var(--crm-surface)" }}>
-              {generando ? (
-                <p className="flex flex-col items-center gap-2 text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
-                  <Loader2 className="size-4 animate-spin" strokeWidth={2} />
-                  Editando la foto. Tarda entre 30 segundos y dos minutos, no cierres esta ventana.
-                </p>
-              ) : (
-                <p className="text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
-                  Aquí aparece la versión editada para compararla antes de aceptarla.
-                </p>
-              )}
-            </div>
-          )}
-        </figure>
-      </div>
-
-      {intentos.length > 1 && (
-        <div className="mt-3">
-          <p className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Intentos de esta sesión</p>
-          <div className="flex flex-wrap gap-2">
-            {intentos.map((url) => (
+          </figure>
+          <figure className="m-0 flex min-h-0 flex-col">
+            <figcaption className="mb-1.5 shrink-0 text-[12px] text-[var(--crm-ink-mute)]">Resultado</figcaption>
+            {resultado ? (
               <button
-                key={url}
                 type="button"
-                onClick={() => setResultado(url)}
-                aria-label="Usar este intento"
-                className="size-12 shrink-0 overflow-hidden rounded-md border-2 p-0"
-                style={{ borderColor: url === resultado ? "var(--crm-accent-strong)" : "var(--crm-line)" }}
+                onClick={() => onVer(resultado)}
+                className={CAJA}
+                style={{ background: "var(--crm-surface)" }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="size-full object-cover" />
+                <img src={resultado} alt="Foto editada" className="max-h-full max-w-full object-contain" />
+                <VerEnGrande />
               </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Pegada al borde inferior del cuerpo del modal, igual que los otros dos pasos. */}
-      <div className="sticky bottom-0 -mx-6 -mb-5 mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-6 py-2.5">
-        <button
-          type="button"
-          onClick={generar}
-          disabled={ocupado || prompt.trim().length < 3}
-          className="crm-btn crm-btn-sm crm-btn-secondary"
-        >
-          {generando ? (
-            <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-          ) : resultado ? (
-            <RotateCcw className="size-3.5" strokeWidth={2} />
-          ) : (
-            <Sparkles className="size-3.5" strokeWidth={2} />
-          )}
-          {generando ? "Generando…" : resultado ? "Reintentar" : "Generar"}
-        </button>
-        {resultado && (
-          <button type="button" onClick={aceptar} disabled={ocupado} className="crm-btn crm-btn-sm crm-btn-secondary">
-            {aplicando ? (
-              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
             ) : (
-              <Check className="size-3.5" strokeWidth={2} />
+              <div className={CAJA} style={{ background: "var(--crm-surface)" }}>
+                {generando ? (
+                  <p className="flex flex-col items-center gap-2 text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
+                    <Loader2 className="size-4 animate-spin" strokeWidth={2} />
+                    Editando la foto. Tarda entre 30 segundos y dos minutos, no cierres esta ventana.
+                  </p>
+                ) : (
+                  <p className="text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
+                    Aquí aparece la versión editada para compararla antes de aceptarla.
+                  </p>
+                )}
+              </div>
             )}
-            Usar esta versión
-          </button>
-        )}
-      </div>
-
-      {error && (
-        <p className="mt-3 text-[12.5px] leading-snug" style={{ color: "var(--destructive)" }}>
-          {error}
-        </p>
-      )}
-    </div>
+          </figure>
+        </div>
+      }
+    />
   );
 }
 
@@ -243,7 +260,10 @@ function VerEnGrande() {
 // en pantalla (bug real, visto editando con IA como primer paso antes de recortar).
 async function fuente(src: string): Promise<{ imageFile: File }> {
   const img = await cargarImagen(mismoOrigen(src));
-  const escala = Math.min(1, MAX_LADO_ENVIO / Math.max(img.naturalWidth, img.naturalHeight));
+  // Mismo tope y misma calidad que el recorte y el texto: el resultado de la IA se vuelve
+  // la imagen final del post, así que mandarla más chica la degradaba de verdad. Cabe
+  // porque `serverActions.bodySizeLimit` está en 8mb en `next.config.ts`.
+  const escala = Math.min(1, MAX_LADO / Math.max(img.naturalWidth, img.naturalHeight));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(img.naturalWidth * escala);
   canvas.height = Math.round(img.naturalHeight * escala);
@@ -256,7 +276,7 @@ async function fuente(src: string): Promise<{ imageFile: File }> {
       canvas.toBlob(
         (b) => (b ? resolve(b) : reject(new Error("No se pudo preparar la imagen para editarla."))),
         "image/jpeg",
-        0.85
+        0.92
       );
     } catch {
       reject(new Error("Esta imagen no se puede editar desde el navegador por su origen."));

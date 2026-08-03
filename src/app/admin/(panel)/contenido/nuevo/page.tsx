@@ -13,7 +13,7 @@ export default async function NuevoPostPage() {
   const desarrollos = await getDesarrolloOptionsParaContenido();
 
   return (
-    <div className="mx-auto max-w-[860px]">
+    <div className="mx-auto max-w-[1200px]">
       <div className="mb-5">
         <ContenidoBreadcrumb actual="Nuevo" />
       </div>

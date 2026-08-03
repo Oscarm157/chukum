@@ -50,6 +50,9 @@ export function Lightbox({
           transition={{ duration: 0.15 }}
           style={{ background: "rgba(4,6,10,0.86)" }}
           className="crm-root fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"
+          // Lenis mueve la página con scrollTo y eso ignora `overflow: hidden`: sin esto el
+          // fondo se corre al scrollear sobre la imagen abierta.
+          data-lenis-prevent
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
