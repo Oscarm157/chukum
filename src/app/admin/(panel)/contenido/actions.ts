@@ -14,7 +14,7 @@ import {
   type SocialPlatform,
   type SocialPostStatus,
 } from "@/lib/schema";
-import { requireRole } from "@/lib/session";
+import { requireAdmin } from "@/lib/session";
 import { uploadImage } from "@/lib/blob";
 import { buildCaptionPrompt, type CaptionPromptInput } from "@/lib/contenido/prompt";
 import { listAccounts, uploadMedia, createSocialPost, type PostForMeAccount } from "@/lib/postforme";
@@ -33,7 +33,7 @@ const generarBorradorSchema = z.object({
 export async function generarBorrador(
   input: unknown
 ): Promise<{ ok: true; id: string } | { error: string }> {
-  const user = await requireRole("admin", "agent");
+  const user = await requireAdmin();
 
   const parsed = generarBorradorSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
@@ -158,14 +158,17 @@ export async function guardarEdicion(
   id: string,
   input: unknown
 ): Promise<{ ok: true } | { error: string }> {
-  await requireRole("admin", "agent");
+  await requireAdmin();
 
   if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
   const parsed = guardarEdicionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
 
-  const existe = await db.select({ id: socialPosts.id }).from(socialPosts).where(eq(socialPosts.id, id));
+  const existe = await db.select({ id: socialPosts.id, status: socialPosts.status }).from(socialPosts).where(eq(socialPosts.id, id));
   if (!existe[0]) return { error: "Ese post no existe." };
+  if (existe[0].status === "programado" || existe[0].status === "publicado") {
+    return { error: "Este post ya se envió y no se puede editar." };
+  }
 
   await db
     .update(socialPosts)
@@ -189,7 +192,7 @@ export async function aprobarYProgramar(
   scheduledAtISO: string | null,
   platforms: string[]
 ): Promise<{ ok: true; status: SocialPostStatus } | { error: string }> {
-  const user = await requireRole("admin", "agent");
+  const user = await requireAdmin();
 
   if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
   const parsed = aprobarSchema.safeParse({ scheduledAt: scheduledAtISO, platforms });
@@ -198,6 +201,9 @@ export async function aprobarYProgramar(
   const rows = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
   const post = rows[0];
   if (!post) return { error: "Ese post no existe." };
+  if (post.status === "programado" || post.status === "publicado") {
+    return { error: "Este post ya se envió a Post for Me, no se puede reenviar." };
+  }
 
   // Las cuentas se resuelven contra lo ya sincronizado, nunca contra un id que mande el
   // cliente: si falta alguna plataforma pedida, se corta antes de llamar a Post for Me.
@@ -277,7 +283,7 @@ export async function aprobarYProgramar(
 // auditoría (nunca salió a redes); si ya se publicó/programó, el registro real de lo que
 // pasó vive en Post for Me. Mismo patrón que `deleteDesarrollo`.
 export async function descartarPost(id: string): Promise<{ ok: true } | { error: string }> {
-  await requireRole("admin", "agent");
+  await requireAdmin();
 
   if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
 
@@ -303,7 +309,7 @@ export async function descartarPost(id: string): Promise<{ ok: true } | { error:
 // ===================== Sincronizar cuentas =====================
 
 export async function sincronizarCuentas(): Promise<{ ok: true; count: number } | { error: string }> {
-  await requireRole("admin", "agent");
+  await requireAdmin();
 
   if (!process.env.POSTFORME_API_KEY) return { error: "Falta POSTFORME_API_KEY." };
 

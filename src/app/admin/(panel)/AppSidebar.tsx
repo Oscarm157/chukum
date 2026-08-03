@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, MapPin, UtensilsCrossed, Inbox, MessageSquare, TrendingUp, FolderTree, LogOut, Sun, Moon } from "lucide-react";
+import { Building2, MapPin, UtensilsCrossed, Share2, Inbox, MessageSquare, TrendingUp, FolderTree, LogOut, Sun, Moon } from "lucide-react";
 import {
   Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup,
   SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -25,6 +25,7 @@ const GROUPS: Group[] = [
     items: [
       { href: "/admin/zonas", label: "Zonas", icon: MapPin },
       { href: "/admin/directorio", label: "Directorio", icon: UtensilsCrossed },
+      { href: "/admin/contenido", label: "Redes sociales", icon: Share2 },
     ],
   },
   {

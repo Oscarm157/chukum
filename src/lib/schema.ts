@@ -260,7 +260,7 @@ export type KwGrupoItem = typeof kwGrupoItems.$inferSelect;
 // que Post for Me asigna a cada cuenta conectada; se sincroniza desde su API, no se escribe a mano.
 export type SocialPlatform = "facebook" | "instagram";
 export type SocialPostSource = "desarrollo" | "libre";
-export type SocialPostStatus = "borrador" | "aprobado" | "programado" | "publicado" | "error";
+export type SocialPostStatus = "borrador" | "programado" | "publicado" | "error";
 
 export const socialAccounts = pgTable("social_accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
