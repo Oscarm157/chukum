@@ -828,3 +828,15 @@ html[data-crm-theme="light"] .crm-logo-navy { display: block; }
     padding-right: var(--asistente-ancho, 400px);
   }
 }
+
+/* Mapa /vivir-en-merida/mapa: la popup de Mapbox no hereda tokens del sitio (no está en
+   el árbol React), así que se ajusta aparte al lenguaje de tarjeta del resto del sitio. */
+.mapboxgl-popup-content {
+  border-radius: 1rem;
+  padding: 0.75rem 0.9rem;
+  box-shadow: 0 12px 32px rgba(30, 26, 22, 0.16);
+  font-family: var(--font-sans-display), sans-serif;
+}
+.mapboxgl-popup-tip {
+  display: none;
+}

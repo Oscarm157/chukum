@@ -6,13 +6,7 @@ Sitio de **Chukum**, la correduría inmobiliaria de Oscar: comercializa desarrol
 terceros (terrenos, casas, departamentos) en la península de Yucatán, incluido Quintana
 Roo. Bootstrap desde el starter de plomería design-agnóstico de Oscar.
 
-**Restricción de marca (dura):** en el sitio público está prohibido usar TANTO la marca
-corporativa del desarrollador (Grupo Orve) COMO los nombres comerciales de los desarrollos
-(Xo'ok, Ciudad Central, Ukana, Tulum Ha, etc.) y de sus amenidades. La identidad pública de
-cada desarrollo es el `heading` por ubicación (ej. "En la selva de Yucatán"). Los nombres
-reales solo viven internamente: DB (`name`), seed, admin y el material de `/campus` (tras el
-gate). Nunca deben filtrarse al bundle público, SEO, metadata, JSON-LD ni copy. El `slug` es id
-interno; evitar que sea un nombre comercial reconocible en URLs nuevas.
+ 
 
 **Arquitectura de marca:** Chukum firma (es quien aparece como `Organization` en el
 JSON-LD, ver `BRAND` en `src/lib/site.ts`). "Vivir en Yucatán" (`CONTENT_BRAND`) es el
