@@ -1,5 +1,5 @@
 /**
- * Edición de foto con Nano Banana Pro (`google/nano-banana-pro`) en Replicate.
+ * Edición de foto con Nano Banana (`google/nano-banana`, estándar) en Replicate.
  * Server-only: lee `REPLICATE_API_TOKEN`, nunca se importa desde un componente cliente.
  *
  * Puerto de /root/clinica/src/lib/replicate.ts (mismo caso de uso, ya en producción),
@@ -9,10 +9,12 @@
  *   un dominio que todavía no sirve el archivo nuevo).
  * - No se manda `aspect_ratio`: su default `match_input_image` es justo lo que se quiere,
  *   la proporción ya la decidió el recorte de la Fase 1.
+ * - A diferencia de `google/nano-banana-pro`, este modelo NO acepta `resolution` — mandarlo
+ *   no rompe la llamada pero no hace nada, así que ni se incluye en el input.
  */
 
 const API = "https://api.replicate.com/v1";
-const MODELO = "google/nano-banana-pro";
+const MODELO = "google/nano-banana";
 
 // `Prefer: wait` deja la conexión abierta hasta ~60s. En la prueba real una generación
 // tardó 102s, así que el polling cubre 90s más; el techo (~150s) cabe en el
@@ -103,7 +105,6 @@ export async function editarFoto({
       // overlay de plantillas, que sí controla la tipografía.
       prompt: `Edita esta fotografía: ${prompt}. Conserva el encuadre, la iluminación y el realismo fotográfico del original. No agregues texto, logotipos ni marcas de agua.`,
       image_input: [dataUri],
-      resolution: "2K",
     });
 
     if (!pred || pred.status !== "succeeded") {
