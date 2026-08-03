@@ -89,7 +89,7 @@ export function Modal({
               className={
                 footer === undefined
                   ? "crm-card w-full p-6 shadow-[var(--crm-shadow-pop)]"
-                  : "crm-card flex w-full flex-col overflow-hidden shadow-[var(--crm-shadow-pop)]"
+                  : "crm-card flex max-h-[92vh] w-full flex-col overflow-hidden shadow-[var(--crm-shadow-pop)]"
               }
               onMouseDown={(e) => e.stopPropagation()}
             >
@@ -101,12 +101,16 @@ export function Modal({
               ) : (
                 <>
                   {title && (
-                    <div className="px-6 pt-6">
+                    <div className="shrink-0 px-6 pt-6">
                       <Header title={title} onClose={onClose} />
                     </div>
                   )}
-                  <div className="max-h-[70vh] overflow-y-auto overscroll-contain px-6 pb-5">{children}</div>
-                  <div className="border-t border-[var(--crm-line)] px-6 py-4">{footer}</div>
+                  {/* `min-h-0` es necesario: sin él, un hijo flex no deja que su propio
+                      `overflow-y-auto` funcione y el scroll se le escapa al overlay de
+                      afuera (el header se siente "atrás" en vez de quedarse fijo). Con
+                      el panel ya topado a 92vh, esta zona SIEMPRE es la que scrollea. */}
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-5">{children}</div>
+                  <div className="shrink-0 border-t border-[var(--crm-line)] px-6 py-4">{footer}</div>
                 </>
               )}
             </motion.div>

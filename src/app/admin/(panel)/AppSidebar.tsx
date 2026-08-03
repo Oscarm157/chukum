@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, MapPin, UtensilsCrossed, Share2, Inbox, MessageSquare, TrendingUp, FolderTree, LogOut, Sun, Moon } from "lucide-react";
+import { Building2, MapPin, UtensilsCrossed, Share2, UserRound, Inbox, MessageSquare, TrendingUp, FolderTree, LogOut, Sun, Moon } from "lucide-react";
 import {
   Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup,
   SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem,
@@ -14,8 +14,17 @@ type Item = { href: string; label: string; icon: typeof Building2; exacto?: bool
 type Group = { label: string; items: Item[] };
 
 // Keywords y Grupos comparten prefijo: sin `exacto`, estar en /grupos marcaría los dos.
-function isActive(pathname: string, { href, exacto }: Item) {
+function coincide(pathname: string, { href, exacto }: Item) {
   return exacto ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+}
+
+// Varias rutas cuelgan de otra (/admin/contenido/perfil de /admin/contenido): gana la
+// coincidencia más específica, para no marcar dos entradas del mismo grupo a la vez.
+function hrefActivo(pathname: string, groups: Group[]): string | undefined {
+  return groups
+    .flatMap((g) => g.items)
+    .filter((item) => coincide(pathname, item))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }
 
 const GROUPS: Group[] = [
@@ -26,6 +35,7 @@ const GROUPS: Group[] = [
       { href: "/admin/zonas", label: "Zonas", icon: MapPin },
       { href: "/admin/directorio", label: "Directorio", icon: UtensilsCrossed },
       { href: "/admin/contenido", label: "Redes sociales", icon: Share2 },
+      { href: "/admin/contenido/perfil", label: "Perfil de vendedor", icon: UserRound },
     ],
   },
   {
@@ -47,6 +57,7 @@ export function AppSidebar({
   logoutAction: () => void;
 }) {
   const pathname = usePathname();
+  const activo = hrefActivo(pathname, GROUPS);
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
@@ -86,7 +97,7 @@ export function AppSidebar({
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
-                      isActive={isActive(pathname, item)}
+                      isActive={item.href === activo}
                       tooltip={item.label}
                     >
                       <Link href={item.href}>

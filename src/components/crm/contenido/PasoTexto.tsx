@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Canvas, FabricImage, Pattern, type FabricObject } from "fabric";
+import { Canvas, FabricImage, Pattern, type FabricObject, type Group } from "fabric";
 import { Loader2, Type } from "lucide-react";
 import { fraunces, inter } from "@/lib/contenido/fonts";
+import { cargarPerfilFirma, type PerfilFirma } from "@/app/admin/(panel)/contenido/perfil-actions";
 import { MAX_LADO, mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
 import {
   construirPlantilla,
+  construirFirma,
   sincronizarTextos,
   ajustarCajaBadge,
   GRANO_SVG,
   PLANTILLAS,
   type Composicion,
   type PlantillaId,
+  type Zona,
 } from "@/components/crm/contenido/plantillas";
 
 /**
@@ -47,6 +50,8 @@ export function PasoTexto({
   const [headline, setHeadline] = useState("");
   const [subtitulo, setSubtitulo] = useState("");
   const [badge, setBadge] = useState("");
+  const [perfil, setPerfil] = useState<PerfilFirma | null>(null);
+  const [conFirma, setConFirma] = useState(false);
   const [listo, setListo] = useState(false);
   const [altoVista, setAltoVista] = useState(320);
   const [procesando, setProcesando] = useState(false);
@@ -59,9 +64,27 @@ export function PasoTexto({
   const compRef = useRef<Composicion | null>(null);
   const granoRef = useRef<Pattern | null>(null);
   const multiplicadorRef = useRef(1);
+  // La firma vive fuera de la composición: sobrevive al cambio de plantilla.
+  const firmaRef = useRef<Group | null>(null);
+  const zonaFirmaRef = useRef<Zona | null>(null);
 
   const fuente = mismoOrigen(src);
   const def = PLANTILLAS.find((p) => p.id === plantilla)!;
+
+  // Sin perfil guardado no hay firma que ofrecer: la casilla ni se pinta.
+  useEffect(() => {
+    let cancelado = false;
+    cargarPerfilFirma()
+      .then((p) => {
+        if (!cancelado) setPerfil(p);
+      })
+      .catch(() => {
+        /* el editor sirve igual sin firma */
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   // Monta el canvas: fuentes cargadas de verdad (si no, el primer trazo sale con la
   // fuente del sistema), foto de fondo y textura de grano. Si la imagen de trabajo cambia
@@ -138,6 +161,8 @@ export function PasoTexto({
       cancelado = true;
       compRef.current = null;
       granoRef.current = null;
+      firmaRef.current = null;
+      zonaFirmaRef.current = null;
       canvasRef.current?.dispose();
       canvasRef.current = null;
       setListo(false);
@@ -158,11 +183,61 @@ export function PasoTexto({
         cuerpo: inter.style.fontFamily,
       });
       comp.objetos.forEach((o) => canvas.add(o));
+      // La firma se quitó junto con la plantilla anterior: vuelve encima, en la misma
+      // posición a la que se hubiera arrastrado.
+      if (firmaRef.current && zonaFirmaRef.current) {
+        canvas.add(firmaRef.current);
+        comp.zonas.set(firmaRef.current, zonaFirmaRef.current);
+      }
       compRef.current = comp;
     }
     sincronizarTextos(comp, { headline, subtitulo, badge });
     canvas.requestRenderAll();
   }, [listo, plantilla, headline, subtitulo, badge]);
+
+  // Capa de firma: se agrega y se quita del canvas de verdad, no se oculta, para que no
+  // pueda colarse en la exportación.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!listo || !canvas) return;
+
+    if (!conFirma || !perfil) {
+      if (firmaRef.current) {
+        canvas.remove(firmaRef.current);
+        compRef.current?.zonas.delete(firmaRef.current);
+        firmaRef.current = null;
+        zonaFirmaRef.current = null;
+        canvas.requestRenderAll();
+      }
+      return;
+    }
+    if (firmaRef.current) return;
+
+    let cancelado = false;
+    (async () => {
+      // Una foto que no carga (o que viene de un origen sin CORS) no debe tumbar la firma:
+      // sale solo con el texto.
+      const foto = perfil.photoUrl
+        ? await cargarImagen(mismoOrigen(perfil.photoUrl)).catch(() => null)
+        : null;
+      const comp = compRef.current;
+      if (cancelado || !comp || canvasRef.current !== canvas) return;
+
+      const firma = construirFirma(canvas.width, canvas.height, perfil, {
+        display: fraunces.style.fontFamily,
+        cuerpo: inter.style.fontFamily,
+      }, foto);
+      canvas.add(firma.grupo);
+      comp.zonas.set(firma.grupo, firma.zona);
+      firmaRef.current = firma.grupo;
+      zonaFirmaRef.current = firma.zona;
+      canvas.requestRenderAll();
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [listo, conFirma, perfil]);
 
   async function aplicar() {
     const canvas = canvasRef.current;
@@ -275,6 +350,22 @@ export function PasoTexto({
           </div>
         )}
       </div>
+
+      {perfil && (
+        <label className="mt-3 flex items-center gap-2 text-[13px] text-[var(--crm-ink-soft)]">
+          <input
+            type="checkbox"
+            checked={conFirma}
+            onChange={(e) => setConFirma(e.target.checked)}
+            className="h-4 w-4 accent-[var(--crm-accent-strong)]"
+          />
+          Incluir mi firma
+          <span className="text-[12px] text-[var(--crm-ink-faint)]">
+            {perfil.name}
+            {perfil.phone ? ` · ${perfil.phone}` : ""}
+          </span>
+        </label>
+      )}
 
       {/* Pegada al borde inferior del cuerpo del modal: la acción del paso no se pierde
           abajo del scroll cuando el contenido es alto. */}

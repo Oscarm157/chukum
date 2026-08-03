@@ -36,6 +36,9 @@ export function PasoIA({
 }) {
   const [prompt, setPrompt] = useState("");
   const [resultado, setResultado] = useState<string | null>(null);
+  // Historial de intentos de esta sesión (no se persiste): reintentar no debe borrar lo
+  // ya generado, solo perderlo era la queja real de Oscar probando este paso.
+  const [intentos, setIntentos] = useState<string[]>([]);
   const [generando, setGenerando] = useState(false);
   const [aplicando, setAplicando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +57,7 @@ export function PasoIA({
     setSrcPrevio(src);
     setPrompt("");
     setResultado(null);
+    setIntentos([]);
     setError(null);
     setGenerando(false);
   }
@@ -71,7 +75,12 @@ export function PasoIA({
       const res = await generarEdicionIA({ prompt: instruccion, ...(await fuente(mia)) });
       if (vigenteRef.current !== mia) return;
       if ("error" in res) setError(res.error);
-      else setResultado(res.resultUrl);
+      else {
+        setResultado(res.resultUrl);
+        // Los últimos 4 intentos de esta sesión, el más nuevo primero, sin duplicar el
+        // que ya estaba mostrado.
+        setIntentos((prev) => [res.resultUrl, ...prev.filter((u) => u !== res.resultUrl)].slice(0, 4));
+      }
     } catch (e) {
       if (vigenteRef.current !== mia) return;
       setError(e instanceof Error ? e.message : "No se pudo editar la foto.");
@@ -160,6 +169,27 @@ export function PasoIA({
         </figure>
       </div>
 
+      {intentos.length > 1 && (
+        <div className="mt-3">
+          <p className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Intentos de esta sesión</p>
+          <div className="flex flex-wrap gap-2">
+            {intentos.map((url) => (
+              <button
+                key={url}
+                type="button"
+                onClick={() => setResultado(url)}
+                aria-label="Usar este intento"
+                className="size-12 shrink-0 overflow-hidden rounded-md border-2 p-0"
+                style={{ borderColor: url === resultado ? "var(--crm-accent-strong)" : "var(--crm-line)" }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="size-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Pegada al borde inferior del cuerpo del modal, igual que los otros dos pasos. */}
       <div className="sticky bottom-0 -mx-6 -mb-5 mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-6 py-2.5">
         <button
@@ -206,12 +236,12 @@ function VerEnGrande() {
   );
 }
 
-// El servidor descarga la foto cuando ya vive en una URL. Un object URL local solo existe
-// en esta pestaña, así que en ese caso se manda el archivo, reducido para no pasarse del
-// límite de 1MB del server action.
-async function fuente(src: string): Promise<{ imageUrl: string } | { imageFile: File }> {
-  if (src.startsWith("http://") || src.startsWith("https://")) return { imageUrl: src };
-
+// Siempre se re-dibuja en canvas antes de mandarla, sin importar si ya es una URL o un
+// object URL local: el navegador respeta la orientación EXIF al decodificar la imagen,
+// pero si se manda la URL tal cual para que el servidor la vuelva a bajar en crudo, esa
+// orientación se pierde y el resultado de Replicate sale rotado respecto a lo que se ve
+// en pantalla (bug real, visto editando con IA como primer paso antes de recortar).
+async function fuente(src: string): Promise<{ imageFile: File }> {
   const img = await cargarImagen(mismoOrigen(src));
   const escala = Math.min(1, MAX_LADO_ENVIO / Math.max(img.naturalWidth, img.naturalHeight));
   const canvas = document.createElement("canvas");

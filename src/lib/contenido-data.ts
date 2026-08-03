@@ -4,6 +4,7 @@ import {
   socialPosts,
   socialPostImages,
   socialAccounts,
+  agentProfiles,
   developments,
   developmentImages,
   type SocialPost,
@@ -11,6 +12,7 @@ import {
   type SocialAccount,
   type SocialPostStatus,
   type DevelopmentImage,
+  type AgentProfile,
 } from "./schema";
 
 export type SocialPostRow = SocialPost & { developmentName: string | null };
@@ -78,6 +80,18 @@ export async function getFotosDelDesarrollo(developmentId: string): Promise<Deve
 
 export async function getSocialAccounts(): Promise<SocialAccount[]> {
   return db.select().from(socialAccounts).orderBy(asc(socialAccounts.platform));
+}
+
+// Perfil del vendedor que firma los posts. Hay uno activo a la vez: la firma del overlay
+// no tiene selector, siempre usa este. Si todavía no se ha llenado, devuelve null.
+export async function getPerfilActivo(): Promise<AgentProfile | null> {
+  const rows = await db
+    .select()
+    .from(agentProfiles)
+    .where(eq(agentProfiles.active, true))
+    .orderBy(desc(agentProfiles.updatedAt))
+    .limit(1);
+  return rows[0] ?? null;
 }
 
 export type DesarrolloOption = { id: string; name: string; city: string | null; imageCount: number };

@@ -1,7 +1,8 @@
-import { Rect, Textbox, FabricText, type Pattern, type FabricObject } from "fabric";
+import { Rect, Textbox, FabricText, FabricImage, Circle, Group, type Pattern, type FabricObject } from "fabric";
 
 /**
- * Las tres plantillas de overlay del sistema de diseño de Chukum (DESIGN-chukum.md).
+ * Las seis plantillas de overlay del sistema de diseño de Chukum (DESIGN-chukum.md), más
+ * la firma del vendedor, que es una capa aparte y se puede sumar a cualquiera de ellas.
  * Todas pintan bloques opacos ENCIMA de la foto: ninguna la reencuadra ni la mueve.
  * Las medidas van en proporción del canvas, así una plantilla se ve igual en 1:1,
  * 4:5 o 9:16.
@@ -20,17 +21,26 @@ const COLOR = {
 export const GRANO_SVG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E";
 
-export type PlantillaId = "banda" | "badge" | "franja";
+export type PlantillaId =
+  | "banda"
+  | "banda_superior"
+  | "badge"
+  | "franja"
+  | "franja_derecha"
+  | "marco";
 
 export const PLANTILLAS: { id: PlantillaId; label: string; usaBadge: boolean; usaSubtitulo: boolean }[] = [
   { id: "banda", label: "Banda inferior", usaBadge: false, usaSubtitulo: true },
+  { id: "banda_superior", label: "Banda superior", usaBadge: false, usaSubtitulo: true },
   { id: "badge", label: "Badge y centro", usaBadge: true, usaSubtitulo: false },
   { id: "franja", label: "Franja lateral", usaBadge: false, usaSubtitulo: true },
+  { id: "franja_derecha", label: "Franja lateral (derecha)", usaBadge: false, usaSubtitulo: true },
+  { id: "marco", label: "Marco", usaBadge: false, usaSubtitulo: true },
 ];
 
 export type Textos = { headline: string; subtitulo: string; badge: string };
 
-type Zona = { left: number; top: number; width: number; height: number };
+export type Zona = { left: number; top: number; width: number; height: number };
 
 export type Composicion = {
   id: PlantillaId;
@@ -86,16 +96,24 @@ export function construirPlantilla(
   grano: Pattern,
   fuentes: Fuentes
 ): Composicion {
-  if (id === "banda") return banda(ancho, alto, grano, fuentes);
-  if (id === "franja") return franja(ancho, alto, grano, fuentes);
+  if (id === "banda" || id === "banda_superior") return banda(id, ancho, alto, grano, fuentes);
+  if (id === "franja" || id === "franja_derecha") return franja(id, ancho, alto, grano, fuentes);
+  if (id === "marco") return marco(ancho, alto, fuentes);
   return badge(ancho, alto, fuentes);
 }
 
-// 1. Banda inferior espresso con el titular en crema.
-function banda(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composicion {
+// 1. Banda espresso con el titular en crema, abajo o arriba. Las dos variantes comparten
+// medidas: solo cambia el borde del que se cuelga la banda.
+function banda(
+  id: "banda" | "banda_superior",
+  W: number,
+  H: number,
+  grano: Pattern,
+  fuentes: Fuentes
+): Composicion {
   const pad = 0.05 * W;
-  const top = 0.62 * H;
   const altoBanda = 0.38 * H;
+  const top = id === "banda" ? H - altoBanda : 0;
   const cuerpoFuente = 0.065 * W;
 
   const fondo = new Rect({ left: 0, top, width: W, height: altoBanda, fill: COLOR.espresso, opacity: 0.92, ...ESTATICO });
@@ -140,7 +158,7 @@ function banda(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composic
   const zona: Zona = { left: pad, top: top + pad * 0.7, width: W - 2 * pad, height: altoBanda - pad * 1.4 };
 
   return {
-    id: "banda",
+    id,
     objetos: [fondo, textura, headline, subtitulo],
     headline,
     subtitulo,
@@ -231,15 +249,24 @@ function badge(W: number, H: number, fuentes: Fuentes): Composicion {
   };
 }
 
-// 3. Franja lateral de estuco: el titular va en tinta oscura sobre superficie clara.
-function franja(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composicion {
+// 3. Franja lateral de estuco: el titular va en tinta oscura sobre superficie clara. El
+// texto se alinea a la izquierda de la franja, no del canvas, así que la variante derecha
+// solo desplaza el bloque completo.
+function franja(
+  id: "franja" | "franja_derecha",
+  W: number,
+  H: number,
+  grano: Pattern,
+  fuentes: Fuentes
+): Composicion {
   const anchoFranja = 0.35 * W;
   const pad = 0.04 * W;
   const cuerpoFuente = 0.06 * W;
+  const left = id === "franja" ? 0 : W - anchoFranja;
 
-  const fondo = new Rect({ left: 0, top: 0, width: anchoFranja, height: H, fill: COLOR.chukum, ...ESTATICO });
+  const fondo = new Rect({ left, top: 0, width: anchoFranja, height: H, fill: COLOR.chukum, ...ESTATICO });
   const textura = new Rect({
-    left: 0,
+    left,
     top: 0,
     width: anchoFranja,
     height: H,
@@ -250,7 +277,7 @@ function franja(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composi
   });
 
   const headline = new Textbox("", {
-    left: pad,
+    left: left + pad,
     top: 0.12 * H,
     width: anchoFranja - 2 * pad,
     fontSize: cuerpoFuente,
@@ -263,7 +290,7 @@ function franja(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composi
   });
 
   const subtitulo = new Textbox("", {
-    left: pad,
+    left: left + pad,
     top: 0.12 * H + cuerpoFuente * 1.4,
     width: anchoFranja - 2 * pad,
     fontSize: cuerpoFuente * 0.4,
@@ -274,10 +301,10 @@ function franja(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composi
     ...MOVIBLE,
   });
 
-  const zona: Zona = { left: pad, top: pad, width: anchoFranja - 2 * pad, height: H - 2 * pad };
+  const zona: Zona = { left: left + pad, top: pad, width: anchoFranja - 2 * pad, height: H - 2 * pad };
 
   return {
-    id: "franja",
+    id,
     objetos: [fondo, textura, headline, subtitulo],
     headline,
     subtitulo,
@@ -289,6 +316,196 @@ function franja(W: number, H: number, grano: Pattern, fuentes: Fuentes): Composi
     gap: 0.018 * H,
     subtituloMovido: false,
   };
+}
+
+// 4. Marco fino de crema y caja de texto en la esquina inferior derecha. Es la plantilla
+// minimal: sin grano y sin badge, la foto se ve casi entera.
+function marco(W: number, H: number, fuentes: Fuentes): Composicion {
+  const grosor = 0.015 * W;
+  // El marco va despegado del borde: pegado se leería como el borde del archivo, no como
+  // un marco puesto encima de la foto.
+  const inset = 0.03 * W;
+  const cajaW = 0.4 * W;
+  const cajaH = 0.16 * H;
+  const padCaja = 0.028 * W;
+  const cuerpoFuente = 0.042 * W;
+
+  // Un solo Rect sin relleno: fabric centra el trazo sobre el contorno, así que el rect se
+  // dibuja medio grosor hacia adentro para que el marco caiga completo dentro de la foto.
+  const borde = new Rect({
+    left: inset + grosor / 2,
+    top: inset + grosor / 2,
+    width: W - 2 * inset - grosor,
+    height: H - 2 * inset - grosor,
+    fill: "transparent",
+    stroke: COLOR.crema,
+    strokeWidth: grosor,
+    ...ESTATICO,
+  });
+
+  const cajaLeft = W - inset - grosor - padCaja - cajaW;
+  const cajaTop = H - inset - grosor - padCaja - cajaH;
+
+  const caja = new Rect({
+    left: cajaLeft,
+    top: cajaTop,
+    width: cajaW,
+    height: cajaH,
+    fill: COLOR.espresso,
+    opacity: 0.92,
+    ...ESTATICO,
+  });
+
+  const headline = new Textbox("", {
+    left: cajaLeft + padCaja,
+    top: cajaTop + 0.2 * cajaH,
+    width: cajaW - 2 * padCaja,
+    fontSize: cuerpoFuente,
+    fontFamily: fuentes.display,
+    fontWeight: 600,
+    fill: COLOR.crema,
+    lineHeight: 1.05,
+    textAlign: "right",
+    ...MOVIBLE,
+  });
+
+  const subtitulo = new Textbox("", {
+    left: cajaLeft + padCaja,
+    top: cajaTop + 0.2 * cajaH + cuerpoFuente * 1.35,
+    width: cajaW - 2 * padCaja,
+    fontSize: cuerpoFuente * 0.45,
+    fontFamily: fuentes.cuerpo,
+    fill: COLOR.crema,
+    opacity: 0.78,
+    lineHeight: 1.35,
+    textAlign: "right",
+    ...MOVIBLE,
+  });
+
+  // La caja es angosta: el texto solo sube y baja dentro de ella, no se desalinea del
+  // borde derecho.
+  const zona: Zona = {
+    left: cajaLeft + padCaja,
+    top: cajaTop + padCaja * 0.5,
+    width: cajaW - 2 * padCaja,
+    height: cajaH - padCaja,
+  };
+
+  return {
+    id: "marco",
+    objetos: [borde, caja, headline, subtitulo],
+    headline,
+    subtitulo,
+    badge: null,
+    zonas: new Map<FabricObject, Zona>([
+      [headline, zona],
+      [subtitulo, zona],
+    ]),
+    gap: 0.012 * H,
+    subtituloMovido: false,
+  };
+}
+
+/**
+ * Firma del vendedor: capa opcional, independiente de la plantilla. Va siempre en la
+ * esquina superior derecha, la única que ninguna de las seis plantillas ocupa (la banda
+ * inferior, la franja izquierda y el badge superior izquierdo quedan libres). Se mueve en
+ * bloque: foto, nombre y teléfono no se arrastran por separado.
+ */
+export type Firma = { grupo: Group; zona: Zona };
+
+export function construirFirma(
+  W: number,
+  H: number,
+  perfil: { name: string; phone: string | null },
+  fuentes: Fuentes,
+  foto: HTMLImageElement | null
+): Firma {
+  const margen = 0.04 * W;
+  const padCaja = 0.018 * W;
+  const diametro = 0.08 * W;
+  const gapFoto = 0.016 * W;
+  const gapTexto = 0.008 * W;
+
+  const nombre = new FabricText(perfil.name, {
+    fontSize: 0.023 * W,
+    fontFamily: fuentes.cuerpo,
+    fontWeight: 500,
+    fill: COLOR.crema,
+    ...ESQUINA,
+    objectCaching: false,
+  });
+  const telTexto = perfil.phone?.trim() ?? "";
+  const telefono = telTexto
+    ? new FabricText(telTexto, {
+        fontSize: 0.019 * W,
+        fontFamily: fuentes.cuerpo,
+        fill: COLOR.crema,
+        opacity: 0.78,
+        ...ESQUINA,
+        objectCaching: false,
+      })
+    : null;
+
+  const imagen = foto ? fotoCircular(foto, diametro) : null;
+  const anchoTexto = Math.max(nombre.width, telefono?.width ?? 0);
+  const altoTexto = nombre.height + (telefono ? gapTexto + telefono.height : 0);
+  const anchoCaja = 2 * padCaja + (imagen ? diametro + gapFoto : 0) + anchoTexto;
+  const altoCaja = 2 * padCaja + Math.max(imagen ? diametro : 0, altoTexto);
+  const left = W - margen - anchoCaja;
+  const top = margen;
+  const centro = top + altoCaja / 2;
+
+  // Mismo velo que usa la plantilla `badge`: sin él, un nombre en crema se pierde sobre
+  // una foto clara.
+  const velo = new Rect({
+    left,
+    top,
+    width: anchoCaja,
+    height: altoCaja,
+    rx: altoCaja * 0.26,
+    ry: altoCaja * 0.26,
+    fill: "rgba(0,0,0,0.35)",
+    ...ESTATICO,
+  });
+
+  const xTexto = left + padCaja + (imagen ? diametro + gapFoto : 0);
+  imagen?.set({ left: left + padCaja, top: centro - diametro / 2 });
+  nombre.set({ left: xTexto, top: centro - altoTexto / 2 });
+  telefono?.set({ left: xTexto, top: centro - altoTexto / 2 + nombre.height + gapTexto });
+
+  const grupo = new Group(
+    [velo, ...(imagen ? [imagen] : []), nombre, ...(telefono ? [telefono] : [])],
+    MOVIBLE
+  );
+  // El grupo recalcula su propia caja al armarse: se reafirma la esquina para que `left`
+  // y `top` sigan siendo los de la composición.
+  grupo.set({ left, top });
+  grupo.setCoords();
+
+  return {
+    grupo,
+    // Se mueve por la mitad superior derecha del lienzo, nunca sobre la banda inferior ni
+    // sobre el badge de la esquina contraria.
+    zona: { left: W / 2, top: 0.025 * H, width: W / 2 - 0.025 * W, height: 0.32 * H },
+  };
+}
+
+// Recorta la foto al cuadrado central y la enmascara con un círculo. El clipPath vive en
+// las unidades naturales de la imagen, antes de escalarla al diámetro final.
+function fotoCircular(foto: HTMLImageElement, diametro: number): FabricImage {
+  const lado = Math.min(foto.naturalWidth, foto.naturalHeight);
+  return new FabricImage(foto, {
+    ...ESQUINA,
+    cropX: (foto.naturalWidth - lado) / 2,
+    cropY: (foto.naturalHeight - lado) / 2,
+    width: lado,
+    height: lado,
+    scaleX: diametro / lado,
+    scaleY: diametro / lado,
+    clipPath: new Circle({ radius: lado / 2, originX: "center", originY: "center" }),
+    objectCaching: false,
+  });
 }
 
 /** Vuelca lo que Oscar escribió en los campos sobre los objetos del canvas. */

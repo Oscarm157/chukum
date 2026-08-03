@@ -308,6 +308,21 @@ export const socialPostImages = pgTable("social_post_images", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
+// Perfil de vendedor para la firma opcional del overlay de texto (nombre/teléfono/foto
+// insertados automático en cualquier plantilla). Uno "activo" a la vez; no hay selector
+// por post, la firma siempre usa el perfil activo del momento.
+export const agentProfiles = pgTable("agent_profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  photoUrl: text("photo_url"),
+  photoPathname: text("photo_pathname"),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
 export type SocialAccount = typeof socialAccounts.$inferSelect;
 export type SocialPost = typeof socialPosts.$inferSelect;
 export type SocialPostImage = typeof socialPostImages.$inferSelect;
+export type AgentProfile = typeof agentProfiles.$inferSelect;
