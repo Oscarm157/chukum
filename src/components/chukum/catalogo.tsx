@@ -6,27 +6,40 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { MessageCircle, ArrowRight, X } from "lucide-react";
 import { SectionHead } from "@/components/chukum/section-head";
-import { ciudadesDe, type Development } from "@/lib/developments";
+import { ciudadesDe, TIPO_LABEL, type Development, type Tipo } from "@/lib/developments";
 import { waLink, STATUS_LABEL } from "@/lib/site";
 import { PropertyTypeBadges } from "@/components/chukum/property-type-badges";
 
-// Catálogo con filtro por ciudad. Los pills seleccionan 1 o varias ciudades; sin selección
-// se muestran todos. El pill "Borrar" limpia la selección completa.
+function toggleInSet<T>(setFn: (updater: (prev: Set<T>) => Set<T>) => void, value: T) {
+  setFn((prev) => {
+    const next = new Set(prev);
+    if (next.has(value)) next.delete(value);
+    else next.add(value);
+    return next;
+  });
+}
+
+// Catálogo con filtro por ciudad y por tipo. Los pills seleccionan 1 o varias opciones por
+// filtro; sin selección se muestran todos. Ambos filtros combinan con AND entre sí. El pill
+// "Borrar" limpia las dos selecciones.
 export function Catalogo({ developments }: { developments: Development[] }) {
   const reduceMotion = useReducedMotion();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectedTipos, setSelectedTipos] = useState<Set<Tipo>>(new Set());
   const ciudades = ciudadesDe(developments);
+  const tipos = (Object.keys(TIPO_LABEL) as Tipo[]).filter((t) =>
+    developments.some((d) => d.tipos.includes(t))
+  );
 
-  const toggle = (ciudad: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(ciudad)) next.delete(ciudad);
-      else next.add(ciudad);
-      return next;
-    });
+  const toggle = (ciudad: string) => toggleInSet(setSelected, ciudad);
+  const toggleTipo = (t: Tipo) => toggleInSet(setSelectedTipos, t);
 
-  const visibles =
-    selected.size === 0 ? developments : developments.filter((d) => selected.has(d.ciudad));
+  const visibles = developments.filter((d) => {
+    const matchCiudad = selected.size === 0 || selected.has(d.ciudad);
+    const matchTipo = selectedTipos.size === 0 || d.tipos.some((t) => selectedTipos.has(t));
+    return matchCiudad && matchTipo;
+  });
+  const hayFiltros = selected.size > 0 || selectedTipos.size > 0;
 
   return (
     <>
@@ -53,10 +66,36 @@ export function Catalogo({ developments }: { developments: Development[] }) {
             </button>
           );
         })}
-        {selected.size > 0 && (
+      </div>
+
+      {/* Pills de tipo + borrar */}
+      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+        <span className="mr-1 text-xs uppercase tracking-[0.16em] text-ink-2">Filtrar por tipo</span>
+        {tipos.map((t) => {
+          const active = selectedTipos.has(t);
+          return (
+            <button
+              key={t}
+              type="button"
+              aria-pressed={active}
+              onClick={() => toggleTipo(t)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                active
+                  ? "bg-cenote text-canvas shadow-sm"
+                  : "border-2 border-[var(--chukum)] text-ink hover:border-cenote hover:text-cenote"
+              }`}
+            >
+              {TIPO_LABEL[t]}
+            </button>
+          );
+        })}
+        {hayFiltros && (
           <button
             type="button"
-            onClick={() => setSelected(new Set())}
+            onClick={() => {
+              setSelected(new Set());
+              setSelectedTipos(new Set());
+            }}
             aria-label="Borrar filtros"
             className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 px-4 py-2 text-sm text-ink-2 transition hover:border-cenote hover:text-cenote"
           >
@@ -70,7 +109,7 @@ export function Catalogo({ developments }: { developments: Development[] }) {
         <p className="mt-10 text-ink-2">
           {developments.length === 0
             ? "Pronto publicaremos los desarrollos disponibles."
-            : "No hay desarrollos en las ciudades seleccionadas."}
+            : "No hay desarrollos con ese filtro."}
         </p>
       ) : (
         <div className="mt-10 flex flex-col gap-5">
