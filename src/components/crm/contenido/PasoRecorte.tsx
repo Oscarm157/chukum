@@ -177,9 +177,12 @@ export function PasoRecorte({
             crop={crop}
             zoom={zoom}
             aspect={formato.valor}
-            // La foto llena el marco desde el inicio: con `contain` arrancaría chica y con
-            // franjas vacías dentro del área de recorte.
-            objectFit="cover"
+            // `contain`: se ve la foto completa al abrir (lo que se espera de un recorte),
+            // aunque la foto no calce con el formato deje franjas dentro del marco. Antes
+            // era `cover`, que para fotos con proporción distinta a la elegida (ej. una
+            // vertical dentro de un marco cuadrado) ya arrancaba con un zoom fuerte aunque
+            // marcara "1.00x" — eso era "el zoom antes de editar" que reportó Oscar.
+            objectFit="contain"
             minZoom={1}
             maxZoom={4}
             onCropChange={setCrop}
