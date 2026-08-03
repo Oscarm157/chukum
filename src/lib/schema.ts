@@ -253,3 +253,40 @@ export const kwGrupoItems = pgTable("kw_grupo_items", {
 
 export type KwGrupo = typeof kwGrupos.$inferSelect;
 export type KwGrupoItem = typeof kwGrupoItems.$inferSelect;
+
+// ---- Contenido social (Facebook/Instagram vía Post for Me) ----
+// Todo post nace en `borrador` y solo una acción explícita de Oscar lo mueve a
+// programado/publicado: nada sale a las redes sin revisión. `postForMeAccountId` es el id
+// que Post for Me asigna a cada cuenta conectada; se sincroniza desde su API, no se escribe a mano.
+export type SocialPlatform = "facebook" | "instagram";
+export type SocialPostSource = "desarrollo" | "libre";
+export type SocialPostStatus = "borrador" | "aprobado" | "programado" | "publicado" | "error";
+
+export const socialAccounts = pgTable("social_accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  platform: text("platform").$type<SocialPlatform>().notNull(),
+  postForMeAccountId: text("post_for_me_account_id").notNull().unique(),
+  username: text("username"),
+  connectedAt: timestamp("connected_at", { withTimezone: true }).defaultNow(),
+});
+
+export const socialPosts = pgTable("social_posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sourceType: text("source_type").$type<SocialPostSource>().notNull(),
+  developmentId: uuid("development_id").references(() => developments.id, { onDelete: "set null" }),
+  topic: text("topic"), // brief cuando la fuente es tema libre
+  caption: text("caption").notNull(),
+  imageUrl: text("image_url").notNull(),
+  imagePathname: text("image_pathname"),
+  platforms: jsonb("platforms").$type<string[]>().notNull(),
+  status: text("status").$type<SocialPostStatus>().default("borrador").notNull(),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+  postForMeId: text("post_for_me_id"),
+  errorMessage: text("error_message"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export type SocialAccount = typeof socialAccounts.$inferSelect;
+export type SocialPost = typeof socialPosts.$inferSelect;

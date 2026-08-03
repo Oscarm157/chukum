@@ -20,6 +20,9 @@ const schema = z.object({
   // Whisper (Replicate) para el dictado por voz del widget de comentarios. Opcional:
   // sin valor, /api/feedback/transcribe responde 500 y el resto del widget funciona.
   REPLICATE_API_TOKEN: z.string().optional(),
+  // Post for Me: publica el contenido social aprobado en Facebook/Instagram. Opcional
+  // en build; sin valor, las actions de /admin/contenido fallan con error claro.
+  POSTFORME_API_KEY: z.string().optional(),
 });
 
 let cached: z.infer<typeof schema> | undefined;
