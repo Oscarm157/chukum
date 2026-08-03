@@ -1,39 +1,38 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Sparkles, Check, RotateCcw } from "lucide-react";
-import { Modal } from "@/components/crm/Modal";
+import { Loader2, Sparkles, Check, RotateCcw, Maximize2 } from "lucide-react";
 import { generarEdicionIA } from "@/app/admin/(panel)/contenido/actions";
 import { mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
 
 /**
- * Edición de la foto del post con Nano Banana Pro: se escribe qué cambiar, se ve el
- * resultado contra el original y solo al aceptar se aplica. Mismo contrato que los otros
- * dos editores: entrega un `File` y el llamador decide si lo sube o lo guarda.
+ * Paso de edición con IA del `ImageWorkspace`: se escribe qué cambiar, se ve el resultado
+ * contra la imagen de trabajo y solo al aceptarlo pasa a serla. Genera en Replicate (única
+ * parte que sí pega al servidor), pero no guarda nada en Blob ni en la base.
  */
 
 // Tope del lado largo de la foto que se manda a editar cuando todavía es un archivo local
-// (pantalla de alta). El cuerpo de un server action no puede pasar de 1MB; el resultado
-// vuelve en 2K de todos modos, así que reducir la entrada no baja la calidad de salida.
+// (pantalla de alta o resultado de un paso anterior). El cuerpo de un server action no
+// puede pasar de 1MB; el resultado vuelve en 2K de todos modos.
 const MAX_LADO_ENVIO = 1400;
 
 // Las dos fotos van en cajas idénticas: comparar sirve solo si se ven al mismo tamaño.
 // En pantalla angosta se achican para que el resultado no quede abajo del pliegue.
 const CAJA =
-  "flex h-[132px] w-full items-center justify-center overflow-hidden rounded-lg border border-[var(--crm-line)] p-2 text-center sm:h-[210px]";
+  "group relative flex h-[132px] w-full items-center justify-center overflow-hidden rounded-lg border border-[var(--crm-line)] p-2 text-center sm:h-[200px]";
 
-export function AiPhotoEditor({
-  open,
+export function PasoIA({
   src,
-  onClose,
   onAplicar,
+  onBusy,
+  onVer,
 }: {
-  open: boolean;
-  /** Object URL de un archivo local o URL ya persistida del post. */
+  /** Imagen de trabajo actual: object URL local o URL ya persistida. */
   src: string;
-  onClose: () => void;
-  /** Si lanza un Error, su mensaje se muestra dentro del modal. */
   onAplicar: (file: File) => void | Promise<void>;
+  onBusy: (busy: boolean) => void;
+  /** Abre el lightbox del workspace para comparar en grande. */
+  onVer: (url: string) => void;
 }) {
   const [prompt, setPrompt] = useState("");
   const [resultado, setResultado] = useState<string | null>(null);
@@ -41,18 +40,18 @@ export function AiPhotoEditor({
   const [aplicando, setAplicando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Una generación tarda entre 30s y ~100s. Si el modal se cierra o se relanza mientras
-  // corre, la respuesta que llega tarde no debe pintarse sobre una sesión que ya no es suya.
-  const intentoRef = useRef(0);
+  // Una generación tarda entre 30s y ~100s. Si la imagen de trabajo cambia mientras corre,
+  // la respuesta que llega tarde no debe pintarse sobre una sesión que ya no es suya: el
+  // ref guarda cuál es la imagen vigente al momento de resolver.
+  const vigenteRef = useRef(src);
   useEffect(() => {
-    intentoRef.current++;
-  }, [open, src]);
+    vigenteRef.current = src;
+  }, [src]);
 
-  // Cada apertura (y cada imagen distinta) arranca en blanco, igual que el recorte.
-  const sesion = open ? src : "";
-  const [sesionPrevia, setSesionPrevia] = useState(sesion);
-  if (sesionPrevia !== sesion) {
-    setSesionPrevia(sesion);
+  // Cada imagen de trabajo nueva arranca el paso en blanco.
+  const [srcPrevio, setSrcPrevio] = useState(src);
+  if (srcPrevio !== src) {
+    setSrcPrevio(src);
     setPrompt("");
     setResultado(null);
     setError(null);
@@ -63,28 +62,31 @@ export function AiPhotoEditor({
 
   async function generar() {
     const instruccion = prompt.trim();
-    const mio = ++intentoRef.current;
+    const mia = src;
     setGenerando(true);
+    onBusy(true);
     setResultado(null);
     setError(null);
     try {
-      const res = await generarEdicionIA({ prompt: instruccion, ...(await fuente(src)) });
-      if (intentoRef.current !== mio) return;
+      const res = await generarEdicionIA({ prompt: instruccion, ...(await fuente(mia)) });
+      if (vigenteRef.current !== mia) return;
       if ("error" in res) setError(res.error);
       else setResultado(res.resultUrl);
     } catch (e) {
-      if (intentoRef.current !== mio) return;
+      if (vigenteRef.current !== mia) return;
       setError(e instanceof Error ? e.message : "No se pudo editar la foto.");
     } finally {
-      if (intentoRef.current === mio) setGenerando(false);
+      if (vigenteRef.current === mia) setGenerando(false);
+      onBusy(false);
     }
   }
 
-  // El resultado vive en un enlace temporal de Replicate: se descarga aquí y se entrega
-  // como archivo, igual que el recorte y el overlay. Si se descarta, no hay nada que borrar.
+  // El resultado vive en un enlace temporal de Replicate: se descarga aquí y pasa a ser la
+  // imagen de trabajo, en memoria. Si se descarta, no hay nada que borrar.
   async function aceptar() {
     if (!resultado) return;
     setAplicando(true);
+    onBusy(true);
     setError(null);
     try {
       const res = await fetch(resultado);
@@ -95,53 +97,12 @@ export function AiPhotoEditor({
       setError(e instanceof Error ? e.message : "No se pudo aplicar la imagen editada.");
     } finally {
       setAplicando(false);
+      onBusy(false);
     }
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Editar con IA"
-      maxWidth={640}
-      footer={
-        <div className="flex flex-wrap justify-end gap-2">
-          <button type="button" onClick={onClose} disabled={ocupado} className="crm-btn crm-btn-sm crm-btn-ghost">
-            {resultado ? "Descartar" : "Cancelar"}
-          </button>
-          <button
-            type="button"
-            onClick={generar}
-            disabled={ocupado || prompt.trim().length < 3}
-            className={resultado ? "crm-btn crm-btn-sm crm-btn-secondary" : "crm-btn crm-btn-sm crm-btn-primary"}
-          >
-            {generando ? (
-              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-            ) : resultado ? (
-              <RotateCcw className="size-3.5" strokeWidth={2} />
-            ) : (
-              <Sparkles className="size-3.5" strokeWidth={2} />
-            )}
-            {generando ? "Generando…" : resultado ? "Reintentar" : "Generar"}
-          </button>
-          {resultado && (
-            <button
-              type="button"
-              onClick={aceptar}
-              disabled={ocupado}
-              className="crm-btn crm-btn-sm crm-btn-primary"
-            >
-              {aplicando ? (
-                <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-              ) : (
-                <Check className="size-3.5" strokeWidth={2} />
-              )}
-              Aceptar
-            </button>
-          )}
-        </div>
-      }
-    >
+    <div>
       <label className="mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]" htmlFor="ia-prompt">
         Qué quieres cambiar
       </label>
@@ -162,30 +123,70 @@ export function AiPhotoEditor({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <figure className="m-0">
-          <figcaption className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Original</figcaption>
-          <div className={CAJA} style={{ background: "var(--crm-surface)" }}>
+          <figcaption className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Imagen de trabajo</figcaption>
+          <button type="button" onClick={() => onVer(src)} className={CAJA} style={{ background: "var(--crm-surface)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt="" className="max-h-full max-w-full object-contain" />
-          </div>
+            <VerEnGrande />
+          </button>
         </figure>
         <figure className="m-0">
           <figcaption className="mb-1.5 text-[12px] text-[var(--crm-ink-mute)]">Resultado</figcaption>
-          <div className={CAJA} style={{ background: "var(--crm-surface)" }}>
-            {generando ? (
-              <p className="flex flex-col items-center gap-2 text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
-                <Loader2 className="size-4 animate-spin" strokeWidth={2} />
-                Editando la foto. Tarda entre 30 segundos y dos minutos, no cierres esta ventana.
-              </p>
-            ) : resultado ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
+          {resultado ? (
+            <button
+              type="button"
+              onClick={() => onVer(resultado)}
+              className={CAJA}
+              style={{ background: "var(--crm-surface)" }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={resultado} alt="Foto editada" className="max-h-full max-w-full object-contain" />
-            ) : (
-              <p className="text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
-                Aquí aparece la versión editada para compararla antes de aceptarla.
-              </p>
-            )}
-          </div>
+              <VerEnGrande />
+            </button>
+          ) : (
+            <div className={CAJA} style={{ background: "var(--crm-surface)" }}>
+              {generando ? (
+                <p className="flex flex-col items-center gap-2 text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
+                  <Loader2 className="size-4 animate-spin" strokeWidth={2} />
+                  Editando la foto. Tarda entre 30 segundos y dos minutos, no cierres esta ventana.
+                </p>
+              ) : (
+                <p className="text-[12.5px] leading-snug text-[var(--crm-ink-mute)]">
+                  Aquí aparece la versión editada para compararla antes de aceptarla.
+                </p>
+              )}
+            </div>
+          )}
         </figure>
+      </div>
+
+      {/* Pegada al borde inferior del cuerpo del modal, igual que los otros dos pasos. */}
+      <div className="sticky bottom-0 -mx-6 -mb-5 mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-6 py-2.5">
+        <button
+          type="button"
+          onClick={generar}
+          disabled={ocupado || prompt.trim().length < 3}
+          className="crm-btn crm-btn-sm crm-btn-secondary"
+        >
+          {generando ? (
+            <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+          ) : resultado ? (
+            <RotateCcw className="size-3.5" strokeWidth={2} />
+          ) : (
+            <Sparkles className="size-3.5" strokeWidth={2} />
+          )}
+          {generando ? "Generando…" : resultado ? "Reintentar" : "Generar"}
+        </button>
+        {resultado && (
+          <button type="button" onClick={aceptar} disabled={ocupado} className="crm-btn crm-btn-sm crm-btn-secondary">
+            {aplicando ? (
+              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+            ) : (
+              <Check className="size-3.5" strokeWidth={2} />
+            )}
+            Usar esta versión
+          </button>
+        )}
       </div>
 
       {error && (
@@ -193,7 +194,15 @@ export function AiPhotoEditor({
           {error}
         </p>
       )}
-    </Modal>
+    </div>
+  );
+}
+
+function VerEnGrande() {
+  return (
+    <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-black/55 text-white opacity-0 transition-opacity group-hover:opacity-100">
+      <Maximize2 className="size-3.5" strokeWidth={2} />
+    </span>
   );
 }
 

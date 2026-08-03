@@ -27,6 +27,18 @@ export async function getSocialPosts(status?: SocialPostStatus): Promise<SocialP
   return rows.map((r) => ({ ...r.post, developmentName: r.developmentName }));
 }
 
+// Vecinos en el mismo orden que la lista (más reciente primero): `anterior` es el de
+// arriba en la tabla y `siguiente` el de abajo. Sin filtro de estado, para poder recorrer
+// todos los borradores desde el detalle.
+export async function getSocialPostVecinos(
+  id: string
+): Promise<{ anterior: string | null; siguiente: string | null }> {
+  const rows = await db.select({ id: socialPosts.id }).from(socialPosts).orderBy(desc(socialPosts.createdAt));
+  const i = rows.findIndex((r) => r.id === id);
+  if (i === -1) return { anterior: null, siguiente: null };
+  return { anterior: rows[i - 1]?.id ?? null, siguiente: rows[i + 1]?.id ?? null };
+}
+
 export async function getSocialPostCounts(): Promise<Record<string, number>> {
   const rows = await db
     .select({ status: socialPosts.status, n: sql<number>`count(*)::int` })

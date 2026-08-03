@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Send, Save, Crop, Type, Sparkles } from "lucide-react";
+import { Loader2, Send, Save, ImageIcon } from "lucide-react";
 import type {
   DevelopmentImage,
   SocialAccount,
@@ -15,9 +15,7 @@ import { guardarEdicion, aprobarYProgramar, actualizarImagen } from "@/app/admin
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { CarruselEditor } from "@/components/crm/contenido/CarruselEditor";
-import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
-import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
-import { AiPhotoEditor } from "@/components/crm/contenido/AiPhotoEditor";
+import { ImageWorkspace } from "@/components/crm/contenido/ImageWorkspace";
 import { SincronizarCuentasButton } from "@/components/crm/contenido/SincronizarCuentasButton";
 import { PLATFORM_LABEL, fmtFecha } from "@/components/crm/contenido/badges";
 
@@ -52,9 +50,7 @@ export function PostEditor({
   const [cuando, setCuando] = useState(toLocalInput(post.scheduledAt));
   const [error, setError] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
-  const [recortando, setRecortando] = useState(false);
-  const [escribiendo, setEscribiendo] = useState(false);
-  const [editandoIA, setEditandoIA] = useState(false);
+  const [editandoImagen, setEditandoImagen] = useState(false);
   const [pending, start] = useTransition();
 
   const disponibles = [...new Set(cuentas.map((c) => c.platform))];
@@ -72,32 +68,15 @@ export function PostEditor({
     setPlatforms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
   }
 
-  // El recorte se persiste solo: sube el JPEG nuevo y deja el post apuntando a él. Si
-  // falla, el error se lanza para que el modal de recorte lo muestre sin cerrarse.
-  async function aplicarRecorte(file: File) {
-    await guardarImagen(file);
-    setRecortando(false);
-    toast.success("Imagen recortada y guardada.");
-  }
-
-  // El overlay exporta la imagen ya aplanada con el texto: se guarda igual que el recorte.
-  async function aplicarTexto(file: File) {
-    await guardarImagen(file);
-    setEscribiendo(false);
-    toast.success("Texto aplicado y guardado.");
-  }
-
-  // La edición con IA llega ya resuelta como archivo: se guarda igual que las otras dos.
-  async function aplicarIA(file: File) {
-    await guardarImagen(file);
-    setEditandoIA(false);
-    toast.success("Imagen editada y guardada.");
-  }
-
+  // El workspace encadena recorte, texto e IA en memoria y entrega la imagen final una
+  // sola vez: aquí hay una subida, un guardado y un refresh, sin importar cuántos pasos
+  // se hayan aplicado. Si falla, el error se lanza para que el modal lo muestre sin
+  // cerrarse ni perder el trabajo.
   async function guardarImagen(file: File) {
     const res = await actualizarImagen(post.id, { imageFile: file });
     if ("error" in res) throw new Error(res.error);
     setImageUrl(res.url);
+    toast.success("Imagen del post actualizada.");
     router.refresh();
   }
 
@@ -175,39 +154,19 @@ export function PostEditor({
             style={{ background: "var(--crm-surface)" }}
           />
           <div className="flex flex-col items-start gap-2">
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setRecortando(true)}
-                disabled={pending}
-                className="crm-btn crm-btn-sm crm-btn-secondary"
-              >
-                <Crop className="size-3.5" strokeWidth={2} />
-                Recortar imagen
-              </button>
-              <button
-                type="button"
-                onClick={() => setEscribiendo(true)}
-                disabled={pending}
-                className="crm-btn crm-btn-sm crm-btn-secondary"
-              >
-                <Type className="size-3.5" strokeWidth={2} />
-                Agregar texto
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditandoIA(true)}
-                disabled={pending}
-                className="crm-btn crm-btn-sm crm-btn-secondary"
-              >
-                <Sparkles className="size-3.5" strokeWidth={2} />
-                Editar con IA
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setEditandoImagen(true)}
+              disabled={pending}
+              className="crm-btn crm-btn-sm crm-btn-secondary"
+            >
+              <ImageIcon className="size-3.5" strokeWidth={2} />
+              Editar imagen
+            </button>
             <p className="max-w-[400px] text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-              Elige el encuadre (cuadrado, vertical o story) y la escala, pon el título encima con una de las tres
-              plantillas, o pide un cambio en la foto misma (quitar un letrero, cambiar el cielo). Al aplicarlo se
-              guarda de inmediato como la imagen del post; la original queda intacta en el catálogo.
+              En una sola ventana: encuadre (cuadrado, vertical o story), título encima con una de las tres plantillas
+              y cambios en la foto misma con IA (quitar un letrero, cambiar el cielo). Se guarda cuando lo confirmas
+              ahí; la foto original queda intacta en el catálogo.
             </p>
           </div>
         </div>
@@ -325,25 +284,11 @@ export function PostEditor({
         pending={pending}
       />
 
-      <ImageCropper
-        open={recortando}
+      <ImageWorkspace
+        open={editandoImagen}
         src={imageUrl}
-        onClose={() => setRecortando(false)}
-        onAplicar={aplicarRecorte}
-      />
-
-      <TextOverlayEditor
-        open={escribiendo}
-        src={imageUrl}
-        onClose={() => setEscribiendo(false)}
-        onAplicar={aplicarTexto}
-      />
-
-      <AiPhotoEditor
-        open={editandoIA}
-        src={imageUrl}
-        onClose={() => setEditandoIA(false)}
-        onAplicar={aplicarIA}
+        onClose={() => setEditandoImagen(false)}
+        onGuardar={guardarImagen}
       />
     </div>
   );

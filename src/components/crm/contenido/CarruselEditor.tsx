@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ArrowUp, ArrowDown, X, Upload, Images, Loader2, Check } from "lucide-react";
 import type { DevelopmentImage, SocialPostFormat, SocialPostImage, SocialPostPlacement } from "@/lib/schema";
 import { Modal } from "@/components/crm/Modal";
+import { Miniatura } from "@/components/crm/Miniatura";
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { mismoOrigen } from "@/components/crm/contenido/imagen";
@@ -362,8 +363,7 @@ function Tile({
   return (
     <div className="crm-card overflow-hidden p-0">
       <div className="relative aspect-[4/5] bg-[var(--crm-surface)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="" className="h-full w-full object-cover" />
+        <Miniatura src={url} className="block h-full w-full" />
         <span className="crm-num absolute left-1.5 top-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-black/65 px-1.5 text-[11px] font-semibold text-white">
           {indice}
         </span>

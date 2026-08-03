@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import {
@@ -6,10 +5,12 @@ import {
   getSocialAccounts,
   getSocialPostImages,
   getFotosDelDesarrollo,
+  getSocialPostVecinos,
 } from "@/lib/contenido-data";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { PostEditor } from "@/components/crm/contenido/PostEditor";
 import { DescartarPostButton } from "@/components/crm/contenido/DescartarPostButton";
+import { ContenidoBreadcrumb, PostVecinos } from "@/components/crm/contenido/navegacion";
 import { EstadoBadge, PlataformaBadges, EDITABLE, fmtFecha } from "@/components/crm/contenido/badges";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,13 @@ export const dynamic = "force-dynamic";
 // (medido contra Replicate); con el default se cortaría a media generación.
 export const maxDuration = 180;
 export const metadata = { title: "Post", robots: { index: false } };
+
+// El caption es un post entero: en la ruta va solo el arranque, en una línea.
+function resumenCaption(caption: string): string {
+  const limpio = caption.replace(/\s+/g, " ").trim();
+  if (!limpio) return "Post sin texto";
+  return limpio.length > 40 ? `${limpio.slice(0, 40).trimEnd()}…` : limpio;
+}
 
 export default async function PostDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,19 +34,18 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
   const cuentas = await getSocialAccounts();
   const imagenesCarrusel = await getSocialPostImages(post.id);
   const fotosCatalogo = post.developmentId ? await getFotosDelDesarrollo(post.developmentId) : [];
+  const vecinos = await getSocialPostVecinos(post.id);
   const editable = EDITABLE.includes(post.status);
   const yaSalio = post.status === "programado" || post.status === "publicado";
 
   return (
     <div className="mx-auto max-w-[960px]">
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <Link
-          href="/admin/contenido"
-          className="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--crm-ink-mute)] transition-colors hover:text-[var(--crm-ink)]"
-        >
-          <span aria-hidden>&larr;</span> Redes sociales
-        </Link>
-        <DescartarPostButton id={post.id} yaSalio={yaSalio} />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <ContenidoBreadcrumb actual={resumenCaption(post.caption)} />
+        <div className="flex items-center gap-2">
+          <PostVecinos anterior={vecinos.anterior} siguiente={vecinos.siguiente} />
+          <DescartarPostButton id={post.id} yaSalio={yaSalio} />
+        </div>
       </div>
 
       <div className="crm-fade mb-6 flex flex-wrap items-center gap-3">

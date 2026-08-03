@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import { Loader2, Crop } from "lucide-react";
-import { Modal } from "@/components/crm/Modal";
 import { MAX_LADO, mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
 
 /**
- * Recorte de la imagen del post en el navegador: se elige formato y zoom, y al aplicar
- * el canvas resuelve un JPEG que el llamador sube a Blob. No escribe nada por su cuenta.
+ * Paso de recorte del `ImageWorkspace`: se elige formato y zoom, y al aplicar el canvas
+ * resuelve un JPEG que pasa a ser la imagen de trabajo. No sube ni guarda nada.
  */
 
 const FORMATOS = [
@@ -17,18 +16,15 @@ const FORMATOS = [
   { ratio: "9:16", valor: 9 / 16, label: "Story/Reel" },
 ] as const;
 
-export function ImageCropper({
-  open,
+export function PasoRecorte({
   src,
-  onClose,
   onAplicar,
+  onBusy,
 }: {
-  open: boolean;
-  /** Object URL de un archivo local o URL ya persistida del post. */
+  /** Imagen de trabajo actual: object URL local o URL ya persistida. */
   src: string;
-  onClose: () => void;
-  /** Si lanza un Error, su mensaje se muestra dentro del modal. */
   onAplicar: (file: File, formato: string) => void | Promise<void>;
+  onBusy: (busy: boolean) => void;
 }) {
   const [formato, setFormato] = useState<(typeof FORMATOS)[number]>(FORMATOS[0]);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -40,12 +36,12 @@ export function ImageCropper({
 
   const fuente = mismoOrigen(src);
 
-  // Cada apertura (y cada imagen distinta) arranca con el encuadre en cero. Se ajusta en
-  // el render, no en un efecto: así no hay un frame con el estado del recorte anterior.
-  const sesion = open ? src : "";
-  const [sesionPrevia, setSesionPrevia] = useState(sesion);
-  if (sesionPrevia !== sesion) {
-    setSesionPrevia(sesion);
+  // Cada imagen nueva (la propia salida de este paso, o la del paso anterior) arranca con
+  // el encuadre en cero. Se ajusta en el render, no en un efecto: así no hay un frame con
+  // el estado del recorte anterior.
+  const [srcPrevio, setSrcPrevio] = useState(src);
+  if (srcPrevio !== src) {
+    setSrcPrevio(src);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setAreaPx(null);
@@ -56,6 +52,7 @@ export function ImageCropper({
   async function aplicar() {
     if (!areaPx) return;
     setProcesando(true);
+    onBusy(true);
     setError(null);
     try {
       const blob = await recortar(fuente, areaPx);
@@ -65,41 +62,17 @@ export function ImageCropper({
       setError(e instanceof Error ? e.message : "No se pudo recortar la imagen.");
     } finally {
       setProcesando(false);
+      onBusy(false);
     }
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Recortar imagen"
-      maxWidth={560}
-      footer={
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} disabled={procesando} className="crm-btn crm-btn-sm crm-btn-ghost">
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={aplicar}
-            disabled={procesando || !areaPx}
-            className="crm-btn crm-btn-sm crm-btn-primary"
-          >
-            {procesando ? (
-              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-            ) : (
-              <Crop className="size-3.5" strokeWidth={2} />
-            )}
-            Aplicar recorte
-          </button>
-        </div>
-      }
-    >
-      <div role="radiogroup" aria-label="Formato de la imagen" className="mb-3 flex flex-wrap gap-2">
+    <div>
+      <div role="radiogroup" aria-label="Formato de la imagen" className="mb-3 flex gap-2 overflow-x-auto sm:flex-wrap">
         {FORMATOS.map((f) => (
           <label
             key={f.ratio}
-            className="crm-tab cursor-pointer focus-within:ring-2 focus-within:ring-[var(--crm-accent-ring)]"
+            className="crm-tab shrink-0 cursor-pointer focus-within:ring-2 focus-within:ring-[var(--crm-accent-ring)]"
             data-active={formato.ratio === f.ratio}
           >
             <input
@@ -120,7 +93,7 @@ export function ImageCropper({
         ))}
       </div>
 
-      <div className="relative h-[300px] overflow-hidden rounded-lg border border-[var(--crm-line)] bg-[var(--crm-surface)] sm:h-[360px]">
+      <div className="relative h-[280px] overflow-hidden rounded-lg border border-[var(--crm-line)] bg-[var(--crm-surface)] sm:h-[340px]">
         <Cropper
           image={fuente}
           crop={crop}
@@ -168,17 +141,34 @@ export function ImageCropper({
         </span>
       </div>
 
-      <p className="mt-2 text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-        Arrastra la foto para mover el encuadre. Lo que queda fuera del marco no se publica. Se guarda en{" "}
-        <span className="crm-num">{formato.ratio}</span>, máximo <span className="crm-num">{MAX_LADO}</span> px de lado.
-      </p>
+      {/* Pegada al borde inferior del cuerpo del modal: la acción del paso no se pierde
+          abajo del scroll cuando el contenido es alto. */}
+      <div className="sticky bottom-0 -mx-6 -mb-5 mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-6 py-2.5 sm:justify-between">
+        <p className="hidden max-w-[52ch] text-[12px] leading-snug text-[var(--crm-ink-mute)] sm:block">
+          Arrastra la foto para mover el encuadre. Queda en <span className="crm-num">{formato.ratio}</span>, máximo{" "}
+          <span className="crm-num">{MAX_LADO}</span> px de lado.
+        </p>
+        <button
+          type="button"
+          onClick={aplicar}
+          disabled={procesando || !areaPx}
+          className="crm-btn crm-btn-sm crm-btn-secondary"
+        >
+          {procesando ? (
+            <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+          ) : (
+            <Crop className="size-3.5" strokeWidth={2} />
+          )}
+          Aplicar recorte
+        </button>
+      </div>
 
       {error && (
         <p className="mt-3 text-[12.5px] leading-snug" style={{ color: "var(--destructive)" }}>
           {error}
         </p>
       )}
-    </Modal>
+    </div>
   );
 }
 

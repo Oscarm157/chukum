@@ -2,13 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Crop, Type } from "lucide-react";
+import { Loader2, Sparkles, ImageIcon } from "lucide-react";
 import type { DesarrolloOption } from "@/lib/contenido-data";
 import { generarBorrador } from "@/app/admin/(panel)/contenido/actions";
 import { SectionHeader } from "@/components/crm/PageShell";
-import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
-import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
-import { AiPhotoEditor } from "@/components/crm/contenido/AiPhotoEditor";
+import { ImageWorkspace } from "@/components/crm/contenido/ImageWorkspace";
 
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
@@ -28,12 +26,8 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [recortando, setRecortando] = useState(false);
-  const [escribiendo, setEscribiendo] = useState(false);
-  const [editandoIA, setEditandoIA] = useState(false);
-  const [formato, setFormato] = useState<string | null>(null);
-  const [conTexto, setConTexto] = useState(false);
-  const [conIA, setConIA] = useState(false);
+  const [editandoImagen, setEditandoImagen] = useState(false);
+  const [edicion, setEdicion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,34 +40,16 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
       return;
     }
     setError(null);
-    setFile(f);
-    setPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(f);
-    });
+    setEdicion(null);
+    reemplazarImagen(f);
   }
 
-  // El recorte reemplaza el archivo que se va a subir: lo que se guarda es la versión
-  // recortada, no la original.
-  function aplicarRecorte(f: File, ratio: string) {
+  // Aquí todavía no hay nada en el servidor: el workspace devuelve la imagen ya editada y
+  // simplemente reemplaza el archivo que se va a subir al generar el borrador. La original
+  // nunca llega al servidor.
+  function aplicarEdicion(f: File, resumen: string) {
     reemplazarImagen(f);
-    setFormato(ratio);
-    setRecortando(false);
-  }
-
-  // El overlay también trabaja sobre el archivo local: se sube ya aplanado con el texto.
-  function aplicarTexto(f: File) {
-    reemplazarImagen(f);
-    setConTexto(true);
-    setEscribiendo(false);
-  }
-
-  // La edición con IA también trabaja sobre el archivo local: lo que se sube al generar el
-  // borrador es la versión editada, la original nunca llega al servidor.
-  function aplicarIA(f: File) {
-    reemplazarImagen(f);
-    setConIA(true);
-    setEditandoIA(false);
+    setEdicion(resumen);
   }
 
   function reemplazarImagen(f: File) {
@@ -249,38 +225,14 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                   <button
                     type="button"
-                    onClick={() => setRecortando(true)}
+                    onClick={() => setEditandoImagen(true)}
                     className="crm-btn crm-btn-sm crm-btn-secondary"
                   >
-                    <Crop className="size-3.5" strokeWidth={2} />
-                    Recortar imagen
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEscribiendo(true)}
-                    className="crm-btn crm-btn-sm crm-btn-secondary"
-                  >
-                    <Type className="size-3.5" strokeWidth={2} />
-                    Agregar texto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditandoIA(true)}
-                    className="crm-btn crm-btn-sm crm-btn-secondary"
-                  >
-                    <Sparkles className="size-3.5" strokeWidth={2} />
-                    Editar con IA
+                    <ImageIcon className="size-3.5" strokeWidth={2} />
+                    Editar imagen
                   </button>
                   <p className="text-[12px] text-[var(--crm-ink-mute)]">
-                    {formato ? (
-                      <>
-                        Recortada a <span className="crm-num">{formato}</span>.
-                      </>
-                    ) : (
-                      "Sin recortar se sube con las proporciones originales."
-                    )}
-                    {conTexto && " Con texto aplicado."}
-                    {conIA && " Editada con IA."}
+                    {edicion ?? "Sin editar se sube con las proporciones originales."}
                   </p>
                 </div>
               )}
@@ -314,26 +266,12 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
       </div>
 
       {preview && (
-        <>
-          <ImageCropper
-            open={recortando}
-            src={preview}
-            onClose={() => setRecortando(false)}
-            onAplicar={aplicarRecorte}
-          />
-          <TextOverlayEditor
-            open={escribiendo}
-            src={preview}
-            onClose={() => setEscribiendo(false)}
-            onAplicar={aplicarTexto}
-          />
-          <AiPhotoEditor
-            open={editandoIA}
-            src={preview}
-            onClose={() => setEditandoIA(false)}
-            onAplicar={aplicarIA}
-          />
-        </>
+        <ImageWorkspace
+          open={editandoImagen}
+          src={preview}
+          onClose={() => setEditandoImagen(false)}
+          onGuardar={aplicarEdicion}
+        />
       )}
     </form>
   );

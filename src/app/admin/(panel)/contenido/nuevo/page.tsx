@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getDesarrolloOptionsParaContenido } from "@/lib/contenido-data";
 import { PageHeader } from "@/components/crm/PageShell";
 import { NuevoPostForm } from "@/components/crm/contenido/NuevoPostForm";
+import { ContenidoBreadcrumb } from "@/components/crm/contenido/navegacion";
 
 export const dynamic = "force-dynamic";
 // Techo de las server actions de esta página. La edición con IA tarda entre 30s y ~100s
@@ -15,12 +15,7 @@ export default async function NuevoPostPage() {
   return (
     <div className="mx-auto max-w-[860px]">
       <div className="mb-5">
-        <Link
-          href="/admin/contenido"
-          className="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--crm-ink-mute)] transition-colors hover:text-[var(--crm-ink)]"
-        >
-          <span aria-hidden>&larr;</span> Redes sociales
-        </Link>
+        <ContenidoBreadcrumb actual="Nuevo" />
       </div>
       <PageHeader
         eyebrow="Contenido"

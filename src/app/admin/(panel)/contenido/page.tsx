@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { SocialPostStatus } from "@/lib/schema";
 import { getSocialPosts, getSocialPostCounts, getSocialAccounts } from "@/lib/contenido-data";
 import { PageHeader } from "@/components/crm/PageShell";
+import { Miniatura } from "@/components/crm/Miniatura";
 import { SincronizarCuentasButton } from "@/components/crm/contenido/SincronizarCuentasButton";
 import { EstadoBadge, PlataformaBadges, STATUS_LABEL, PLATFORM_LABEL, fmtFecha } from "@/components/crm/contenido/badges";
 
@@ -99,11 +100,9 @@ export default async function ContenidoPage({
                   >
                     <td className="crm-td">
                       <div className="flex items-start gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Miniatura
                           src={p.imageUrl}
-                          alt=""
-                          className="size-12 shrink-0 rounded-lg border border-[var(--crm-line)] object-cover"
+                          className="size-12 shrink-0 rounded-lg border border-[var(--crm-line)]"
                         />
                         <Link
                           href={`/admin/contenido/${p.id}`}

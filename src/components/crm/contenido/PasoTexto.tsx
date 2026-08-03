@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas, FabricImage, Pattern, type FabricObject } from "fabric";
 import { Loader2, Type } from "lucide-react";
-import { Modal } from "@/components/crm/Modal";
 import { fraunces, inter } from "@/lib/contenido/fonts";
 import { MAX_LADO, mismoOrigen, cargarImagen } from "@/components/crm/contenido/imagen";
 import {
@@ -17,10 +16,9 @@ import {
 } from "@/components/crm/contenido/plantillas";
 
 /**
- * Overlay de texto sobre la imagen del post: se elige una de las tres plantillas del
- * sistema de diseño, se escribe el texto en los campos y se arrastra dentro de la zona
- * segura. Al aplicar exporta un JPEG aplanado que el llamador sube; la "receta"
- * (plantilla, texto, posición) no se guarda.
+ * Paso de overlay de texto del `ImageWorkspace`: se elige plantilla, se escribe el texto y
+ * se arrastra dentro de la zona segura. Al aplicar exporta un JPEG aplanado que pasa a ser
+ * la imagen de trabajo; la "receta" (plantilla, texto, posición) no se guarda.
  */
 
 // Resolución de trabajo del canvas. La exportación sube a `MAX_LADO` con el multiplicador
@@ -30,23 +28,20 @@ const LADO_DISENO = 1080;
 // que los campos de texto no queden abajo del pliegue.
 function cajaVista() {
   const angosta = window.innerWidth < 640;
-  return { ancho: Math.min(520, window.innerWidth - 96), alto: angosta ? 260 : 360 };
+  return { ancho: Math.min(520, window.innerWidth - 96), alto: angosta ? 240 : 320 };
 }
 
 const labelCls = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 
-export function TextOverlayEditor({
-  open,
+export function PasoTexto({
   src,
-  onClose,
   onAplicar,
+  onBusy,
 }: {
-  open: boolean;
-  /** Object URL de un archivo local o URL ya persistida del post. */
+  /** Imagen de trabajo actual: object URL local o URL ya persistida. */
   src: string;
-  onClose: () => void;
-  /** Si lanza un Error, su mensaje se muestra dentro del modal. */
   onAplicar: (file: File) => void | Promise<void>;
+  onBusy: (busy: boolean) => void;
 }) {
   const [plantilla, setPlantilla] = useState<PlantillaId>("banda");
   const [headline, setHeadline] = useState("");
@@ -69,9 +64,10 @@ export function TextOverlayEditor({
   const def = PLANTILLAS.find((p) => p.id === plantilla)!;
 
   // Monta el canvas: fuentes cargadas de verdad (si no, el primer trazo sale con la
-  // fuente del sistema), foto de fondo y textura de grano.
+  // fuente del sistema), foto de fondo y textura de grano. Si la imagen de trabajo cambia
+  // (por ejemplo, se recortó primero), se rearma sobre la nueva.
   useEffect(() => {
-    if (!open || !el) return;
+    if (!el) return;
 
     let cancelado = false;
 
@@ -146,7 +142,7 @@ export function TextOverlayEditor({
       canvasRef.current = null;
       setListo(false);
     };
-  }, [open, fuente, el]);
+  }, [fuente, el]);
 
   // Cambiar de plantilla rearma las capas y devuelve las posiciones a su sitio; el texto
   // ya escrito se conserva. Escribir solo actualiza los objetos que ya existen.
@@ -172,6 +168,7 @@ export function TextOverlayEditor({
     const canvas = canvasRef.current;
     if (!canvas) return;
     setProcesando(true);
+    onBusy(true);
     setError(null);
     try {
       canvas.discardActiveObject();
@@ -194,41 +191,17 @@ export function TextOverlayEditor({
       setError(e instanceof Error ? e.message : "No se pudo aplicar el texto.");
     } finally {
       setProcesando(false);
+      onBusy(false);
     }
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Agregar texto"
-      maxWidth={620}
-      footer={
-        <div className="flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose} disabled={procesando} className="crm-btn crm-btn-sm crm-btn-ghost">
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={aplicar}
-            disabled={procesando || !listo || !headline.trim()}
-            className="crm-btn crm-btn-sm crm-btn-primary"
-          >
-            {procesando ? (
-              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-            ) : (
-              <Type className="size-3.5" strokeWidth={2} />
-            )}
-            Aplicar texto
-          </button>
-        </div>
-      }
-    >
-      <div role="radiogroup" aria-label="Plantilla" className="mb-3 flex flex-wrap gap-2">
+    <div>
+      <div role="radiogroup" aria-label="Plantilla" className="mb-3 flex gap-2 overflow-x-auto sm:flex-wrap">
         {PLANTILLAS.map((p) => (
           <label
             key={p.id}
-            className="crm-tab cursor-pointer focus-within:ring-2 focus-within:ring-[var(--crm-accent-ring)]"
+            className="crm-tab shrink-0 cursor-pointer focus-within:ring-2 focus-within:ring-[var(--crm-accent-ring)]"
             data-active={plantilla === p.id}
           >
             <input
@@ -303,18 +276,34 @@ export function TextOverlayEditor({
         )}
       </div>
 
-      <p className="mt-2.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-        Arrastra el texto para acomodarlo: solo se mueve dentro de la zona de la plantilla. Cambiar de plantilla
-        conserva lo escrito y reacomoda las posiciones. Se guarda un JPEG aplanado de máximo{" "}
-        <span className="crm-num">{MAX_LADO}</span> px de lado, sin la foto original.
-      </p>
+      {/* Pegada al borde inferior del cuerpo del modal: la acción del paso no se pierde
+          abajo del scroll cuando el contenido es alto. */}
+      <div className="sticky bottom-0 -mx-6 -mb-5 mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--crm-line)] bg-[var(--crm-surface-2)] px-6 py-2.5 sm:justify-between">
+        <p className="hidden max-w-[52ch] text-[12px] leading-snug text-[var(--crm-ink-mute)] sm:block">
+          El texto se arrastra dentro de la zona de la plantilla. Sale un JPEG aplanado de máximo{" "}
+          <span className="crm-num">{MAX_LADO}</span> px de lado.
+        </p>
+        <button
+          type="button"
+          onClick={aplicar}
+          disabled={procesando || !listo || !headline.trim()}
+          className="crm-btn crm-btn-sm crm-btn-secondary"
+        >
+          {procesando ? (
+            <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
+          ) : (
+            <Type className="size-3.5" strokeWidth={2} />
+          )}
+          Aplicar texto
+        </button>
+      </div>
 
       {error && (
         <p className="mt-3 text-[12.5px] leading-snug" style={{ color: "var(--destructive)" }}>
           {error}
         </p>
       )}
-    </Modal>
+    </div>
   );
 }
 
