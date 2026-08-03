@@ -16,6 +16,10 @@ import type { SocialPlatform } from "@/lib/schema";
 // - `platform_configurations.instagram`/`.facebook` aceptan `placement: reels|stories|
 //   timeline`, todos opcionales. Para un post de imagen normal (no reels) se omite
 //   `placement`: cada plataforma cae a su default de feed.
+// - Carrusel: no hay campo ni endpoint aparte. Mandar varios elementos en `media` arma
+//   el carrusel solo, siempre que el placement sea el de feed. Con `placement: stories`
+//   el spec dice que crea un post por cada media (N stories sueltos, no un carrusel),
+//   así que el módulo fuerza formato de una sola imagen cuando se publica a story.
 // - `GET /social-accounts` devuelve `{ data: SocialAccountDto[], meta }`, igual que asume
 //   publish.mjs.
 
@@ -91,9 +95,12 @@ export async function uploadMedia(imageUrl: string): Promise<string> {
 export type CreateSocialPostInput = {
   caption: string;
   accountIds: string[];
-  mediaUrl: string;
+  /** `media_url` ya devuelto por `uploadMedia`. Con más de uno sale carrusel. */
+  mediaUrls: string[];
   scheduledAt: Date | null;
   platforms: SocialPlatform[];
+  /** Ausente = feed (default de cada plataforma). */
+  placement?: "stories";
 };
 
 export type SocialPostResult = {
@@ -102,18 +109,18 @@ export type SocialPostResult = {
 };
 
 export async function createSocialPost(input: CreateSocialPostInput): Promise<SocialPostResult> {
-  // Post de imagen normal (feed), nunca reels: se omite `placement` y cada plataforma
-  // usa su default de línea de tiempo.
+  // Sin `placement` cada plataforma cae a su feed (nunca reels: esto son imágenes).
+  const config = input.placement ? { placement: input.placement } : {};
   const platform_configurations: Record<string, object> = {};
-  if (input.platforms.includes("facebook")) platform_configurations.facebook = {};
-  if (input.platforms.includes("instagram")) platform_configurations.instagram = {};
+  if (input.platforms.includes("facebook")) platform_configurations.facebook = { ...config };
+  if (input.platforms.includes("instagram")) platform_configurations.instagram = { ...config };
 
   return api<SocialPostResult>("/social-posts", {
     method: "POST",
     body: JSON.stringify({
       caption: input.caption,
       social_accounts: input.accountIds,
-      media: [{ url: input.mediaUrl }],
+      media: input.mediaUrls.map((url) => ({ url })),
       scheduled_at: input.scheduledAt ? input.scheduledAt.toISOString() : null,
       platform_configurations,
     }),

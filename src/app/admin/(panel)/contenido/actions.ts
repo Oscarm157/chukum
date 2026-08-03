@@ -1,17 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import {
   socialPosts,
+  socialPostImages,
   socialAccounts,
   developments,
   developmentImages,
   type SocialPlatform,
+  type SocialPost,
   type SocialPostStatus,
 } from "@/lib/schema";
 import { requireAdmin } from "@/lib/session";
@@ -223,6 +225,218 @@ export async function actualizarImagen(
   return { ok: true, url: uploaded.url };
 }
 
+// ===================== Carrusel: formato, destino e imágenes =====================
+// La imagen 1 sigue siendo `socialPosts.imageUrl`; en `socialPostImages` viven solo las
+// 2+. Instagram no acepta más de 10 media por carrusel, así que ese es el tope.
+
+const MAX_CARRUSEL = 10;
+
+// Carga el post y corta si ya se envió: mismo criterio que guardarEdicion/actualizarImagen.
+async function postEditable(id: string): Promise<{ post: SocialPost } | { error: string }> {
+  if (!z.string().uuid().safeParse(id).success) return { error: "Id inválido." };
+  const rows = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+  const post = rows[0];
+  if (!post) return { error: "Ese post no existe." };
+  if (post.status === "programado" || post.status === "publicado") {
+    return { error: "Este post ya se envió y no se puede editar." };
+  }
+  return { post };
+}
+
+async function contarImagenesExtra(postId: string): Promise<number> {
+  const filas = await db
+    .select({ id: socialPostImages.id })
+    .from(socialPostImages)
+    .where(eq(socialPostImages.postId, postId));
+  return filas.length;
+}
+
+function revalidarPost(id: string) {
+  revalidatePath("/admin/contenido");
+  revalidatePath(`/admin/contenido/${id}`);
+}
+
+const formatoSchema = z.object({
+  format: z.enum(["post", "carrusel"]),
+  placement: z.enum(["timeline", "stories"]),
+});
+
+export async function cambiarFormatoYPlacement(
+  postId: string,
+  input: unknown
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin();
+
+  const parsed = formatoSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  const { format, placement } = parsed.data;
+
+  // Post for Me convierte un carrusel con placement `stories` en N stories sueltos, no en
+  // un carrusel: la combinación se rechaza en vez de aceptarse y salir distinta.
+  if (placement === "stories" && format === "carrusel") {
+    return { error: "Una story solo lleva una imagen. Cambia el formato a Post o publica a feed." };
+  }
+
+  const cargado = await postEditable(postId);
+  if ("error" in cargado) return cargado;
+
+  await db
+    .update(socialPosts)
+    .set({ format, placement, updatedAt: new Date() })
+    .where(eq(socialPosts.id, postId));
+
+  revalidarPost(postId);
+  return { ok: true };
+}
+
+export async function agregarImagenCarruselDesdeCatalogo(
+  postId: string,
+  developmentImageId: string
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin();
+
+  if (!z.string().uuid().safeParse(developmentImageId).success) return { error: "Id inválido." };
+  const cargado = await postEditable(postId);
+  if ("error" in cargado) return cargado;
+  const { post } = cargado;
+
+  if (post.sourceType !== "desarrollo" || !post.developmentId) {
+    return { error: "Este post no salió de un desarrollo, no tiene galería de dónde elegir." };
+  }
+
+  // La foto tiene que ser del mismo desarrollo del post: el id llega del cliente y se
+  // verifica contra la DB, nunca se usa tal cual.
+  const fotos = await db
+    .select()
+    .from(developmentImages)
+    .where(
+      and(
+        eq(developmentImages.id, developmentImageId),
+        eq(developmentImages.developmentId, post.developmentId)
+      )
+    );
+  const foto = fotos[0];
+  if (!foto) return { error: "Esa foto no es de este desarrollo." };
+
+  const existentes = await contarImagenesExtra(postId);
+  // +1 por la portada (`imageUrl`) y +1 por la que se está agregando.
+  if (existentes + 2 > MAX_CARRUSEL) {
+    return { error: `Un carrusel no puede pasar de ${MAX_CARRUSEL} imágenes.` };
+  }
+
+  // Se copia la referencia, la foto sigue en el catálogo. Igual que en `generarBorrador`,
+  // las rutas relativas de `public/` se absolutizan: Post for Me tiene que descargarla.
+  await db.insert(socialPostImages).values({
+    postId,
+    url: foto.url.startsWith("http") ? foto.url : `${BRAND.url}${foto.url}`,
+    pathname: foto.pathname,
+    sortOrder: existentes,
+  });
+
+  revalidarPost(postId);
+  return { ok: true };
+}
+
+export async function agregarImagenCarruselSubida(
+  postId: string,
+  formData: FormData
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin();
+
+  const cargado = await postEditable(postId);
+  if ("error" in cargado) return cargado;
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "No se recibió archivo." };
+
+  const existentes = await contarImagenesExtra(postId);
+  // +1 por la portada (`imageUrl`) y +1 por la que se está agregando.
+  if (existentes + 2 > MAX_CARRUSEL) {
+    return { error: `Un carrusel no puede pasar de ${MAX_CARRUSEL} imágenes.` };
+  }
+
+  const subida = await uploadImage("contenido", file);
+  if ("error" in subida) return { error: subida.error };
+
+  await db.insert(socialPostImages).values({
+    postId,
+    url: subida.url,
+    pathname: subida.pathname,
+    sortOrder: existentes,
+  });
+
+  revalidarPost(postId);
+  return { ok: true };
+}
+
+export async function quitarImagenCarrusel(
+  imageId: string
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin();
+
+  if (!z.string().uuid().safeParse(imageId).success) return { error: "Id inválido." };
+  const filas = await db.select().from(socialPostImages).where(eq(socialPostImages.id, imageId));
+  const imagen = filas[0];
+  if (!imagen) return { error: "Esa imagen no existe." };
+
+  const cargado = await postEditable(imagen.postId);
+  if ("error" in cargado) return cargado;
+
+  // Solo se borra el blob si se subió para este post (`contenido/`). Las del catálogo
+  // apuntan al archivo del desarrollo: borrarlas se llevaría la foto del desarrollo.
+  if (imagen.pathname?.startsWith("contenido/")) {
+    try {
+      await del(imagen.url);
+    } catch (e) {
+      console.error("[contenido] fallo al borrar blob", imagen.url, e);
+    }
+  }
+
+  await db.delete(socialPostImages).where(eq(socialPostImages.id, imageId));
+
+  // El hueco en `sortOrder` no rompe el orden, pero deja la numeración con saltos: se
+  // renumera lo que queda para que la siguiente que entre caiga al final.
+  const resto = await db
+    .select({ id: socialPostImages.id })
+    .from(socialPostImages)
+    .where(eq(socialPostImages.postId, imagen.postId))
+    .orderBy(asc(socialPostImages.sortOrder));
+  await Promise.all(
+    resto.map((r, i) =>
+      db.update(socialPostImages).set({ sortOrder: i }).where(eq(socialPostImages.id, r.id))
+    )
+  );
+
+  revalidarPost(imagen.postId);
+  return { ok: true };
+}
+
+export async function reordenarImagenesCarrusel(
+  postId: string,
+  orderedIds: string[]
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin();
+
+  const parsed = z.array(z.string().uuid()).safeParse(orderedIds);
+  if (!parsed.success) return { error: "Orden inválido." };
+
+  const cargado = await postEditable(postId);
+  if ("error" in cargado) return cargado;
+
+  // El update va acotado al post: un id de otro post no se toca aunque venga en la lista.
+  await Promise.all(
+    parsed.data.map((id, i) =>
+      db
+        .update(socialPostImages)
+        .set({ sortOrder: i })
+        .where(and(eq(socialPostImages.id, id), eq(socialPostImages.postId, postId)))
+    )
+  );
+
+  revalidarPost(postId);
+  return { ok: true };
+}
+
 // ===================== Editar la foto con IA =====================
 
 const generarEdicionIASchema = z.object({
@@ -292,15 +506,28 @@ export async function aprobarYProgramar(
     };
   }
 
+  // Imagen 1 (`imageUrl`) + las del carrusel en su orden. En formato `post` sale un
+  // arreglo de un solo elemento, igual que antes.
+  const extra =
+    post.format === "carrusel"
+      ? await db
+          .select({ url: socialPostImages.url })
+          .from(socialPostImages)
+          .where(eq(socialPostImages.postId, id))
+          .orderBy(asc(socialPostImages.sortOrder))
+      : [];
+  const urls = [post.imageUrl, ...extra.map((i) => i.url)];
+
   const inicio = Date.now();
   try {
-    const mediaUrl = await uploadMedia(post.imageUrl);
+    const mediaUrls = await Promise.all(urls.map(uploadMedia));
     const resultado = await createSocialPost({
       caption: post.caption,
       accountIds: cuentas.map((c) => c.postForMeAccountId),
-      mediaUrl,
+      mediaUrls,
       scheduledAt: parsed.data.scheduledAt ? new Date(parsed.data.scheduledAt) : null,
       platforms: parsed.data.platforms as SocialPlatform[],
+      ...(post.placement === "stories" ? { placement: "stories" as const } : {}),
     });
 
     const status: SocialPostStatus = parsed.data.scheduledAt ? "programado" : "publicado";
@@ -323,6 +550,9 @@ export async function aprobarYProgramar(
         post: id,
         ms: Date.now() - inicio,
         status,
+        formato: post.format,
+        placement: post.placement,
+        imagenes: urls.length,
       })
     );
 

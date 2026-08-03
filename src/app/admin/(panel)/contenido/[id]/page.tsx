@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import { getSocialPostById, getSocialAccounts } from "@/lib/contenido-data";
+import {
+  getSocialPostById,
+  getSocialAccounts,
+  getSocialPostImages,
+  getFotosDelDesarrollo,
+} from "@/lib/contenido-data";
 import { SectionHeader } from "@/components/crm/PageShell";
 import { PostEditor } from "@/components/crm/contenido/PostEditor";
 import { DescartarPostButton } from "@/components/crm/contenido/DescartarPostButton";
@@ -19,6 +24,8 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
   if (!post) notFound();
 
   const cuentas = await getSocialAccounts();
+  const imagenesCarrusel = await getSocialPostImages(post.id);
+  const fotosCatalogo = post.developmentId ? await getFotosDelDesarrollo(post.developmentId) : [];
   const editable = EDITABLE.includes(post.status);
   const yaSalio = post.status === "programado" || post.status === "publicado";
 
@@ -113,8 +120,12 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
             imageUrl: post.imageUrl,
             platforms: post.platforms,
             scheduledAt: post.scheduledAt,
+            format: post.format,
+            placement: post.placement,
           }}
           cuentas={cuentas}
+          imagenesCarrusel={imagenesCarrusel}
+          fotosCatalogo={fotosCatalogo}
         />
       ) : (
         <section className="crm-card crm-fade p-6">

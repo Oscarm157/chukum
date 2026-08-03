@@ -2,12 +2,15 @@ import { asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
   socialPosts,
+  socialPostImages,
   socialAccounts,
   developments,
   developmentImages,
   type SocialPost,
+  type SocialPostImage,
   type SocialAccount,
   type SocialPostStatus,
+  type DevelopmentImage,
 } from "./schema";
 
 export type SocialPostRow = SocialPost & { developmentName: string | null };
@@ -40,6 +43,25 @@ export async function getSocialPostById(id: string): Promise<SocialPostRow | nul
     .where(eq(socialPosts.id, id));
   const r = rows[0];
   return r ? { ...r.post, developmentName: r.developmentName } : null;
+}
+
+// Imágenes 2+ del carrusel, en el orden en que se publican. La 1 es `post.imageUrl`.
+export async function getSocialPostImages(postId: string): Promise<SocialPostImage[]> {
+  return db
+    .select()
+    .from(socialPostImages)
+    .where(eq(socialPostImages.postId, postId))
+    .orderBy(asc(socialPostImages.sortOrder));
+}
+
+// Galería del desarrollo del que salió el post: es de dónde se eligen las fotos extra
+// del carrusel sin volver a subirlas.
+export async function getFotosDelDesarrollo(developmentId: string): Promise<DevelopmentImage[]> {
+  return db
+    .select()
+    .from(developmentImages)
+    .where(eq(developmentImages.developmentId, developmentId))
+    .orderBy(asc(developmentImages.sortOrder));
 }
 
 export async function getSocialAccounts(): Promise<SocialAccount[]> {

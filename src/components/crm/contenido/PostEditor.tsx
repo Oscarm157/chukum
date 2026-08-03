@@ -4,10 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Send, Save, Crop, Type, Sparkles } from "lucide-react";
-import type { SocialAccount } from "@/lib/schema";
+import type {
+  DevelopmentImage,
+  SocialAccount,
+  SocialPostFormat,
+  SocialPostImage,
+  SocialPostPlacement,
+} from "@/lib/schema";
 import { guardarEdicion, aprobarYProgramar, actualizarImagen } from "@/app/admin/(panel)/contenido/actions";
 import { ConfirmDialog } from "@/components/crm/ConfirmDialog";
 import { SectionHeader } from "@/components/crm/PageShell";
+import { CarruselEditor } from "@/components/crm/contenido/CarruselEditor";
 import { ImageCropper } from "@/components/crm/contenido/ImageCropper";
 import { TextOverlayEditor } from "@/components/crm/contenido/TextOverlayEditor";
 import { AiPhotoEditor } from "@/components/crm/contenido/AiPhotoEditor";
@@ -20,9 +27,23 @@ const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
 export function PostEditor({
   post,
   cuentas,
+  imagenesCarrusel,
+  fotosCatalogo,
 }: {
-  post: { id: string; caption: string; imageUrl: string; platforms: string[]; scheduledAt: Date | null };
+  post: {
+    id: string;
+    caption: string;
+    imageUrl: string;
+    platforms: string[];
+    scheduledAt: Date | null;
+    format: SocialPostFormat;
+    placement: SocialPostPlacement;
+  };
   cuentas: SocialAccount[];
+  /** Imágenes 2+ del carrusel, ya en orden. */
+  imagenesCarrusel: SocialPostImage[];
+  /** Galería del desarrollo del post; vacía si es de tema libre. */
+  fotosCatalogo: DevelopmentImage[];
 }) {
   const router = useRouter();
   const [caption, setCaption] = useState(post.caption);
@@ -37,6 +58,12 @@ export function PostEditor({
   const [pending, start] = useTransition();
 
   const disponibles = [...new Set(cuentas.map((c) => c.platform))];
+  const comoSale =
+    post.placement === "stories"
+      ? "Va como story de una imagen."
+      : post.format === "carrusel"
+        ? `Va como carrusel de ${imagenesCarrusel.length + 1} imágenes.`
+        : "Va como post de una imagen.";
   const programado = cuando.trim().length > 0;
   // Un datetime-local a medio escribir da una fecha inválida: no se formatea ni se envía.
   const fechaOk = programado && !Number.isNaN(new Date(cuando).getTime());
@@ -178,15 +205,24 @@ export function PostEditor({
               </button>
             </div>
             <p className="max-w-[400px] text-[12px] leading-snug text-[var(--crm-ink-mute)]">
-              Elige el formato (feed cuadrado, feed vertical o story) y el encuadre, pon el título encima con una de las
-              tres plantillas, o pide un cambio en la foto misma (quitar un letrero, cambiar el cielo). Al aplicarlo se
+              Elige el encuadre (cuadrado, vertical o story) y la escala, pon el título encima con una de las tres
+              plantillas, o pide un cambio en la foto misma (quitar un letrero, cambiar el cielo). Al aplicarlo se
               guarda de inmediato como la imagen del post; la original queda intacta en el catálogo.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="crm-card crm-fade p-6" style={{ animationDelay: "55ms" }}>
+      <CarruselEditor
+        postId={post.id}
+        portadaUrl={imageUrl}
+        format={post.format}
+        placement={post.placement}
+        imagenes={imagenesCarrusel}
+        fotosCatalogo={fotosCatalogo}
+      />
+
+      <section className="crm-card crm-fade p-6" style={{ animationDelay: "110ms" }}>
         <SectionHeader title="Texto del post" className="mb-4" />
         <textarea
           id="caption"
@@ -201,7 +237,7 @@ export function PostEditor({
         </p>
       </section>
 
-      <section className="crm-card crm-fade p-6" style={{ animationDelay: "110ms" }}>
+      <section className="crm-card crm-fade p-6" style={{ animationDelay: "165ms" }}>
         <SectionHeader title="Dónde se publica" className="mb-4" />
         {disponibles.length === 0 ? (
           <div className="flex flex-col items-start gap-3">
@@ -234,7 +270,7 @@ export function PostEditor({
         )}
       </section>
 
-      <section className="crm-card crm-fade p-6" style={{ animationDelay: "165ms" }}>
+      <section className="crm-card crm-fade p-6" style={{ animationDelay: "220ms" }}>
         <SectionHeader title="Cuándo se publica" className="mb-4" />
         <div className="max-w-[280px]">
           <label className={label} htmlFor="cuando">
@@ -282,8 +318,8 @@ export function PostEditor({
         title={fechaOk ? "Programar el post" : "Publicar ahora"}
         description={
           fechaOk
-            ? `Sale solo en ${listaPlataformas(platforms)} el ${fmtFecha(new Date(cuando))}, hora de Yucatán. Después de esto ya no se puede editar desde aquí.`
-            : `Se publica de inmediato en ${listaPlataformas(platforms)}. Después de esto ya no se puede editar desde aquí.`
+            ? `${comoSale} Sale solo en ${listaPlataformas(platforms)} el ${fmtFecha(new Date(cuando))}, hora de Yucatán. Después de esto ya no se puede editar desde aquí.`
+            : `${comoSale} Se publica de inmediato en ${listaPlataformas(platforms)}. Después de esto ya no se puede editar desde aquí.`
         }
         confirmLabel={fechaOk ? "Programar" : "Publicar ahora"}
         pending={pending}

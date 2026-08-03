@@ -261,6 +261,10 @@ export type KwGrupoItem = typeof kwGrupoItems.$inferSelect;
 export type SocialPlatform = "facebook" | "instagram";
 export type SocialPostSource = "desarrollo" | "libre";
 export type SocialPostStatus = "borrador" | "programado" | "publicado" | "error";
+export type SocialPostFormat = "post" | "carrusel";
+// "stories" con formato carrusel crearía N posts de story separados (así lo maneja Post
+// for Me), no un carrusel: la UI debe forzar formato "post" cuando placement="stories".
+export type SocialPostPlacement = "timeline" | "stories";
 
 export const socialAccounts = pgTable("social_accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -276,8 +280,11 @@ export const socialPosts = pgTable("social_posts", {
   developmentId: uuid("development_id").references(() => developments.id, { onDelete: "set null" }),
   topic: text("topic"), // brief cuando la fuente es tema libre
   caption: text("caption").notNull(),
+  // Imagen 1 / portada. Con formato "carrusel" las imágenes 2+ viven en socialPostImages.
   imageUrl: text("image_url").notNull(),
   imagePathname: text("image_pathname"),
+  format: text("format").$type<SocialPostFormat>().default("post").notNull(),
+  placement: text("placement").$type<SocialPostPlacement>().default("timeline").notNull(),
   platforms: jsonb("platforms").$type<string[]>().notNull(),
   status: text("status").$type<SocialPostStatus>().default("borrador").notNull(),
   scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
@@ -288,5 +295,19 @@ export const socialPosts = pgTable("social_posts", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
+// Imágenes 2+ de un post en formato "carrusel" (la imagen 1 es socialPosts.imageUrl).
+// Mismo patrón que developmentImages: sortOrder, borrado en cascada con el post.
+export const socialPostImages = pgTable("social_post_images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  postId: uuid("post_id")
+    .notNull()
+    .references(() => socialPosts.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  pathname: text("pathname"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 export type SocialAccount = typeof socialAccounts.$inferSelect;
 export type SocialPost = typeof socialPosts.$inferSelect;
+export type SocialPostImage = typeof socialPostImages.$inferSelect;
