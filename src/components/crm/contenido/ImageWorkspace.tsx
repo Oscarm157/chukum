@@ -86,25 +86,31 @@ export function ImageWorkspace({
 
   const bloqueado = ocupado || guardando;
 
-  // Esc cierra, salvo que el lightbox esté encima (Esc es suyo) o haya un paso corriendo.
   // El scroll se bloquea en <html> Y en <body>: el elemento que de verdad scrollea en este
-  // documento es <html> (medido), así que bloquear solo `body` deja la página moviéndose
-  // de fondo mientras se edita.
+  // documento es <html> (medido), así que bloquear solo `body` deja la página moviéndose de
+  // fondo. Este efecto depende SOLO de `open`: si se reejecutara al abrir el lightbox (que
+  // pone su propio `hidden`) guardaría "hidden" como valor previo y al cerrar el editor la
+  // página se quedaría sin scroll.
+  useEffect(() => {
+    if (!open) return;
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, [open]);
+
+  // Esc cierra, salvo que el lightbox esté encima (Esc es suyo) o haya un paso corriendo.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !lightbox.open && !bloqueado) onClose();
     };
     document.addEventListener("keydown", onKey);
-    const prevBody = document.body.style.overflow;
-    const prevHtml = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevBody;
-      document.documentElement.style.overflow = prevHtml;
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose, lightbox.open, bloqueado]);
 
   // El resultado de un paso reemplaza la imagen de trabajo; el siguiente paso lo recibe

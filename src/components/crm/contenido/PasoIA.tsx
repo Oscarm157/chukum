@@ -195,7 +195,9 @@ export function PasoIA({
         </div>
       }
       lienzo={
-        <div className="grid h-[420px] grid-cols-1 gap-3 sm:h-[400px] sm:grid-cols-2 lg:h-auto lg:min-h-0 lg:flex-1">
+        // `grid-rows-2` en angosto: sin él las dos filas se reparten por contenido y la caja
+        // del resultado (solo texto) queda mucho más chica que la de la imagen.
+        <div className="grid h-[420px] grid-cols-1 grid-rows-2 gap-3 sm:h-[400px] sm:grid-cols-2 sm:grid-rows-1 lg:h-auto lg:min-h-0 lg:flex-1">
           <figure className="m-0 flex min-h-0 flex-col">
             <figcaption className="mb-1.5 shrink-0 text-[12px] text-[var(--crm-ink-mute)]">
               Imagen de trabajo
