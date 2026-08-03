@@ -16,6 +16,7 @@ import {
 } from "@/lib/schema";
 import { requireAdmin } from "@/lib/session";
 import { uploadImage } from "@/lib/blob";
+import { BRAND } from "@/lib/site";
 import { buildCaptionPrompt, type CaptionPromptInput } from "@/lib/contenido/prompt";
 import { listAccounts, uploadMedia, createSocialPost, type PostForMeAccount } from "@/lib/postforme";
 
@@ -62,7 +63,9 @@ export async function generarBorrador(
     const hero = images.find((img) => img.kind === "hero") ?? images[0];
     if (!hero) return { error: "Ese desarrollo no tiene fotos cargadas." };
 
-    imageUrl = hero.url;
+    // Algunas fotos del catálogo son rutas relativas a `public/` (no todo viene de Blob).
+    // Post for Me necesita descargar la imagen, así que hace falta la URL absoluta.
+    imageUrl = hero.url.startsWith("http") ? hero.url : `${BRAND.url}${hero.url}`;
     imagePathname = hero.pathname;
     developmentId = dev.id;
     // Solo se pasa el `heading` público al prompt, nunca `name` (nombre comercial
