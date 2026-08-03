@@ -16,12 +16,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { asc, eq, ilike } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { developments, developmentImages, users, socialAccounts, socialPosts, type SocialPlatform } from "@/lib/schema";
+import { developments, developmentImages, users, socialAccounts, type SocialPlatform } from "@/lib/schema";
 import { BRAND } from "@/lib/site";
 import {
-  generarBorradorInterno,
   aprobarYProgramarInterno,
   descartarPostInterno,
 } from "@/app/admin/(panel)/contenido/actions";
@@ -30,10 +29,17 @@ import {
   sendPhoto,
   answerCallbackQuery,
   editMessageReplyMarkup,
+  getFile,
+  descargarArchivo,
   type InlineKeyboardMarkup,
 } from "@/lib/telegram";
+import { transcribirAudio } from "@/lib/transcribe";
+import { interpretarYGenerarBorrador, type ResultadoAgente } from "@/lib/contenido-agente/loop";
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // el loop del agente puede tomar varios turnos con Claude.
+
+const MAX_AUDIO_BYTES = 8 * 1024 * 1024; // mismo tope que /api/feedback/transcribe
 
 // Shape laxo del Update de Telegram: solo se valida lo que se usa, con `.passthrough()`
 // para no romper con campos que Telegram manda y no importan aquí.
@@ -46,6 +52,7 @@ const telegramUpdateSchema = z
         message_id: z.number(),
         chat: chatSchema,
         text: z.string().optional(),
+        voice: z.object({ file_id: z.string() }).passthrough().optional(),
       })
       .passthrough()
       .optional(),
@@ -107,27 +114,22 @@ async function manejarDesarrollos(chatId: number) {
   await sendMessage(chatId, `Desarrollos disponibles:\n${filas.map((f) => `- ${f.name}`).join("\n")}`);
 }
 
-async function manejarPost(chatId: number, texto: string) {
-  const nombre = texto.trim();
-  if (!nombre) {
-    await sendMessage(chatId, "Escribe /post seguido del nombre del desarrollo, ej. /post Xo'ok.");
+// Formatea la respuesta del agente igual que antes formateaba `manejarPost`: foto +
+// caption recortado + teclado de aprobar/descartar cuando arma un post; texto plano cuando
+// necesita aclarar algo.
+async function responderResultadoAgente(chatId: number, resultado: ResultadoAgente) {
+  if (resultado.tipo === "mensaje") {
+    await sendMessage(chatId, resultado.texto);
     return;
   }
+  const caption =
+    resultado.caption.length > CAPTION_MAX ? `${resultado.caption.slice(0, CAPTION_MAX - 1)}…` : resultado.caption;
+  await sendPhoto(chatId, resultado.imageUrl, caption, teclado(resultado.postId));
+}
 
-  const matches = await db
-    .select({ id: developments.id, name: developments.name })
-    .from(developments)
-    .where(ilike(developments.name, `%${nombre}%`));
-
-  if (matches.length === 0) {
-    await sendMessage(chatId, `No encontré ningún desarrollo con "${nombre}". Prueba /desarrollos para ver la lista.`);
-    return;
-  }
-  if (matches.length > 1) {
-    await sendMessage(
-      chatId,
-      `Encontré varios: ${matches.map((m) => m.name).join(", ")}. Sé más específico.`
-    );
+async function manejarMensaje(chatId: number, text: string) {
+  if (text.startsWith("/desarrollos")) {
+    await manejarDesarrollos(chatId);
     return;
   }
 
@@ -138,36 +140,41 @@ async function manejarPost(chatId: number, texto: string) {
     return;
   }
 
-  const resultado = await generarBorradorInterno({ sourceType: "desarrollo", developmentId: matches[0].id }, userId);
-  if ("error" in resultado) {
-    await sendMessage(chatId, `No se pudo generar el post: ${resultado.error}`);
-    return;
-  }
-
-  const filas = await db.select().from(socialPosts).where(eq(socialPosts.id, resultado.id));
-  const post = filas[0];
-  if (!post) {
-    await sendMessage(chatId, "El post se generó pero no lo pude leer de vuelta. Revísalo en el panel.");
-    return;
-  }
-
-  const caption = post.caption.length > CAPTION_MAX ? `${post.caption.slice(0, CAPTION_MAX - 1)}…` : post.caption;
-  await sendPhoto(chatId, post.imageUrl, caption, teclado(post.id));
+  const resultado = await interpretarYGenerarBorrador({ mensaje: text, userId });
+  await responderResultadoAgente(chatId, resultado);
 }
 
-async function manejarMensaje(chatId: number, text: string) {
-  if (text.startsWith("/desarrollos")) {
-    await manejarDesarrollos(chatId);
+// Nota de voz: se descarga, se transcribe y de ahí en más sigue exactamente el mismo
+// camino que un mensaje de texto normal.
+async function manejarVoz(chatId: number, fileId: string) {
+  const filePath = await getFile(fileId);
+  if (!filePath) {
+    await sendMessage(chatId, "No pude descargar el audio. Intenta de nuevo o escribe el mensaje.");
     return;
   }
-  if (text.startsWith("/post")) {
-    await manejarPost(chatId, text.slice("/post".length));
+
+  const dataUri = await descargarArchivo(filePath, MAX_AUDIO_BYTES);
+  if (!dataUri) {
+    await sendMessage(chatId, "No pude descargar el audio (o pesa demasiado). Intenta de nuevo o escribe el mensaje.");
     return;
   }
-  await sendMessage(
-    chatId,
-    "Comandos disponibles:\n/desarrollos — lista los desarrollos con fotos\n/post <nombre> — genera un borrador de ese desarrollo"
-  );
+
+  let texto: string;
+  try {
+    texto = await transcribirAudio(dataUri);
+  } catch (e) {
+    console.error(
+      JSON.stringify({ evento: "telegram_contenido_error", error: `transcribe: ${e instanceof Error ? e.message : String(e)}` })
+    );
+    await sendMessage(chatId, "No pude entender el audio, intenta de nuevo o escribe el mensaje.");
+    return;
+  }
+  if (!texto.trim()) {
+    await sendMessage(chatId, "No pude entender el audio, intenta de nuevo o escribe el mensaje.");
+    return;
+  }
+
+  await manejarMensaje(chatId, texto);
 }
 
 async function manejarCallback(
@@ -258,6 +265,8 @@ export async function POST(req: NextRequest) {
       } else {
         await answerCallbackQuery(update.callback_query.id);
       }
+    } else if (update.message?.voice) {
+      await manejarVoz(chatId, update.message.voice.file_id);
     } else if (update.message?.text) {
       await manejarMensaje(chatId, update.message.text);
     }

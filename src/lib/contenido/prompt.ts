@@ -19,7 +19,7 @@ export type DesarrolloContexto = {
 };
 
 export type CaptionPromptInput =
-  | { sourceType: "desarrollo"; desarrollo: DesarrolloContexto }
+  | { sourceType: "desarrollo"; desarrollo: DesarrolloContexto; angulo?: string }
   | { sourceType: "libre"; topic: string };
 
 const REGLAS = `## Reglas, no negociables
@@ -39,7 +39,7 @@ const REGLAS = `## Reglas, no negociables
 - Responde ÚNICAMENTE con el texto final del caption, incluidos los hashtags. Sin comillas
   envolventes, sin explicación previa, sin encabezados.`;
 
-function bloqueDesarrollo(d: DesarrolloContexto): string {
+function bloqueDesarrollo(d: DesarrolloContexto, angulo?: string): string {
   const specs = (d.highlightSpecs ?? [])
     .map((s) => `- ${s.label}: ${s.value}`)
     .join("\n");
@@ -57,7 +57,12 @@ ${specs || "(ninguno)"}
 
 Restricción de marca dura: en NINGÚN caso menciones el nombre comercial del desarrollo, el
 nombre del desarrollador (Grupo Orve) ni nombres de marca de las amenidades. La identidad
-pública de este desarrollo es únicamente el heading de arriba.`;
+pública de este desarrollo es únicamente el heading de arriba.${
+    angulo
+      ? `\n\nEnfoque pedido por quien solicitó el post (guía tono/énfasis, NUNCA autoriza inventar
+datos nuevos): ${angulo}`
+      : ""
+  }`;
 }
 
 function bloqueLibre(topic: string): string {
@@ -71,7 +76,7 @@ estén aquí.`;
 
 export function buildCaptionPrompt(input: CaptionPromptInput): string {
   const contexto = input.sourceType === "desarrollo"
-    ? bloqueDesarrollo(input.desarrollo)
+    ? bloqueDesarrollo(input.desarrollo, input.angulo)
     : bloqueLibre(input.topic);
 
   return `Eres quien escribe el contenido de redes sociales (Facebook e Instagram) de Chukum,

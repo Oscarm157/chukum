@@ -70,3 +70,57 @@ export function editMessageReplyMarkup(
 ): Promise<unknown> {
   return llamar("editMessageReplyMarkup", { chat_id: chatId, message_id: messageId, reply_markup: markup });
 }
+
+// getFile de la Bot API: dado el file_id de un mensaje de voz, devuelve la ruta relativa
+// (`file_path`) con la que se arma la URL de descarga real del archivo.
+export async function getFile(fileId: string): Promise<string | null> {
+  const token = process.env.TELEGRAM_CHUKUM_BOT_TOKEN;
+  if (!token) {
+    console.error(JSON.stringify({ evento: "telegram_api_error", metodo: "getFile", error: "Falta TELEGRAM_CHUKUM_BOT_TOKEN." }));
+    return null;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`);
+  } catch (e) {
+    console.error(JSON.stringify({ evento: "telegram_api_error", metodo: "getFile", error: e instanceof Error ? e.message : String(e) }));
+    return null;
+  }
+
+  const data = await res.json().catch(() => null);
+  const filePath = data?.result?.file_path;
+  if (!res.ok || typeof filePath !== "string") {
+    console.error(JSON.stringify({ evento: "telegram_api_error", metodo: "getFile", status: res.status }));
+    return null;
+  }
+  return filePath;
+}
+
+// Descarga el archivo (nota de voz) desde el CDN de archivos de Telegram y lo devuelve como
+// data URI, listo para mandar a `transcribirAudio`. Corta si pesa más que `maxBytes`.
+export async function descargarArchivo(filePath: string, maxBytes: number): Promise<string | null> {
+  const token = process.env.TELEGRAM_CHUKUM_BOT_TOKEN;
+  if (!token) {
+    console.error(JSON.stringify({ evento: "telegram_api_error", metodo: "descargarArchivo", error: "Falta TELEGRAM_CHUKUM_BOT_TOKEN." }));
+    return null;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+  } catch (e) {
+    console.error(JSON.stringify({ evento: "telegram_api_error", metodo: "descargarArchivo", error: e instanceof Error ? e.message : String(e) }));
+    return null;
+  }
+  if (!res.ok) {
+    console.error(JSON.stringify({ evento: "telegram_api_error", metodo: "descargarArchivo", status: res.status }));
+    return null;
+  }
+
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.byteLength > maxBytes) return null;
+
+  const mime = res.headers.get("content-type") || "audio/ogg";
+  return `data:${mime};base64,${buf.toString("base64")}`;
+}

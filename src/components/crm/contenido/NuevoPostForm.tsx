@@ -11,18 +11,25 @@ import { ImageWorkspace } from "@/components/crm/contenido/ImageWorkspace";
 const label = "mb-1.5 block text-[12.5px] font-medium text-[var(--crm-ink-soft)]";
 const hint = "mt-1.5 text-[12px] leading-snug text-[var(--crm-ink-mute)]";
 
-type Fuente = "desarrollo" | "libre";
+type Fuente = "desarrollo" | "libre" | "agente";
 
 const FUENTES: { v: Fuente; label: string }[] = [
   { v: "desarrollo", label: "Desarrollo del catálogo" },
   { v: "libre", label: "Tema libre" },
+  { v: "agente", label: "Describir con IA" },
 ];
+
+type ResultadoAgente =
+  | { tipo: "post_creado"; postId: string; caption: string; imageUrl: string }
+  | { tipo: "mensaje"; texto: string };
 
 export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[] }) {
   const router = useRouter();
   const [fuente, setFuente] = useState<Fuente>("desarrollo");
   const [developmentId, setDevelopmentId] = useState("");
   const [topic, setTopic] = useState("");
+  const [descripcionAgente, setDescripcionAgente] = useState("");
+  const [avisoAgente, setAvisoAgente] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -63,6 +70,7 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setAvisoAgente(null);
 
     if (fuente === "desarrollo" && !developmentId) {
       setError("Elige un desarrollo.");
@@ -76,8 +84,31 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
       setError("Sube la imagen que va a acompañar el post.");
       return;
     }
+    if (fuente === "agente" && !descripcionAgente.trim()) {
+      setError("Describe el post que quieres.");
+      return;
+    }
 
     start(async () => {
+      if (fuente === "agente") {
+        const res = await fetch("/api/contenido/agente", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mensaje: descripcionAgente.trim() }),
+        });
+        const data = (await res.json().catch(() => null)) as ResultadoAgente | { error: string } | null;
+        if (!data || "error" in data) {
+          setError(data?.error ?? "No se pudo generar el post.");
+          return;
+        }
+        if (data.tipo === "mensaje") {
+          setAvisoAgente(data.texto);
+          return;
+        }
+        router.push(`/admin/contenido/${data.postId}`);
+        return;
+      }
+
       const res = await generarBorrador(
         fuente === "desarrollo"
           ? { sourceType: "desarrollo", developmentId }
@@ -110,6 +141,7 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
                 onChange={() => {
                   setFuente(o.v);
                   setError(null);
+                  setAvisoAgente(null);
                 }}
                 className="sr-only"
               />
@@ -151,6 +183,33 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
             {conFotos.length < desarrollos.length && conFotos.length > 0 && (
               <p className={hint}>
                 {desarrollos.length - conFotos.length} desarrollo(s) no aparecen aquí porque no tienen fotos.
+              </p>
+            )}
+          </div>
+        ) : fuente === "agente" ? (
+          <div className="mt-5 max-w-[560px]">
+            <label className={label} htmlFor="descripcionAgente">
+              Describe el post
+            </label>
+            <textarea
+              id="descripcionAgente"
+              rows={3}
+              maxLength={500}
+              value={descripcionAgente}
+              onChange={(e) => {
+                setDescripcionAgente(e.target.value);
+                setAvisoAgente(null);
+              }}
+              className="crm-textarea"
+              placeholder="Describe el post: qué desarrollo, a quién le hablas, qué destacar."
+            />
+            <p className={hint}>
+              <span className="crm-num">{descripcionAgente.length}</span>/500. El agente resuelve el desarrollo del
+              catálogo y escribe el caption con ese enfoque, sin inventar datos.
+            </p>
+            {avisoAgente && (
+              <p className="crm-card mt-3 border-[var(--crm-accent-ring)] p-3 text-[12.5px] text-[var(--crm-ink-soft)]">
+                {avisoAgente}
               </p>
             )}
           </div>
@@ -256,7 +315,7 @@ export function NuevoPostForm({ desarrollos }: { desarrollos: DesarrolloOption[]
           ) : (
             <Sparkles className="size-4" strokeWidth={2} />
           )}
-          {pending ? "Escribiendo el borrador…" : "Generar borrador"}
+          {pending ? "Escribiendo el borrador…" : fuente === "agente" ? "Generar" : "Generar borrador"}
         </button>
         <p className="text-[12.5px] text-[var(--crm-ink-mute)]">
           {pending

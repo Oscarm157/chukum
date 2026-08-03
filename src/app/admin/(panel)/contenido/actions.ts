@@ -32,6 +32,10 @@ const generarBorradorSchema = z.object({
   developmentId: z.string().uuid().optional(),
   topic: z.string().trim().min(1).max(500).optional(),
   imageFile: z.instanceof(File).optional(),
+  // Enfoque/audiencia opcional (agente de contenido); solo aplica cuando sourceType es
+  // "desarrollo". Guía tono/énfasis del caption, nunca autoriza inventar datos (ver
+  // `bloqueDesarrollo` en `src/lib/contenido/prompt.ts`).
+  angulo: z.string().trim().max(200).optional(),
 });
 
 export async function generarBorrador(
@@ -94,6 +98,7 @@ export async function generarBorradorInterno(
         amenities: dev.amenities,
         statusMarketing: dev.statusMarketing,
       },
+      angulo: v.angulo,
     };
   } else {
     if (!v.topic) return { error: "Falta escribir el tema." };
